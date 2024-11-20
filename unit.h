@@ -3,6 +3,8 @@
 #include <string>
 #include <iostream>
 
+/// @todo Switch from int Exponent to std::ratio Exponent
+
 /**
  * @brief base unit class which holds a type of type Type
  * 
@@ -14,12 +16,62 @@ template <char Symbol, typename Type, int Exponent>
 class Unit
 {   
 public:
-    Unit(double value)
+    Unit(Type value)
         : value(value) {};
     void Print()
     {
         std::cout << Symbol << std::endl;
     }
+
+    /**
+     * @brief Multiply with a unit with the same type and symbol (and any exponent)
+     */
+    template <char RHS_Symbol, typename RHS_Type, int RHS_Exponent>
+    auto operator*(Unit<RHS_Symbol, RHS_Type, RHS_Exponent> rhs_unit)
+    {
+        static_assert(Symbol == RHS_Symbol, "Unit symbols must match");
+        static_assert(std::is_same_v<Type, RHS_Type>, "Unit types must match");
+
+        return Unit<Symbol, Type, Exponent + RHS_Exponent>{value * rhs_unit.value};
+    }
+
+    /**
+     * @brief Add with a unit with the same type and symbol (and any exponent)
+     */
+    template <char RHS_Symbol, typename RHS_Type, int RHS_Exponent>
+    auto operator+(Unit<RHS_Symbol, RHS_Type, RHS_Exponent> rhs_unit)
+    {
+        static_assert(Symbol == RHS_Symbol, "Unit symbols must match");
+        static_assert(std::is_same_v<Type, RHS_Type>, "Unit types must match");
+
+        return Unit<Symbol, Type, Exponent>{value + rhs_unit.value};
+    }
+
+    /**
+     * @brief Subtract with a unit with the same type and symbol (and any exponent)
+     */
+    template <char RHS_Symbol, typename RHS_Type, int RHS_Exponent>
+    auto operator-(Unit<RHS_Symbol, RHS_Type, RHS_Exponent> rhs_unit)
+    {
+        static_assert(Symbol == RHS_Symbol, "Unit symbols must match");
+        static_assert(std::is_same_v<Type, RHS_Type>, "Unit types must match");
+
+        return Unit<Symbol, Type, Exponent>{value - rhs_unit.value};
+    }
+
+    /**
+     * @brief Divide with a unit with the same type and symbol (and any exponent)
+     */
+    template <char RHS_Symbol, typename RHS_Type, int RHS_Exponent>
+    auto operator/(Unit<RHS_Symbol, RHS_Type, RHS_Exponent> rhs_unit)
+    {
+        static_assert(Symbol == RHS_Symbol, "Unit symbols must match");
+        static_assert(std::is_same_v<Type, RHS_Type>, "Unit types must match");
+
+        return Unit<Symbol, Type, Exponent - RHS_Exponent>{value / rhs_unit.value};
+    }
+
+private:
     Type value;
 };
 
