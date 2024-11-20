@@ -1,7 +1,7 @@
 #include <iostream>
 #include "unit.h"
 
-void unit::Print()
-{
-    std::cout << "Hello" << std::endl;
-}
+// Meter operator"" _meter(long double value)
+// {
+//     return Meter{static_cast<double>(value)};
+// }

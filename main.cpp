@@ -1,8 +1,13 @@
 // Run tests
 #include "unit.h"
+#include <iostream>
+
+using Meter = Unit<'m', double, 1>;
+using Meter_2 = Unit<'m', double, 2>;
 
 int main()
 {
-    unit my_unit{};
-    my_unit.Print();
+    Meter dist = 2.5_meter;
+    // std::cout << dist.value << std::endl;
+    dist.Print();
 }

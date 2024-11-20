@@ -1,6 +1,8 @@
 {
     "C_Cpp.default.compilerPath": "/usr/bin/clang++",
     "files.associations": {
-        "iostream": "cpp"
+        "iostream": "cpp",
+        "iosfwd": "cpp",
+        "ostream": "cpp"
     }
 }
