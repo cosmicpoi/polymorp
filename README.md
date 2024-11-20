@@ -1,6 +1,6 @@
 # c++ game engine
 Polymorp
-Timothy Mendelez, Yuhao Tang, Faith Luo
+Timothy Melendez, Yuhao Tang, Faith Luo
 
 # Compilation
 
