@@ -1,12 +1,14 @@
 #pragma once
 
+#include <cmath>
 #include "Unit.h"
+#include "UnitMath.h"
 
 /**
  * @brief Base class for Vector2 with units
  * For now, we only support Vectors where all components are the same type and exponent
  */
-template <typename U>
+template <IsUnit U>
 class Vector2
 {
 public:
@@ -30,7 +32,20 @@ public:
      */
     // inline Vector2(Type cx, Type cy) : x(cx), y(cy) {}
 
-    // U 
+    Exp1<U> NormSq()
+    {
+        return x*x + y*y;
+    }
+
+    U Norm()
+    {
+        return squareRoot( NormSq() );
+    }
+
+    double Norm_d()
+    {
+        return std::sqrt((double) NormSq().GetValue());
+    }
 
 private:
     U x;

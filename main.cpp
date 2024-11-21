@@ -1,5 +1,6 @@
 // Run tests
 #include "Unit.h"
+#include "UnitMath.h"
 #include "Vector.h"
 #include <iostream>
 
@@ -11,18 +12,30 @@ inline Meter operator"" _meter(long double value)
     return Meter{static_cast<double>(value)};
 }
 
-Meter_2 square_meter(Meter dist)
-{
-    return dist * dist;
-}
+using Foot = Unit<'f', float, 1>;
+
+using Inch = Unit<'f', int, 1>;
 
 int main()
 {
-    Exp1<Meter> dist2{3.0};
-    dist2.Print();
+    Meter mVal{2.0};
+    squareRoot(mVal).Print();
+
+    Foot fVal{2.0};
+    squareRoot(fVal).Print();
+
+    Inch iVal{2};
+    squareRoot(iVal).Print();
 
 
-    // Vector2<float> myVec{1, 2};
-    Vector2<Meter> myVec{1, 2};
-    myVec.Print();
+    // Vector2<Meter> mVec{1.0, 1.0};
+    // std::cout << mVec.Norm() << std::endl;
+
+    // Vector2<Foot> dVec{2.0, 2.0};
+    // std::cout << dVec.Norm() << std::endl;
+
+    Vector2<Inch> iVec{3, 3};
+    iVec.Norm().Print();
+    std::cout << iVec.Norm_d() << std::endl;
+
 }

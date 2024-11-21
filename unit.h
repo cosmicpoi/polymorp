@@ -28,7 +28,7 @@ public:
     void Print()
     {
         std::cout << "Unit print" << std::endl;
-        std::cout << symbol << exponent << std::endl;
+        std::cout << symbol << exponent << " " << value << std::endl;
     }
 
     // type traits accessible at runtime
@@ -41,6 +41,14 @@ public:
      */
     Unit(Type value)
         : value(value) {};
+
+    /**
+     * @brief Get the underlying represented value
+     */
+    Type GetValue()
+    {
+        return value;
+    }
 
     /**
      * @brief Multiply with a unit with the same type and symbol (and any exponent)
@@ -98,7 +106,7 @@ private:
 // Type helpers
 //--------------------------------------------------------------------------------
 
-// ** Concept **
+/* ******* Concept ********* */
 
 // Define the primary template
 template <typename T>
@@ -116,7 +124,7 @@ struct IsUnitHelper<Unit<Symbol, Type, Exponent>> : std::true_type
 template <typename T>
 concept IsUnit = IsUnitHelper<T>::value;
 
-// ** Type traits **
+/* ******* Type traits ********* */
 
 /** 
  * @brief Concept to check if a type is a specialization of Unit
@@ -133,6 +141,8 @@ struct UnitTraits
 //--------------------------------------------------------------------------------
 // Type transformers
 //--------------------------------------------------------------------------------
+
+/* ******* Exponentiators ********* */
 
 /**
  * @brief Adjust exponent by by Delta (i.e. if Delta=1, `m^2` -> `m^3`)
@@ -151,3 +161,6 @@ using Exp1 = AdjustExponent<U, 1>;
  */
 template <IsUnit U>
 using DExp1 = AdjustExponent<U, -1>;
+
+
+/* ******* Casting helpers ********* */
