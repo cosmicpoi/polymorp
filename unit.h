@@ -27,6 +27,7 @@ public:
     // Debug function
     void Print()
     {
+        std::cout << "Unit print" << std::endl;
         std::cout << symbol << exponent << std::endl;
     }
 
@@ -35,16 +36,11 @@ public:
     using type = Type;
     static constexpr int exponent = Exponent;
 
-
-
-    /** 
+    /**
      * @brief Constructor for converting from literal
      */
     Unit(Type value)
-        : value(value) {
-
-            std::cout << "that function is running!" << std::endl;
-        };
+        : value(value) {};
 
     /**
      * @brief Multiply with a unit with the same type and symbol (and any exponent)
@@ -102,29 +98,56 @@ private:
 // Type helpers
 //--------------------------------------------------------------------------------
 
-// Helper type trait to extract template parameters from Unit
-template <typename U>
-struct UnitTraits;
+// ** Concept **
 
-// Specialization for the Unit class
-template <char Symbol, typename Type, int Exponent>
-struct UnitTraits<Unit<Symbol, Type, Exponent>> {
-    static constexpr char symbol = Symbol;
-    using type = Type;
-    static constexpr int exponent = Exponent;
-};
-
-/** @brief Concept to check if a type is a specialization of Unit
- * 
- */
 // Define the primary template
 template <typename T>
-struct IsUnitHelper : std::false_type {};
+struct IsUnitHelper : std::false_type
+{};
 
 // Specialization for the `Unit` template
 template <char Symbol, typename Type, int Exponent>
-struct IsUnitHelper<Unit<Symbol, Type, Exponent>> : std::true_type {};
+struct IsUnitHelper<Unit<Symbol, Type, Exponent>> : std::true_type
+{};
 
-// Define the concept
+/** 
+ * @brief Concept to check if a type is a Unit
+ */
 template <typename T>
 concept IsUnit = IsUnitHelper<T>::value;
+
+// ** Type traits **
+
+/** 
+ * @brief Concept to check if a type is a specialization of Unit
+ */
+template <IsUnit U>
+struct UnitTraits
+{
+    // Extract the parameters directly from U using partial specialization
+    static constexpr char symbol = U::symbol;
+    using type = typename U::type;
+    static constexpr int exponent = U::exponent;
+};
+
+//--------------------------------------------------------------------------------
+// Type transformers
+//--------------------------------------------------------------------------------
+
+/**
+ * @brief Adjust exponent by by Delta (i.e. if Delta=1, `m^2` -> `m^3`)
+ */
+template <IsUnit U, int Delta>
+using AdjustExponent = Unit<U::symbol, typename U::type, U::exponent + Delta>;
+
+/**
+ * @brief Exponentiate by 1 (i.e. `m^2` -> `m^3`)
+ */
+template <IsUnit U>
+using Exp1 = AdjustExponent<U, 1>;
+
+/**
+ * @brief De-exponentiate by 1 (i.e. `m^2` -> `m^1`)
+ */
+template <IsUnit U>
+using DExp1 = AdjustExponent<U, -1>;

@@ -11,8 +11,6 @@ inline Meter operator"" _meter(long double value)
     return Meter{static_cast<double>(value)};
 }
 
-using Foot = Unit<'f', float, 1>;
-
 Meter_2 square_meter(Meter dist)
 {
     return dist * dist;
@@ -20,11 +18,9 @@ Meter_2 square_meter(Meter dist)
 
 int main()
 {
-    Meter dist = 2.5_meter;
-    // square_meter(dist).Print();
+    Exp1<Meter> dist2{3.0};
+    dist2.Print();
 
-    Foot dist2{2};
-    // dist2.Print();
 
     // Vector2<float> myVec{1, 2};
     Vector2<Meter> myVec{1, 2};

@@ -12,6 +12,7 @@ class Vector2
 public:
     void Print()
     {
+        std::cout << "Vector2 print" << std::endl;
         std::cout << UnitTraits<U>::symbol << std::endl;
         x.Print();
         y.Print();
@@ -28,6 +29,8 @@ public:
      * @brief Constructor for converting from literals
      */
     // inline Vector2(Type cx, Type cy) : x(cx), y(cy) {}
+
+    // U 
 
 private:
     U x;
