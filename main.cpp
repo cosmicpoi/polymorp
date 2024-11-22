@@ -38,4 +38,8 @@ int main()
     iVec.Norm().Print();
     std::cout << iVec.Norm_d() << std::endl;
 
+    Vector4<Inch> iVec4{1, 2, 3, 4};
+    iVec4.Print();
+
+
 }
