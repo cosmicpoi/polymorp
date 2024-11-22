@@ -4,6 +4,10 @@
 #include "Unit.h"
 #include "UnitMath.h"
 
+//--------------------------------------------------------------------------------
+// Vector class
+//--------------------------------------------------------------------------------
+
 template <size_t N>
 concept ValidVectorSize = (N == 2 || N == 3 || N == 4);
 
@@ -116,9 +120,23 @@ public:
         return myV;
     }
 
+    /**
+     * @brief Dot product
+     */
+    template <IsUnit RHS>
+    VectorN<AdjustExponent<U, RHS::exponent>> Dot(RHS rhs)
+        requires IsSameUnit<U, RHS>
+    {
+        VectorN<AdjustExponent<U, RHS::exponent>> myV;
+        return myV;
+    }
+    
+
 private:
     U v[N] = {};
 };
+
+// Some aliases
 
 template <IsUnit U>
 using Vector2 = Vector<2, U>;
@@ -128,3 +146,7 @@ using Vector3 = Vector<3, U>;
 
 template <IsUnit U>
 using Vector4 = Vector<4, U>;
+
+//--------------------------------------------------------------------------------
+// Concepts
+//--------------------------------------------------------------------------------

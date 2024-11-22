@@ -102,11 +102,12 @@ private:
     Type value;
 };
 
+
 //--------------------------------------------------------------------------------
-// Type helpers
+// Concepts
 //--------------------------------------------------------------------------------
 
-/* ******* Concept ********* */
+/* ******* Basic Concept ********* */
 
 // Define the primary template
 template <typename T>
@@ -124,19 +125,33 @@ struct IsUnitHelper<Unit<Symbol, Type, Exponent>> : std::true_type
 template <typename T>
 concept IsUnit = IsUnitHelper<T>::value;
 
-/* ******* Type traits ********* */
 
-/** 
- * @brief Helper to inspect unit traits
+/* ******* Pairwise unit checking ********* */
+
+/**
+ * @brief Concept that matches units of the same symbol and type, but possibly different exponent (e.g. a float `m` and float `m^2`)
  */
-template <IsUnit U>
-struct UnitTraits
+template<typename U, typename V>
+concept BothUnits = IsUnit<U> && IsUnit<V>;
+
+template<typename U, typename V>
+concept IsSameSymbol = requires
 {
-    // Extract the parameters directly from U using partial specialization
-    static constexpr char symbol = U::symbol;
-    using type = typename U::type;
-    static constexpr int exponent = U::exponent;
-};
+    { V::symbol } -> std::same_as<const char&>;
+    { U::symbol } -> std::same_as<const char&>;
+    { V::symbol == U::symbol } -> std::same_as<bool>;
+} && (V::symbol == U::symbol);
+
+template<typename U, typename V>
+concept IsSameType = requires
+{
+    typename V::type;
+    typename U::type;
+} && std::same_as<typename V::type, typename U::type>;
+
+template<typename U, typename V>
+concept IsSameUnit = BothUnits<U, V> && IsSameSymbol<U, V> && IsSameType<U, V>;
+
 
 //--------------------------------------------------------------------------------
 // Type transformers
@@ -175,33 +190,3 @@ concept IsEven = (N % 2 == 0);
  */
 template <IsUnit U> requires IsEven<U::exponent>
 using HalfExp = AdjustExponent<U, -U::exponent / 2>;
-
-/**
- * @brief Concept that matches units of the same symbol and type, but possibly different exponent (e.g. a float `m` and float `m^2`)
- */
-template<typename U, typename V>
-concept BothUnits = IsUnit<U> && IsUnit<V>;
-
-template<typename U, typename V>
-concept IsSameSymbol = requires
-{
-    { V::symbol } -> std::same_as<const char&>;
-    { U::symbol } -> std::same_as<const char&>;
-    { V::symbol == U::symbol } -> std::same_as<bool>;
-} && (V::symbol == U::symbol);
-
-template<typename U, typename V>
-concept IsSameType = requires
-{
-    typename V::type;
-    typename U::type;
-} && std::same_as<typename V::type, typename U::type>;
-
-template<typename U, typename V>
-concept IsSameUnit = BothUnits<U, V> && IsSameSymbol<U, V> && IsSameType<U, V>;
-
-// concept IsSameUnit = requires {
-//     { U::symbol == V::symbol } -> std::same_as<bool>;
-// };
-
-/* ******* Casting helpers ********* */
