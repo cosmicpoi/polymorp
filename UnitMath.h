@@ -5,7 +5,7 @@
 
 
 template<IsUnit U>
-inline DExp1<U> squareRoot(U val)
+inline HalfExp<U> squareRoot(U val)
 {
     if constexpr (std::is_integral_v<typename U::type>)
     {

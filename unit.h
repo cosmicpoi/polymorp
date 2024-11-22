@@ -127,7 +127,7 @@ concept IsUnit = IsUnitHelper<T>::value;
 /* ******* Type traits ********* */
 
 /** 
- * @brief Concept to check if a type is a specialization of Unit
+ * @brief Helper to inspect unit traits
  */
 template <IsUnit U>
 struct UnitTraits
@@ -162,5 +162,46 @@ using Exp1 = AdjustExponent<U, 1>;
 template <IsUnit U>
 using DExp1 = AdjustExponent<U, -1>;
 
+/**
+ * @brief Double the exponent of U
+ */
+template <IsUnit U>
+using DoubleExp = AdjustExponent<U, U::exponent>;
+
+template <int N>
+concept IsEven = (N % 2 == 0);
+/**
+ * @brief Half the exponent of U (can only be used on even numbers)
+ */
+template <IsUnit U> requires IsEven<U::exponent>
+using HalfExp = AdjustExponent<U, -U::exponent / 2>;
+
+/**
+ * @brief Concept that matches units of the same symbol and type, but possibly different exponent (e.g. a float `m` and float `m^2`)
+ */
+template<typename U, typename V>
+concept BothUnits = IsUnit<U> && IsUnit<V>;
+
+template<typename U, typename V>
+concept IsSameSymbol = requires
+{
+    { V::symbol } -> std::same_as<const char&>;
+    { U::symbol } -> std::same_as<const char&>;
+    { V::symbol == U::symbol } -> std::same_as<bool>;
+} && (V::symbol == U::symbol);
+
+template<typename U, typename V>
+concept IsSameType = requires
+{
+    typename V::type;
+    typename U::type;
+} && std::same_as<typename V::type, typename U::type>;
+
+template<typename U, typename V>
+concept IsSameUnit = BothUnits<U, V> && IsSameSymbol<U, V> && IsSameType<U, V>;
+
+// concept IsSameUnit = requires {
+//     { U::symbol == V::symbol } -> std::same_as<bool>;
+// };
 
 /* ******* Casting helpers ********* */
