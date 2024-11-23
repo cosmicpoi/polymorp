@@ -150,7 +150,7 @@ concept IsSameType = requires
 } && std::same_as<typename V::type, typename U::type>;
 
 template<typename U, typename V>
-concept IsSameUnit = BothUnits<U, V> && IsSameSymbol<U, V> && IsSameType<U, V>;
+concept IsLikeUnit = BothUnits<U, V> && IsSameSymbol<U, V> && IsSameType<U, V>;
 
 
 //--------------------------------------------------------------------------------

@@ -1,3 +1,9 @@
+//--------------------------------------------------------------------------------
+// Vector class
+//
+//   Support for building Vectors out of Units
+//--------------------------------------------------------------------------------
+
 #pragma once
 
 #include <cmath>
@@ -37,6 +43,8 @@ public:
         }
         std::cout << std::endl;
     }
+
+    static constexpr size_t n = N;
 
     template <IsUnit UU>
     using VectorN = Vector<N, UU>;
@@ -114,23 +122,30 @@ public:
      */
     template <IsUnit RHS>
     VectorN<AdjustExponent<U, RHS::exponent>> operator*(RHS rhs)
-        requires IsSameUnit<U, RHS>
+        requires IsLikeUnit<U, RHS>
     {
-        VectorN<AdjustExponent<U, RHS::exponent>> myV;
-        return myV;
+        if constexpr (N == 2)
+        {
+            VectorN<AdjustExponent<U, RHS::exponent>> myV{v[0] * rhs, v[1] * rhs};
+            return myV;
+        }
+        else
+        {
+            VectorN<AdjustExponent<U, RHS::exponent>> myV;
+            return myV;
+        }
     }
 
     /**
      * @brief Dot product
      */
-    template <IsUnit RHS>
-    VectorN<AdjustExponent<U, RHS::exponent>> Dot(RHS rhs)
-        requires IsSameUnit<U, RHS>
-    {
-        VectorN<AdjustExponent<U, RHS::exponent>> myV;
-        return myV;
-    }
-    
+    // template <IsUnit RHS>
+    // VectorN<AdjustExponent<U, RHS::exponent>> Dot(RHS rhs)
+    //     requires IsLikeUnit<U, RHS>
+    // {
+    //     VectorN<AdjustExponent<U, RHS::exponent>> myV;
+    //     return myV;
+    // }
 
 private:
     U v[N] = {};
@@ -150,3 +165,35 @@ using Vector4 = Vector<4, U>;
 //--------------------------------------------------------------------------------
 // Concepts
 //--------------------------------------------------------------------------------
+
+/* ******* Is Vector ********* */
+
+// Define the primary template
+template <typename T>
+struct IsVectorHelper : std::false_type
+{
+};
+
+// Specialization for the `Unit` template
+template <size_t N, IsUnit U>
+    requires ValidVectorSize<N>
+struct IsVectorHelper<Vector<N, U>> : std::true_type
+{
+};
+
+/**
+ * @brief Concept to check if a type is a `Vector` with `Units`
+ */
+template <typename T>
+concept IsVector = IsVectorHelper<T>::value;
+
+/* ******* Is Vector of size N ********* */
+template <size_t N, typename T>
+concept IsOfSize = requires {
+    { T::n } -> std::same_as<const size_t &>;
+} && (T::n == N);
+
+template <size_t N, typename T>
+concept IsVectorN = IsVector<T> && IsOfSize<N, T> && ValidVectorSize<N>;
+
+/* ******* Is Vector with like units ********* */

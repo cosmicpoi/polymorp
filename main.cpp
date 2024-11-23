@@ -1,60 +1,143 @@
 // Run tests
 #include "Unit.h"
+#include "UnitIdentifier.h"
 #include "UnitMath.h"
 #include "Vector.h"
+#include "CompoundUnit.h"
+#include "StringLiteral.h"
 #include <iostream>
 
-using Meter = Unit<'m', double, 1>;
-using Meter_2 = Unit<'m', double, 2>;
+// using Meter = Unit<'m', double, 1>;
+// using Meter_2 = Unit<'m', double, 2>;
 
-using Foot = Unit<'f', float, 1>;
-using Foot_2 = Unit<'f', float, 2>;
+// using Foot = Unit<'f', float, 1>;
+// using Foot_2 = Unit<'f', float, 2>;
 
-using Inch = Unit<'i', int, 1>;
-using Inch_2 = Unit<'i', int, 2>;
+// using Inch = Unit<'i', int, 1>;
+// using Inch_2 = Unit<'i', int, 2>;
 
-inline Meter operator"" _meter(long double value)
+// inline Meter operator"" _meter(long double value)
+// {
+//     return Meter{static_cast<double>(value)};
+// }
+
+
+// using Yard = UnitBase<'y', 1>;
+// using Pop = UnitBase<'p', 2>;
+
+#include <utility>
+#include <type_traits>
+#include <array>
+#include <algorithm>
+#include <initializer_list>
+
+
+/**
+ * 1. Define a vector of UnitLeaf (already done)
+ */
+
+/**
+ * 2. Add printability (already done)
+ */
+
+/**
+ * 3. Define prepend
+ */
+
+// ---------
+
+template <typename T>
+struct IsIntegerSequenceHelper : std::false_type
+{};
+
+// Specialization for the `Unit` template
+template <typename T, T... ints>
+struct IsIntegerSequenceHelper<std::integer_sequence<T, ints...>> : std::true_type
 {
-    return Meter{static_cast<double>(value)};
+    static void Print()
+    {
+        // std::cout << 'z' << std::endl;
+        // PrintMany_St<ints...>();
+    }
+};
+
+template <typename T>
+concept IsIntegerSequence = IsIntegerSequenceHelper<T>::value;
+
+// ----
+
+
+// template<typename T>
+// void PrintIndexSeq()
+// {
+//     std::cout << 'x' << std::endl;
+// }
+
+template<IsIntegerSequence T>
+void PrintIndexSeq()
+{
+    std::cout << 'y' << std::endl;
 }
 
+// template <char... Ns>
+// using GetIdxSeq = std::index_sequence_for<Ns...>;
+
+template <char C>
+struct CharWrapper
+{   
+};
+
+// Assertion checks
+using Leaf1 = UnitLeaf<"hello", 1>;
+using Leaf2 = UnitLeaf<"sup", 1>;
+
+using ULV1 = ULPrepend<Leaf1, UnitLeafVector<Leaf1, Leaf2>>;
+using ULV2 = UnitLeafVector<Leaf1, Leaf1, Leaf2>;
+
+static_assert(std::is_same_v<ULV1, ULV2>, "Prepend OK");
+
+int main() {
+    // MyType<'a', 'b', 'c'>;
+
+    // PrintSingle<'a'>();
+    // PrintMany<'a', 'b', 'c'>();
+
+    // PrintIndexSeq<GetIdxSeq<'a', 'b', 'c'>>();
+
+    // using seq = std::index_sequence_for<CharWrapper<'a'>, CharWrapper<'b'>, CharWrapper<'c'>>;
+    // IsIntegerSequenceHelper<seq>::Print();
+
+    using Leaf1 = UnitLeaf<"hello", 1>;
+    using Leaf2 = UnitLeaf<"sup", 2>;
+    using Leaf3 = UnitLeaf<"uwuw", 3>;
+
+    using ULV = UnitLeafVector<Leaf3, Leaf2, Leaf1>;
+
+    // std::cout << IsUnitLeaf<Leaf1> << std::endl;
+    // std::cout << IsUnitLeafVector<ULV> << std::endl;
+
+    // ULPrepend<Leaf1, ULV>::Print();
+
+    // ULAppend<Leaf1, ULV>::Print();
+
+    // std::cout << std::is_same_v<ULPrepend<Leaf1, ULV>, UnitLeafVector<Leaf1, Leaf1, Leaf2>> << std::endl;
 
 
-int main()
-{
-    // std::cout << IsSameUnit<Meter, Meter_2> << std::endl;
-    // Meter_2 mVal{2.0};
-    // squareRoot(mVal).Print();
+    // ULRemoveFirst<Leaf2, ULV>::Print();
 
-    // Foot_2 fVal{2.0};
-    // squareRoot(fVal).Print();
+    // std::cout << ULCompare<Leaf1, Leaf2> << std::endl;
 
-    // Inch_2 iVal{2};
-    // squareRoot(iVal).Print();
+    // ULGreaterOf<UnitLeaf<"hello", 3>, UnitLeaf<"hello", 1>>::Print();    
 
-    // Unit<'x', float, 4> myV{2.0};
-    // myV.Print();
-    // squareRoot(myV).Print();
+    // ULGreaterOf<UnitLeaf<"sub", -1>, UnitLeaf<"hello", 1>>::Print();    
 
 
-    Vector2<Meter> mVec2(0, 0);
+    // using seq2 = SortSequence_t<std::integer_sequence<int, 1, 3, 2>>;
+    // IsIntegerSequenceHelper<seq2>::Print();
 
-    Vector4<Meter> mVec{};
-    std::cout << mVec.Norm().GetValue() << std::endl;
-    mVec.Print();
-    (mVec * 1.0_meter).Print();
-    // Unit<'m', int, 1> badMeter = 0;
-    // (mVec * badMeter).Print(); // causes compilation error
+    ULMin<UnitLeafVector<Leaf3, Leaf2, Leaf1, Leaf1, Leaf1, Leaf3>>::Print();
 
-    // // Vector2<Foot> dVec{2.0, 2.0};
-    // // std::cout << dVec.Norm() << std::endl;
+    std::cout << std::endl;
 
-    // Vector2<Inch> iVec{3, 3};
-    // iVec.Norm().Print();
-    // std::cout << iVec.Norm_d() << std::endl;
-
-    // Vector4<Inch> iVec4{1, 2, 3, 4};
-    // iVec4.Print();
-
-
+    
 }
