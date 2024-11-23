@@ -1,6 +1,7 @@
 #pragma once
 #include "StringLiteral.h"
 #include "TypeUtils.h"
+#include <string>
 
 /**
  * UnitIdentifier - the unique representation of a particular unit. Comprised of atomic units and exponents
@@ -11,7 +12,7 @@
 template <StringLiteral Symbol, int Exponent>
 struct UnitLeaf
 {
-    static constexpr const char *symbol = Symbol;
+    static constexpr StringLiteral symbol = Symbol;
     static constexpr int exponent = Exponent;
 
     static void Print()
@@ -174,8 +175,14 @@ concept _CompareExp = requires {
 } && (A::exponent < B::exponent);
 
 template <typename A, typename B>
+concept _CompareSymb = requires {
+    A::symbol;
+    B::symbol;
+} && (CompareStrings<A::symbol, B::symbol>::value);
+
+template <typename A, typename B>
+concept ULCompare = IsUnitLeaf<A> && IsUnitLeaf<B> && _CompareSymb<A, B>;
 // concept ULCompare = IsUnitLeaf<A> && IsUnitLeaf<B> && _CompareExp<A, B>;
-concept ULCompare = _CompareExp<A, B>;
 
 // Comparison selector GreaterOf
 template <typename A, typename B>

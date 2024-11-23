@@ -107,9 +107,9 @@ int main() {
     // using seq = std::index_sequence_for<CharWrapper<'a'>, CharWrapper<'b'>, CharWrapper<'c'>>;
     // IsIntegerSequenceHelper<seq>::Print();
 
-    using Leaf1 = UnitLeaf<"hello", 1>;
-    using Leaf2 = UnitLeaf<"sup", 2>;
-    using Leaf3 = UnitLeaf<"uwuw", 3>;
+    using Leaf1 = UnitLeaf<"aello", 1>;
+    using Leaf2 = UnitLeaf<"dup", 2>;
+    using Leaf3 = UnitLeaf<"zwuw", 3>;
 
     using ULV = UnitLeafVector<Leaf3, Leaf2, Leaf1>;
 
@@ -136,8 +136,19 @@ int main() {
     // IsIntegerSequenceHelper<seq2>::Print();
 
     ULMin<UnitLeafVector<Leaf3, Leaf2, Leaf1, Leaf1, Leaf1, Leaf3>>::Print();
-
     std::cout << std::endl;
+    ULMin<UnitLeafVector<Leaf1, Leaf2, Leaf3>>::Print();
+    std::cout << std::endl;
+    ULMin<UnitLeafVector<Leaf3, Leaf2, Leaf1>>::Print();
+    std::cout << std::endl;
+
+    constexpr auto strLit1 = MakeStrLitHelper<"aaaa">::str;
+    constexpr auto strLit2 = MakeStrLitHelper<"bbbb">::str;
+
+    std::cout << CompareStrings<strLit1, strLit2>::value << std::endl;
+    std::cout << CompareStrings<strLit2, strLit1>::value << std::endl;
+
+    
 
     
 }

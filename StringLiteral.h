@@ -12,28 +12,26 @@ struct StringLiteral
     {
         std::copy_n(str, N, data);
     }
+};
 
-    // Commenting these out until we use them; no need for an overly complex implementation
+// Compare two StringLiterals lexicographically at compile-time
 
-    // consteval bool operator==(const StringLiteral<N> str) const
-    // {
-    //     return std::equal(str.data, str.data + N, data);
-    // }
+constexpr bool const_strcmp(const char* str1, const char* str2) {
+    size_t idx = 0;
+    while (str1[idx] && str1[idx] == str2[idx])
+    {
+        idx++;
+    }
+    
+    // Return the difference between the ASCII values of the mismatched characters
+    return str1[idx] - str2[idx] > 0 ? true : false;
+}
 
-    // template <std::size_t N2>
-    // consteval bool operator==(const StringLiteral<N2>) const
-    // {
-    //     return false;
-    // }
-
-    // consteval char operator[](std::size_t n) const {
-    //     return data[n];
-    // }
-
-    // consteval std::size_t size() const
-    // {
-    //     return N - 1;
-    // }
+// Specialization for comparing two StringLiteral types
+template <StringLiteral T1, StringLiteral T2>
+struct CompareStrings
+{
+    static constexpr bool value = const_strcmp(T1.data, T2.data);
 };
 
 
@@ -51,16 +49,6 @@ void PrintStrLit_Endl() {
     std::cout << std::endl;
 }
 
-/** Equality helper */
-// template<StringLiteral Str1, StringLiteral Str2>
-// struct IsSameLiteralHelper
-// {
-//     static constexpr bool value = Str1.value == Str2.value;
-// };
-
-// template<StringLiteral Str1, StringLiteral Str2>
-// using IsSameLiteral = IsSameLiteralHelper<Str1, Str2>::value;
-
 /** Type trait */
 // This is just a wrapper since StringLiteral<"MyStr"> will give an error saying "MyStr" isn't type size_t
 
@@ -73,6 +61,8 @@ struct MakeStrLitHelper
 
 template <StringLiteral Str>
 using MakeStrLit = typename MakeStrLitHelper<Str>::str;
+
+// Helpers for sorting
 
 
 // Helper for getting underlying data from string lit
