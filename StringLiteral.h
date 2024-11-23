@@ -27,12 +27,20 @@ constexpr bool const_strcmp(const char* str1, const char* str2) {
     return str1[idx] - str2[idx] > 0 ? true : false;
 }
 
-// Specialization for comparing two StringLiteral types
+// Comparing two StringLiteral types
 template <StringLiteral T1, StringLiteral T2>
 struct CompareStrings
 {
     static constexpr bool value = const_strcmp(T1.data, T2.data);
 };
+
+//
+template <StringLiteral T1, StringLiteral T2>
+struct StrEq
+{
+    static constexpr bool value = const_strcmp(T1.data, T2.data) == 0;
+};
+
 
 
  /** Print helper function */

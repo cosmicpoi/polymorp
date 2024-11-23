@@ -107,9 +107,10 @@ int main() {
     // using seq = std::index_sequence_for<CharWrapper<'a'>, CharWrapper<'b'>, CharWrapper<'c'>>;
     // IsIntegerSequenceHelper<seq>::Print();
 
-    using Leaf1 = UnitLeaf<"aello", 1>;
-    using Leaf2 = UnitLeaf<"dup", 2>;
-    using Leaf3 = UnitLeaf<"zwuw", 3>;
+    using Leaf1 = UnitLeaf<"aaa", 1>;
+    using Leaf2 = UnitLeaf<"bbb", 2>;
+    using Leaf3 = UnitLeaf<"ccc", 3>;
+    using Leaf4 = UnitLeaf<"aaaa", 1>;
 
     using ULV = UnitLeafVector<Leaf3, Leaf2, Leaf1>;
 
@@ -148,6 +149,25 @@ int main() {
     std::cout << CompareStrings<strLit1, strLit2>::value << std::endl;
     std::cout << CompareStrings<strLit2, strLit1>::value << std::endl;
 
+    ULSort<UnitLeafVector<Leaf3, Leaf2, Leaf1, Leaf4>>::Print();
+    std::cout << std::endl;
+
+    ULSort<UnitLeafVector<Leaf1, Leaf3, Leaf4, Leaf2>>::Print();
+    std::cout << std::endl;
+
+    ULSort<ULConcat<ULV, ULV>>::Print();
+    ULMerge_<ULSort<ULConcat<ULV, ULV>>>::type::Print();
+    ULMerge_<UnitLeafVector<Leaf1, Leaf1, Leaf1>>::type::Print();
+
+    using UL1 = UnitLeaf<"aaaa", 1>;
+    using UL2 = UnitLeaf<"aaaa", 2>;
+    std::cout << StrEq<UL1::symbol, UL2::symbol>::value << std::endl;
+    std::cout << ULIsSameSymbol<UL1, UL2> << std::endl;
+
+    ULCombine<UL1, UL2>::Print();
+    std::cout << std::endl;
+
+    
     
 
     

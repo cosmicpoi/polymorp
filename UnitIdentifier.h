@@ -1,4 +1,8 @@
+
+// ULSorting functionality adapted from https://www.slamecka.cz/posts/2021-03-17-cpp-metaprogramming-exercises-1/
+
 #pragma once
+
 #include "StringLiteral.h"
 #include "TypeUtils.h"
 #include <string>
@@ -76,6 +80,30 @@ struct IsUnitLeafVectorHelper<UnitLeafVector<Ts...>> : std::true_type
 template <typename T>
 concept IsUnitLeafVector = IsUnitLeafVectorHelper<T>::value && HasPrint<T>;
 
+/** Concept to match UnitLeaves of same symbol */
+template <typename A, typename B>
+concept _IsSameSymbol = requires {
+    A::symbol;
+    B::symbol;
+} && (StrEq<A::symbol, B::symbol>::value);
+
+template <typename A, typename B>
+concept ULIsSameSymbol = IsUnitLeaf<A> && IsUnitLeaf<B> && _IsSameSymbol<A, B>;
+
+/** Combine two unitleaves (and add their exponents) */
+template <typename U, typename V> requires(IsUnitLeaf<U> && IsUnitLeaf<V>)
+struct ULCombine_;
+
+template <typename U, typename V> requires(IsUnitLeaf<U> && IsUnitLeaf<V> && ULIsSameSymbol<U, V>)
+struct ULCombine_<U, V>
+{
+    using type = UnitLeaf<U::symbol, U::exponent + V::exponent>;
+};
+
+template <typename U, typename V> requires(IsUnitLeaf<U> && IsUnitLeaf<V> && ULIsSameSymbol<U, V>)
+using ULCombine = typename ULCombine_<U, V>::type;
+
+
 /** Prepend to a UnitLeafVector */
 
 template <typename H, typename V>
@@ -136,6 +164,22 @@ using ULAppend = typename ULAppendHelper<H, V>::type;
 //     using type = UnitLeafVector<T...>;
 // };
 
+/** concat two lists */
+
+template <typename U, typename V>
+    requires(IsUnitLeafVector<U> && IsUnitLeafVector<V>)
+struct ULConcat_;
+
+template <IsUnitLeaf... V1, IsUnitLeaf... V2>
+struct ULConcat_<UnitLeafVector<V1...>, UnitLeafVector<V2...>>
+{
+    using type = UnitLeafVector<V1..., V2...>;
+};
+
+template <typename U, typename V>
+    requires(IsUnitLeafVector<U> && IsUnitLeafVector<V>)
+using ULConcat = typename ULConcat_<U, V>::type;
+
 /** Remove first occurrence of element R from Vector V */
 
 template <typename R, typename V>
@@ -184,7 +228,7 @@ template <typename A, typename B>
 concept ULCompare = IsUnitLeaf<A> && IsUnitLeaf<B> && _CompareSymb<A, B>;
 // concept ULCompare = IsUnitLeaf<A> && IsUnitLeaf<B> && _CompareExp<A, B>;
 
-// Comparison selector GreaterOf
+// Comparison selector SmallerOf
 template <typename A, typename B>
     requires(IsUnitLeaf<A> && IsUnitLeaf<B>)
 struct ULSmallerOf_
@@ -240,3 +284,67 @@ struct ULMin_<UnitLeafVector<H, T...>>
 template <typename V>
     requires(IsUnitLeafVector<V>)
 using ULMin = typename ULMin_<V>::min;
+
+/** Define sort */
+
+template <typename Prefix, typename Rest>
+    requires(IsUnitLeafVector<Prefix> && IsUnitLeafVector<Rest>)
+struct ULSortRecurse;
+
+template <IsUnitLeaf... Prefix, IsUnitLeaf H, IsUnitLeaf... T>
+struct ULSortRecurse<UnitLeafVector<Prefix...>, UnitLeafVector<H, T...>>
+{
+    using min = ULMin<UnitLeafVector<H, T...>>;
+    using rest = ULRemoveFirst<min, UnitLeafVector<H, T...>>;
+    using type = typename ULSortRecurse<ULAppend<min, UnitLeafVector<Prefix...>>, rest>::type;
+};
+
+template <IsUnitLeaf... Prefix, IsUnitLeaf... T>
+    requires(sizeof...(T) == 0)
+struct ULSortRecurse<UnitLeafVector<Prefix...>, UnitLeafVector<T...>>
+{
+    using type = UnitLeafVector<Prefix...>;
+};
+
+template <typename T>
+struct ULSort_;
+
+template <IsUnitLeaf... T>
+struct ULSort_<UnitLeafVector<T...>>
+{
+    using type = typename ULSortRecurse<UnitLeafVector<>, UnitLeafVector<T...>>::type;
+};
+
+template <typename V>
+    requires(IsUnitLeafVector<V>)
+using ULSort = typename ULSort_<V>::type;
+
+/** Merge duplicates in a list */
+
+template <typename V>
+    requires(IsUnitLeafVector<V>)
+struct ULMerge_;
+
+template <IsUnitLeaf H1, IsUnitLeaf H2, IsUnitLeaf... T> requires ULIsSameSymbol<H1, H2>
+struct ULMerge_<UnitLeafVector<H1, H2, T...>> // if there are duplicates, merge
+{
+    using Combined = ULCombine<H1, H2>;
+    using type = typename ULMerge_<UnitLeafVector<Combined, T...>>::type;
+};
+
+template <IsUnitLeaf H, IsUnitLeaf... T> // if there are no duplicates, go to next index
+struct ULMerge_<UnitLeafVector<H, T...>>
+{
+    using type = ULPrepend<H, typename ULMerge_<UnitLeafVector<T...>>::type>;
+};
+
+template <IsUnitLeaf... T>
+    requires(sizeof...(T) == 0) // if we've reached the end
+struct ULMerge_<UnitLeafVector<T...>>
+{
+    using type = UnitLeafVector<T...>;
+};
+
+/** Remove exp 0 */
+
+/** GetUnique - combine exponents and remove zeros */
