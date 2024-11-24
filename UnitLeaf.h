@@ -3,6 +3,7 @@
 
 #pragma once
 
+#include <iostream>
 #include "StringLiteral.h"
 #include "TypeUtils.h"
 #include <string>
@@ -56,7 +57,6 @@ struct UnitLeafVector
          {
             Ts::Print();
             std::cout << "; "; }(), ...);
-        std::cout << std::endl;
     }
 };
 

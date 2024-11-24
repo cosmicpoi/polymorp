@@ -1,6 +1,7 @@
 // Adapted from https://dev.to/sgf4/strings-as-template-parameters-c20-4joh
 #pragma once
 
+#include <iostream>
 #include <algorithm>
 
 template<std::size_t N>
@@ -41,8 +42,6 @@ struct StrEq
     static constexpr bool value = const_strcmp(T1.data, T2.data) == 0;
 };
 
-
-
  /** Print helper function */
  // https://ctrpeach.io/posts/cpp20-string-literal-template-parameters/
 
@@ -69,21 +68,3 @@ struct MakeStrLitHelper
 
 template <StringLiteral Str>
 using MakeStrLit = typename MakeStrLitHelper<Str>::str;
-
-// Helpers for sorting
-
-
-// Helper for getting underlying data from string lit
-// template <StringLiteral Str>
-// struct StrLitGetHelper
-// {
-//     static constexpr const char* str = Str.data;
-// };
-
-
-// template <StringLiteral Str>
-// const char* StrLitGet()
-// {
-//     return StrLitGetHelper<Str>::str;
-// }
- 

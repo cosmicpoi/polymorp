@@ -10,6 +10,11 @@ concept UnitIdentifier = IsUnitLeafVector<V> && std::is_same_v<V, ULGetUnique<V>
 template <StringLiteral Symbol, int Exponent>
 using UnitBase = UnitLeaf<Symbol, Exponent>;
 
+/** Shorthand to make a UnitBase with exp 1 */
+template <StringLiteral Symbol>
+using UnitAtomic = UnitBase<Symbol, 1>;
+
+
 /** Other aliases */
 template <UnitIdentifier V>
 using UIInvert = InvertUnitLeafVector<V>;

@@ -1,28 +1,29 @@
 // Run tests
 #include "Unit.h"
-#include "UnitIdentifier.h"
-#include "UnitMath.h"
-#include "Vector.h"
-#include <iostream>
+
+using Meter = Unit<double, MakeUnitIdentifier<UnitAtomic<"meter">>>;
+using Meter_2 = Unit<double, MakeUnitIdentifier<UnitBase<"meter", 2>>>;
+
+inline Meter operator"" _meter(long double value)
+{
+    return Meter{static_cast<double>(value)};
+}
 
 
 
-// inline Meter operator"" _meter(long double value)
-// {
-//     return Meter{static_cast<double>(value)};
-// }
-
-
-int main() {
-    using UL1 = UnitBase<"aaaa", 1>;
-    using UL2 = UnitBase<"bbbb", 2>;
-    using UL3 = UnitBase<"cccc", -1>;
+int main()
+{
     
-    using UI_1 = MakeUnitIdentifier<UL1, UL3, UL2>;
-    UI_1::Print();
-    // UI_1::type::Print();
-    using UI_2 = MakeUnitIdentifier<UL2, UL3, UL3>;
-    UI_2::Print();
 
-    UIDivide<UI_1, UI_2>::Print();
+    Meter myVal = 1.2;
+    Meter_2 myVal2 = 3.0;
+
+
+    myVal.Print();
+    std::cout << std::endl;
+
+    (myVal - 2.0_meter).Print();
+    
+    std::cout << std::endl; 
+
 }
