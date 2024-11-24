@@ -1,8 +1,15 @@
 // Run tests
 #include "Unit.h"
+#include "UnitMath.h"
 
 using Meter = Unit<double, MakeUnitIdentifier<UnitAtomic<"meter">>>;
 using Meter_2 = Unit<double, MakeUnitIdentifier<UnitBase<"meter", std::ratio<2>>>>;
+
+using KM_2 = Unit<
+    double,
+    MakeUnitIdentifier<UnitBase<"meter", std::ratio<2>>>,
+    std::ratio<1000000>
+>;
 
 inline Meter operator"" _meter(long double value)
 {
@@ -13,29 +20,14 @@ inline Meter operator"" _meter(long double value)
 
 int main()
 {
-    PrintRatio<std::ratio<2, 4>>();
-    std::cout << std::endl;
-    using U2 = Unit<double, 
-        MakeUnitIdentifier<
-            UnitBase<"meter", std::ratio<2,3>>,
-            UnitBase<"second", std::ratio<3,7>>
-        >
-    >;
-    U2::PrintInfo();
-    std::cout << std::endl; 
-
-    UIMult<typename U2::uid, typename Meter::uid>::Print();
-    std::cout << std::endl; 
-
-    Meter myVal = 1.2;
-    Meter_2 myVal2 = 3.0;
-
-
-    myVal.Print();
+    KM_2 myVal2 = 1;
+    myVal2.Print();
     std::cout << std::endl;
 
-    (myVal - 2.0_meter).Print();
-    
-    std::cout << std::endl; 
+    unit_sqrt(myVal2).Print();
+    std::cout << std::endl;
+
+    unit_pow<decltype(myVal2), std::ratio<2,7>>(myVal2).Print();
+    std::cout << std::endl;
 
 }

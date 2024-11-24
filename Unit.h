@@ -81,3 +81,19 @@ public:
     /** @brief Underlying value */
     Type value = 0;
 };
+
+// Concept to match Unit
+template <typename T>
+struct IsUnitHelper : std::false_type
+{
+};
+
+// Specialization for the `Unit` template
+template <typename Type, UnitIdentifier UID, IsRatio Ratio>
+struct IsUnitHelper<Unit<Type, UID, Ratio>> : std::true_type
+{
+};
+
+template <typename T>
+concept IsUnit = IsUnitHelper<T>::value;
+

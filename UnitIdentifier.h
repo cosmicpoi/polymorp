@@ -30,3 +30,7 @@ using UIMult = ULGetUnique<ULConcat<A, B>>;
 /** Divide = compute A / B */
 template <UnitIdentifier A, UnitIdentifier B>
 using UIDivide = ULGetUnique<ULConcat<A, UIInvert<B>>>;
+
+/** Exponentiate: compute UID^(some ratio) */
+template <UnitIdentifier A, IsRatio Exp>
+using UIExp = ExpUnitLeafVector<A, Exp>;

@@ -137,6 +137,7 @@ template <typename A, typename B>
     requires(IsUnitLeaf<A> && IsUnitLeaf<B>)
 using ULSmallerOf = typename ULSmallerOf_<A, B>::type;
 
+
 /** Combine two unitleaves (and add their exponents) */
 template <typename U, typename V>
     requires(IsUnitLeaf<U> && IsUnitLeaf<V>)
@@ -184,34 +185,6 @@ struct ULAppendHelper<H, UnitLeafVector<T...>>
 template <typename H, typename V>
     requires(IsUnitLeaf<H> && IsUnitLeafVector<V>)
 using ULAppend = typename ULAppendHelper<H, V>::type;
-
-/* recursively - for the exercise */
-
-// template<typename H, typename V> requires (IsUnitLeaf<H> and IsUnitLeafVector<V>)
-// struct ULAppend_;
-
-// template<IsUnitLeaf E, IsUnitLeaf H, IsUnitLeaf... T>
-// struct ULAppend_<E, UnitLeafVector<H, T...>>
-// {
-//     using type = ULPrepend<H, typename ULAppend_<E, UnitLeafVector<T...>>::type>;
-// };
-
-// template<IsUnitLeaf E, IsUnitLeaf... T> requires (sizeof...(T) == 0)
-// struct ULAppend_<E, UnitLeafVector<T...>>
-// {
-//     using type = UnitLeafVector<E>;
-// };
-
-/* popback - for the exercise */
-
-// template<typename T> requires IsUnitLeafVector<T>
-// struct PopBack;
-
-// template<IsUnitLeaf H, IsUnitLeaf... T>
-// struct PopBack<UnitLeafVector<H, T...>>
-// {
-//     using type = UnitLeafVector<T...>;
-// };
 
 /* popfront */
 template <typename T>
@@ -297,6 +270,35 @@ struct InvertUnitLeafVector_<UnitLeafVector<T...>>
 template <typename V>
     requires(IsUnitLeafVector<V>)
 using InvertUnitLeafVector = typename InvertUnitLeafVector_<V>::type;
+
+/** Exponentiate: compute A^(some ratio) */
+
+template<typename A, typename Exp> requires (IsUnitLeaf<A> && IsRatio<Exp>)
+using ULExp = UnitLeaf<A::symbol, std::ratio_multiply<typename A::exponent, Exp>>;
+
+// Exponentiate a UnitLeafVector
+template <typename V, typename Exp>
+    requires(IsUnitLeafVector<V> && IsRatio<Exp>)
+struct ExpUnitLeafVector_
+{
+};
+
+template <IsUnitLeaf H, IsUnitLeaf... T, IsRatio Exp>
+struct ExpUnitLeafVector_<UnitLeafVector<H, T...>,  Exp>
+{
+    using type = ULPrepend<ULExp<H, Exp>, typename ExpUnitLeafVector_<UnitLeafVector<T...>, Exp>::type>;
+};
+
+template <IsUnitLeaf... T, IsRatio Exp>
+    requires(sizeof...(T) == 0)
+struct ExpUnitLeafVector_<UnitLeafVector<T...>, Exp>
+{
+    using type = UnitLeafVector<T...>;
+};
+
+template <typename V, typename Exp>
+    requires(IsUnitLeafVector<V> && IsRatio<Exp>)
+using ExpUnitLeafVector = typename ExpUnitLeafVector_<V, Exp>::type;
 
 /** Define min */
 template <typename R, typename V>

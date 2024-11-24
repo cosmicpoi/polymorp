@@ -44,3 +44,23 @@ constexpr void PrintRatio()
         std::cout << "/" << T::den;
     }
 }
+
+/** Function to multiply out a ratio */
+template <typename T, IsRatio R>
+T MultRatio(T val)
+{
+    return (T)(val * ((T)R::num) / ((T)R::den));
+}
+
+template <typename T, IsRatio R>
+T DivRatio(T val)
+{
+    return (T)(val * ((T)R::den) / ((T)R::num));
+};
+
+/** Convert ratio to double */
+template <IsRatio R>
+constexpr double RatioAsDouble()
+{
+    return ((double)R::num) / ((double)R::den);
+}
