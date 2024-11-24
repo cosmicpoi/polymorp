@@ -5,9 +5,27 @@
 
 /** Concept to ensure ::Print() exists */
 template <typename T>
-concept HasPrint = requires(std::ostream& os) {
+concept HasPrint = requires(std::ostream &os) {
     { T::Print(os) } -> std::same_as<void>;
 };
+
+/** Function to print integer sequences */
+template <typename T, T... Ints>
+void print_integer_sequence(std::integer_sequence<T, Ints...>)
+{
+    ((std::cout << Ints << " "), ...);
+    std::cout << std::endl;
+}
+
+
+// Helper function to create a compile-time zero-initialized array of type T and size N
+template <typename T, size_t N>
+constexpr std::array<T, N> create_array()
+{
+    return ([]<std::size_t... Is>(std::index_sequence<Is...>) -> std::array<T, N>
+            { return {((void)Is, 0)...}; })(std::make_index_sequence<N>{});
+}
+
 
 /** Concept to match ratio */
 
@@ -37,7 +55,7 @@ concept RatioIsZero = IsRatio<T> && RatioIsZero_<T>;
 
 /** Function to print std::ratio */
 template <IsRatio T>
-constexpr void PrintRatio(std::ostream& os = std::cout)
+constexpr void PrintRatio(std::ostream &os = std::cout)
 {
     os << T::num;
     if (T::den != 1)

@@ -7,6 +7,7 @@
 #pragma once
 
 #include <cmath>
+#include <initializer_list>
 #include "Unit.h"
 #include "UnitMath.h"
 
@@ -99,74 +100,30 @@ public:
     }
 
     /** Default constructors */
-    inline Vector()
-        requires(N == 2)
-        : _v{0, 0} {};
 
     inline Vector()
-        requires(N == 3)
-        : _v{0, 0, 0} {};
-
-    inline Vector()
-        requires(N == 4)
-        : _v{0, 0, 0, 0} {};
-
-    inline Vector()
-    {
-        std::fill(_v, _v + N, 0);
-    }
-
-    /** Constructors for passing in units of the same type */
-    inline Vector(U c0, U c1)
-        requires(N == 2)
-        : _v{c0, c1}
+        : _v(create_array<U, N>())
     {
     }
 
-    inline Vector(U c0, U c1, U c2)
-        requires(N == 3)
-        : _v{c0, c1, c2}
+    /** @brief Variadic constructor - can take any types convertible to U.  */
+    template <typename... Args>
+    inline Vector(Args... initList)
+        requires((std::is_convertible_v<Args, U> && ...) && sizeof...(initList) <= N)
+        : _v{initList...}
     {
     }
-
-    inline Vector(U c0, U c1, U c2, U c3)
-        requires(N == 4)
-        : _v{c0, c1, c2, c3}
-    {
-    }
-
-    // TODO implement arbitrary size
 
     /**
      * @brief Compute norm-squared of this vector
      */
     inline ExpUnit_T<U, std::ratio<2>> NormSq()
     {
-        using U_2 = ExpUnit_T<U, std::ratio<2>>;
-
-        if constexpr (N == 2)
-        {
-            return _v[0] * _v[0] + _v[1] * _v[1];
-        }
-        else if constexpr (N == 3)
-        {
-            return _v[0] * _v[0] + _v[1] * _v[1] + _v[2] * _v[2];
-        }
-        else if constexpr (N == 4)
-        {
-            return _v[0] * _v[0] + _v[1] * _v[1] + _v[2] * _v[2] + _v[3] * _v[3];
-        }
-        else
-        {
-            U_2 sum = 0;
-            for (uint i = 0; i < N; i++)
-            {
-                sum += _v[i] * _v[i];
-            }
-            return sum;
-        }
-
-        // TODO implement other sizes
+        // Zero-overhead solution: generate the expression (_v[0] * rhs, _v[1] * rhs ...) at compile time
+        return ([this]<std::size_t... Is>(std::index_sequence<Is...>)
+                {
+                    return ((_v[Is] * _v[Is]) + ...); // Fold expression
+                })(std::make_index_sequence<N>{});
     }
 
     /**
@@ -192,50 +149,28 @@ public:
     VectorN<UnitMult<U, RHS>> operator*(RHS rhs)
     {
         using MultVectorN = VectorN<UnitMult<U, RHS>>;
-        if constexpr (N == 2)
-        {
-            MultVectorN myV{_v[0] * rhs, _v[1] * rhs};
-            return myV;
-        }
-        else
-        {
-            MultVectorN myV;
-            return myV;
-        }
+        // Zero-overhead solution: generate the expression (_v[0] * rhs, _v[1] * rhs ...) at compile time
+        return ([this, &rhs]<std::size_t... Is>(std::index_sequence<Is...>)
+                {
+                    return MultVectorN{(_v[Is] * rhs)...}; // Expands the expression for each index
+                })(std::make_index_sequence<N>{});
     }
 
-    /**
-     * @brief Dot product
-     */
+    /** @brief Dot product */
     template <IsUnit RHS>
     UnitMult<U, RHS> Dot(VectorN<RHS> rhs)
     {
-        if constexpr (N == 2)
-        {
-            return _v[0] * rhs[0] + _v[1] * rhs[1];
-        }
-        else if constexpr (N == 3)
-        {
-            return _v[0] * rhs[0] + _v[1] * rhs[1] + _v[2] * rhs[2];
-            // return MultVectorN{};
-        }
-        else if constexpr (N == 4)
-        {
-            return _v[0] * rhs[0] + _v[1] * rhs[1] + _v[2] * rhs[2] + _v[3] * rhs[3];
-        }
-        else
-        {
-            UnitMult<U, RHS> sum = 0;
-            for (size_t i =0; i < N; i++)
-            {
-                sum += _v[i] * rhs[i];
-            }
-            return sum;
-        }
+        // Zero-overhead solution: generate the expression (_v[0] * rhs, _v[1] * rhs ...) at compile time
+        return ([this, &rhs]<std::size_t... Is>(std::index_sequence<Is...>)
+                {
+                    return ((_v[Is] * rhs[Is]) + ...); // Fold expression
+                })(std::make_index_sequence<N>{});
     }
 
+    /** @brief Shorthand for dot product */
+
 private:
-    U _v[N] = {};
+    std::array<U, N> _v;
 };
 
 template <size_t N, IsUnit U>
