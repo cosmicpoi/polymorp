@@ -18,28 +18,28 @@ public:
     using ratio = Ratio;
 
     /** @brief Print type info */
-    static constexpr void PrintInfo()
+    static constexpr void PrintInfo(std::ostream& os = std::cout)
     {
-        std::cout << typeid(Type).name() << " ( ";
+        os << typeid(Type).name() << " ( ";
         UID::Print();
-        std::cout << ") x";
+        os << ") x";
         PrintRatio<Ratio>();
-        std::cout << "; ";
+        os << "; ";
     }
 
     /** @brief Print type info and value (no newline) */
-    void Print()
+    void Print(std::ostream& os = std::cout) const
     {
-        PrintInfo();
-        std::cout << " " << value;
+        PrintInfo(os);
+        os << " " << value;
     }
 
     /** @brief Logging shorthand to print a header, contents, and newline */
-    void Log()
+    void Log(std::ostream& os) const
     {
-        std::cout << "Unit print" << std::endl;
-        Print();
-        std::cout << std::endl;
+        os << "Unit print" << std::endl;
+        Print(os);
+        os << std::endl;
     }
 
     /** @brief Constructor for converting from literal */
@@ -51,6 +51,12 @@ public:
     auto operator*(Unit<RHS_Type, RHS_UID, RHS_Ratio> rhs)
     {
         return Unit<Type, UIMult<UID, RHS_UID>, std::ratio_multiply<Ratio, RHS_Ratio>>{(Type)(value * rhs.value)};
+    }
+
+    /** @brief Multiply with unitless scalar. */
+    auto operator*(Type rhs)
+    {
+        return Unit<Type, UID, Ratio>{value * rhs};
     }
 
     /** @brief Divide by another unit. If the types clash, always convert to the LHS unit. */
@@ -78,9 +84,20 @@ public:
         return Unit<Type, UID, Ratio>{(Type)(value - rhs.value)};
     }
 
+    std::ostream& operator<<(std::ostream& os) const
+    {
+        Print(os);
+        return os;
+    }
+
     /** @brief Underlying value */
     Type value = 0;
 };
+
+template <typename Type, UnitIdentifier UID, IsRatio Ratio>
+std::ostream &operator<<(std::ostream &os, Unit<Type, UID, Ratio> val) { 
+    return val.operator<<(os);
+}
 
 // Concept to match Unit
 template <typename T>
@@ -88,7 +105,6 @@ struct IsUnitHelper : std::false_type
 {
 };
 
-// Specialization for the `Unit` template
 template <typename Type, UnitIdentifier UID, IsRatio Ratio>
 struct IsUnitHelper<Unit<Type, UID, Ratio>> : std::true_type
 {
@@ -96,4 +112,3 @@ struct IsUnitHelper<Unit<Type, UID, Ratio>> : std::true_type
 
 template <typename T>
 concept IsUnit = IsUnitHelper<T>::value;
-

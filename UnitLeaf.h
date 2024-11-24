@@ -20,11 +20,11 @@ struct UnitLeaf
     static constexpr StringLiteral symbol = Symbol;
     using exponent = Exponent;
 
-    static void Print()
+    static void Print(std::ostream& os = std::cout)
     {
-        PrintStrLit<Symbol>();
-        std::cout << " ";
-        PrintRatio<Exponent>();
+        PrintStrLit<Symbol>(os);
+        os << " ";
+        PrintRatio<Exponent>(os);
     }
 };
 
@@ -52,12 +52,12 @@ template <typename... Ts>
     requires(IsUnitLeaf<Ts> && ...)
 struct UnitLeafVector
 {
-    static void Print()
+    static void Print(std::ostream& os = std::cout)
     {
         ([&]
          {
-            Ts::Print();
-            std::cout << "; "; }(), ...);
+            Ts::Print(os);
+            os << "; "; }(), ...);
     }
 };
 

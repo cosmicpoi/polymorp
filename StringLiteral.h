@@ -46,14 +46,8 @@ struct StrEq
  // https://ctrpeach.io/posts/cpp20-string-literal-template-parameters/
 
 template<StringLiteral Str>
-void PrintStrLit() {
-    std::cout << Str.data;
-}
-
-template<StringLiteral Str>
-void PrintStrLit_Endl() {
-    PrintStrLit<Str>();
-    std::cout << std::endl;
+void PrintStrLit(std::ostream& os = std::cout) {
+    os << Str.data;
 }
 
 /** Type trait */

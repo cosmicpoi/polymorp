@@ -16,18 +16,32 @@ inline Meter operator"" _meter(long double value)
     return Meter{static_cast<double>(value)};
 }
 
+template<int MyInt>
+class IntHolder
+{
+public:
+    std::ostream& operator<<(std::ostream& os) const {
+        os << MyInt;
+        return os;
+    }
+};
 
+
+template<int MyInt>
+std::ostream &operator<<(std::ostream &os, IntHolder<MyInt> mh) { 
+    return mh.operator<<(os);
+}
 
 int main()
 {
+
     KM_2 myVal2 = 1;
-    myVal2.Print();
-    std::cout << std::endl;
+    std::cout << myVal2 << std::endl;
 
-    unit_sqrt(myVal2).Print();
-    std::cout << std::endl;
+    std::cout << unit_sqrt(myVal2) << std::endl;
 
-    unit_pow<decltype(myVal2), std::ratio<2,7>>(myVal2).Print();
-    std::cout << std::endl;
+    std::cout << unit_pow<std::ratio<2,7>>(myVal2) << std::endl;
+
+    std::cout << (2.0_meter * 2.0) << std::endl;
 
 }

@@ -1,11 +1,12 @@
 #pragma once
 
 #include <concepts>
+#include <iostream>
 
 /** Concept to ensure ::Print() exists */
 template <typename T>
-concept HasPrint = requires {
-    { T::Print() } -> std::same_as<void>;
+concept HasPrint = requires(std::ostream& os) {
+    { T::Print(os) } -> std::same_as<void>;
 };
 
 /** Concept to match ratio */
@@ -36,12 +37,12 @@ concept RatioIsZero = IsRatio<T> && RatioIsZero_<T>;
 
 /** Function to print std::ratio */
 template <IsRatio T>
-constexpr void PrintRatio()
+constexpr void PrintRatio(std::ostream& os = std::cout)
 {
-    std::cout << T::num;
+    os << T::num;
     if (T::den != 1)
     {
-        std::cout << "/" << T::den;
+        os << "/" << T::den;
     }
 }
 

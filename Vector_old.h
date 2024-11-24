@@ -14,40 +14,27 @@
 // Vector class
 //--------------------------------------------------------------------------------
 
-template <size_t N>
-concept ValidVectorSize = (N == 2 || N == 3 || N == 4);
-
 /**
- * @brief Base class for Vector2 with units
- * For now, we only support Vectors where all components are the same type and exponent
+ * @brief Base class for Vector with units
  */
 template <size_t N, IsUnit U>
-    requires ValidVectorSize<N>
 class Vector
 {
 public:
-    void Print()
-    {
-        std::cout << "Vector print" << std::endl;
-        std::cout << U::symbol << U::exponent;
-
-        std::cout << " " << v[0].GetValue();
-        std::cout << " " << v[1].GetValue();
-        if constexpr (N > 2)
-        {
-            std::cout << " " << v[2].GetValue();
-        }
-        if constexpr (N > 3)
-        {
-            std::cout << " " << v[3].GetValue();
-        }
-        std::cout << std::endl;
-    }
-
     static constexpr size_t n = N;
+    using unit = U;
 
     template <IsUnit UU>
     using VectorN = Vector<N, UU>;
+
+    static constexpr void PrintInfo()
+    {
+        U::PrintInfo();
+        std::cout << "[N=";
+        std::cout << N;
+        std::cout <<"];";
+    }
+    
 
     /** Default constructors */
     inline Vector()
@@ -161,6 +148,8 @@ using Vector3 = Vector<3, U>;
 
 template <IsUnit U>
 using Vector4 = Vector<4, U>;
+
+
 
 //--------------------------------------------------------------------------------
 // Concepts

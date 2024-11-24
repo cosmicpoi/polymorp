@@ -10,6 +10,7 @@ using ExpUnit_T = Unit<
     UIExp<typename U::uid, Exp>,
     typename U::ratio>;
 
+// Maintain ratio while computing sqrt
 template <IsUnit U>
 inline ExpUnit_T<U, std::ratio<1, 2>> unit_sqrt(U val)
 {
@@ -21,7 +22,8 @@ inline ExpUnit_T<U, std::ratio<1, 2>> unit_sqrt(U val)
     return DivRatio<Type, Ratio>(std::sqrt(actual_val));
 }
 
-template <IsUnit U, IsRatio Exp>
+// Maintain ratio while computing pow
+template <IsRatio Exp, IsUnit U>
 inline ExpUnit_T<U, Exp> unit_pow(U val)
 {
     using Type = typename U::type;
