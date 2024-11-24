@@ -1,192 +1,83 @@
 #pragma once
 
-#include <string>
-#include <iostream>
+#include <type_traits>
+#include <ratio>
+#include "UnitIdentifier.h"
+#include "TypeUtils.h"
 
-//--------------------------------------------------------------------------------
-// Unit class
-//--------------------------------------------------------------------------------
-
-/// @todo Switch from int Exponent to std::ratio Exponent
-/// @todo Support ratios
-
-/**
- * @brief Base unit class which holds a type of type Type
- *
- * @tparam Symbol unique char representing the unit
- * @tparam Type underlying type of the unit
- * @tparam Exponent exponent of unit (e.g. 2 for `m^2`)
- */
-template <char Symbol, typename Type, int Exponent>
-class Unit
+template <typename Type, UnitIdentifier UID, IsRatio Ratio = std::ratio<1>>
+struct Unit
 {
 public:
-    /// @todo Test this
     // Use the default constructor of the underlying type
     Unit() {};
-    // Debug function
-    void Print()
+
+    // Type traits
+    using type = Type;
+    using uid = UID;
+    using ratio = Ratio;
+
+    /** @brief Print type info */
+    static constexpr void PrintInfo()
     {
-        std::cout << "Unit print" << std::endl;
-        std::cout << symbol << exponent << " " << value << std::endl;
+        std::cout << typeid(Type).name() << " ( ";
+        UID::Print();
+        std::cout << ") x";
+        PrintRatio<Ratio>();
+        std::cout << "; ";
     }
 
-    // type traits accessible at runtime
-    static constexpr char symbol = Symbol;
-    using type = Type;
-    static constexpr int exponent = Exponent;
+    /** @brief Print type info and value (no newline) */
+    void Print()
+    {
+        PrintInfo();
+        std::cout << " " << value;
+    }
 
-    /**
-     * @brief Constructor for converting from literal
-     */
+    /** @brief Logging shorthand to print a header, contents, and newline */
+    void Log()
+    {
+        std::cout << "Unit print" << std::endl;
+        Print();
+        std::cout << std::endl;
+    }
+
+    /** @brief Constructor for converting from literal */
     Unit(Type value)
         : value(value) {};
 
-    /**
-     * @brief Get the underlying represented value
-     */
-    Type GetValue()
+    /** @brief Multiply with another unit. If the types clash, always convert to the LHS unit. */
+    template <typename RHS_Type, UnitIdentifier RHS_UID, IsRatio RHS_Ratio>
+    auto operator*(Unit<RHS_Type, RHS_UID, RHS_Ratio> rhs)
     {
-        return value;
+        return Unit<Type, UIMult<UID, RHS_UID>, std::ratio_multiply<Ratio, RHS_Ratio>>{(Type)(value * rhs.value)};
     }
 
-    /**
-     * @brief Multiply with a unit with the same type and symbol (and any exponent)
-     */
-    template <char RHS_Symbol, typename RHS_Type, int RHS_Exponent>
-    auto operator*(Unit<RHS_Symbol, RHS_Type, RHS_Exponent> rhs_unit)
+    /** @brief Divide by another unit. If the types clash, always convert to the LHS unit. */
+    template <typename RHS_Type, UnitIdentifier RHS_UID, IsRatio RHS_Ratio>
+    auto operator/(Unit<RHS_Type, RHS_UID, RHS_Ratio> rhs)
     {
-        static_assert(Symbol == RHS_Symbol, "Unit symbols must match");
-        static_assert(std::is_same_v<Type, RHS_Type>, "Unit types must match");
-
-        return Unit<Symbol, Type, Exponent + RHS_Exponent>{value * rhs_unit.value};
+        return Unit<Type, UIDivide<UID, RHS_UID>, std::ratio_divide<Ratio, RHS_Ratio>>{(Type)(value / rhs.value)};
     }
 
-    /**
-     * @brief Add with a unit with the same type and symbol (and any exponent)
-     */
-    template <char RHS_Symbol, typename RHS_Type, int RHS_Exponent>
-    auto operator+(Unit<RHS_Symbol, RHS_Type, RHS_Exponent> rhs_unit)
+    /** @brief Add with another unit, only if UIDs match. If the types clash, always convert to the LHS unit. */
+    template <typename RHS_Type, UnitIdentifier RHS_UID, IsRatio RHS_Ratio>
+    auto operator+(Unit<RHS_Type, RHS_UID, RHS_Ratio> rhs)
+        requires(std::is_same_v<UID, RHS_UID>)
     {
-        static_assert(Symbol == RHS_Symbol, "Unit symbols must match");
-        static_assert(std::is_same_v<Type, RHS_Type>, "Unit types must match");
-
-        return Unit<Symbol, Type, Exponent>{value + rhs_unit.value};
+        // TODO support ratio properly
+        return Unit<Type, UID, Ratio>{(Type)(value + rhs.value)};
     }
 
-    /**
-     * @brief Subtract with a unit with the same type and symbol (and any exponent)
-     */
-    template <char RHS_Symbol, typename RHS_Type, int RHS_Exponent>
-    auto operator-(Unit<RHS_Symbol, RHS_Type, RHS_Exponent> rhs_unit)
+    /** @brief Subtract with another unit, only if UIDs match. If the types clash, always convert to the LHS unit. */
+    template <typename RHS_Type, UnitIdentifier RHS_UID, IsRatio RHS_Ratio>
+    auto operator-(Unit<RHS_Type, RHS_UID, RHS_Ratio> rhs)
+        requires(std::is_same_v<UID, RHS_UID>)
     {
-        static_assert(Symbol == RHS_Symbol, "Unit symbols must match");
-        static_assert(std::is_same_v<Type, RHS_Type>, "Unit types must match");
-
-        return Unit<Symbol, Type, Exponent>{value - rhs_unit.value};
+        // TODO support ratio properly
+        return Unit<Type, UID, Ratio>{(Type)(value - rhs.value)};
     }
 
-    /**
-     * @brief Divide with a unit with the same type and symbol (and any exponent)
-     */
-    template <char RHS_Symbol, typename RHS_Type, int RHS_Exponent>
-    auto operator/(Unit<RHS_Symbol, RHS_Type, RHS_Exponent> rhs_unit)
-    {
-        static_assert(Symbol == RHS_Symbol, "Unit symbols must match");
-        static_assert(std::is_same_v<Type, RHS_Type>, "Unit types must match");
-
-        return Unit<Symbol, Type, Exponent - RHS_Exponent>{value / rhs_unit.value};
-    }
-
-private:
-    Type value;
+    /** @brief Underlying value */
+    Type value = 0;
 };
-
-
-//--------------------------------------------------------------------------------
-// Concepts
-//--------------------------------------------------------------------------------
-
-/* ******* Basic Concept ********* */
-
-// Define the primary template
-template <typename T>
-struct IsUnitHelper : std::false_type
-{};
-
-// Specialization for the `Unit` template
-template <char Symbol, typename Type, int Exponent>
-struct IsUnitHelper<Unit<Symbol, Type, Exponent>> : std::true_type
-{};
-
-/** 
- * @brief Concept to check if a type is a Unit
- */
-template <typename T>
-concept IsUnit = IsUnitHelper<T>::value;
-
-
-/* ******* Pairwise unit checking ********* */
-
-/**
- * @brief Concept that matches units of the same symbol and type, but possibly different exponent (e.g. a float `m` and float `m^2`)
- */
-template<typename U, typename V>
-concept BothUnits = IsUnit<U> && IsUnit<V>;
-
-template<typename U, typename V>
-concept IsSameSymbol = requires
-{
-    { V::symbol } -> std::same_as<const char&>;
-    { U::symbol } -> std::same_as<const char&>;
-    { V::symbol == U::symbol } -> std::same_as<bool>;
-} && (V::symbol == U::symbol);
-
-template<typename U, typename V>
-concept IsSameType = requires
-{
-    typename V::type;
-    typename U::type;
-} && std::same_as<typename V::type, typename U::type>;
-
-template<typename U, typename V>
-concept IsSameUnit = BothUnits<U, V> && IsSameSymbol<U, V> && IsSameType<U, V>;
-
-
-//--------------------------------------------------------------------------------
-// Type transformers
-//--------------------------------------------------------------------------------
-
-/* ******* Exponentiators ********* */
-
-/**
- * @brief Adjust exponent by by Delta (i.e. if Delta=1, `m^2` -> `m^3`)
- */
-template <IsUnit U, int Delta>
-using AdjustExponent = Unit<U::symbol, typename U::type, U::exponent + Delta>;
-
-/**
- * @brief Exponentiate by 1 (i.e. `m^2` -> `m^3`)
- */
-template <IsUnit U>
-using Exp1 = AdjustExponent<U, 1>;
-
-/**
- * @brief De-exponentiate by 1 (i.e. `m^2` -> `m^1`)
- */
-template <IsUnit U>
-using DExp1 = AdjustExponent<U, -1>;
-
-/**
- * @brief Double the exponent of U
- */
-template <IsUnit U>
-using DoubleExp = AdjustExponent<U, U::exponent>;
-
-template <int N>
-concept IsEven = (N % 2 == 0);
-/**
- * @brief Half the exponent of U (can only be used on even numbers)
- */
-template <IsUnit U> requires IsEven<U::exponent>
-using HalfExp = AdjustExponent<U, -U::exponent / 2>;
