@@ -25,6 +25,15 @@ struct IsRatio_<std::ratio<Num, Den>> : std::true_type
 template <typename T>
 concept IsRatio = IsRatio_<T>::value;
 
+/** Concept to check for zero ratio */
+template <typename T>
+concept RatioIsZero_ = requires {
+    T::num == 0;
+} && T::num == 0;
+
+template <typename T>
+concept RatioIsZero = IsRatio<T> && RatioIsZero_<T>;
+
 /** Function to print std::ratio */
 template <IsRatio T>
 constexpr void PrintRatio()
