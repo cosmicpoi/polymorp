@@ -1,6 +1,7 @@
 // Run tests
 #include "Unit.h"
 #include "UnitMath.h"
+#include "Vector.h"
 
 using Meter = Unit<double, MakeUnitIdentifier<UnitAtomic<"meter">>>;
 using Meter_2 = Unit<double, MakeUnitIdentifier<UnitBase<"meter", std::ratio<2>>>>;
@@ -16,32 +17,16 @@ inline Meter operator"" _meter(long double value)
     return Meter{static_cast<double>(value)};
 }
 
-template<int MyInt>
-class IntHolder
-{
-public:
-    std::ostream& operator<<(std::ostream& os) const {
-        os << MyInt;
-        return os;
-    }
-};
-
-
-template<int MyInt>
-std::ostream &operator<<(std::ostream &os, IntHolder<MyInt> mh) { 
-    return mh.operator<<(os);
-}
 
 int main()
 {
+    Vector<2, Meter> myVector{4, 3};
+    
+    Vector2<Meter_2> myVector2{1, 1};
 
-    KM_2 myVal2 = 1;
-    std::cout << myVal2 << std::endl;
-
-    std::cout << unit_sqrt(myVal2) << std::endl;
-
-    std::cout << unit_pow<std::ratio<2,7>>(myVal2) << std::endl;
-
-    std::cout << (2.0_meter * 2.0) << std::endl;
+    std::cout << myVector << std::endl;
+    std::cout << myVector2 << std::endl;
+    
+    std::cout << myVector.Dot(myVector2) << std::endl;
 
 }

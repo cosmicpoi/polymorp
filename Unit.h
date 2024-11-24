@@ -18,24 +18,25 @@ public:
     using ratio = Ratio;
 
     /** @brief Print type info */
-    static constexpr void PrintInfo(std::ostream& os = std::cout)
+    static constexpr void PrintInfo(std::ostream &os = std::cout)
     {
         os << typeid(Type).name() << " ( ";
-        UID::Print();
-        os << ") x";
-        PrintRatio<Ratio>();
+        UID::Print(os);
+        os << ") X";
+        PrintRatio<Ratio>(os);
         os << "; ";
     }
 
     /** @brief Print type info and value (no newline) */
-    void Print(std::ostream& os = std::cout) const
+    void Print(std::ostream &os = std::cout) const
     {
+        os << "u{ ";
         PrintInfo(os);
-        os << " " << value;
+        os << " " << value << " }";
     }
 
     /** @brief Logging shorthand to print a header, contents, and newline */
-    void Log(std::ostream& os) const
+    void Log(std::ostream &os) const
     {
         os << "Unit print" << std::endl;
         Print(os);
@@ -84,7 +85,14 @@ public:
         return Unit<Type, UID, Ratio>{(Type)(value - rhs.value)};
     }
 
-    std::ostream& operator<<(std::ostream& os) const
+    template <typename RHS_Type, UnitIdentifier RHS_UID, IsRatio RHS_Ratio>
+    void operator+=(Unit<RHS_Type, RHS_UID, RHS_Ratio> rhs)
+        requires(std::is_same_v<UID, RHS_UID>)
+    {
+        value = value + rhs.value;
+    }
+
+    std::ostream &operator<<(std::ostream &os) const
     {
         Print(os);
         return os;
@@ -95,7 +103,8 @@ public:
 };
 
 template <typename Type, UnitIdentifier UID, IsRatio Ratio>
-std::ostream &operator<<(std::ostream &os, Unit<Type, UID, Ratio> val) { 
+std::ostream &operator<<(std::ostream &os, Unit<Type, UID, Ratio> val)
+{
     return val.operator<<(os);
 }
 
@@ -112,3 +121,19 @@ struct IsUnitHelper<Unit<Type, UID, Ratio>> : std::true_type
 
 template <typename T>
 concept IsUnit = IsUnitHelper<T>::value;
+
+// Concept to match like units (same type and UID)
+// template <typename A, typename B>
+// struct IsLikeUnit {};
+
+template <typename A, typename B>
+concept SameUid = IsUnit<A> && IsUnit<B> && std::is_same_v<typename A::uid, typename B::uid>;
+
+template <typename A, typename B>
+concept SameUidAndType = IsUnit<A> && IsUnit<B> && SameUid<A, B> && std::is_same_v<typename A::type, typename B::type>;
+
+// Unit transformers
+
+// Get the resulant unit from multiplying two units. Left-side type always dominates.
+template <IsUnit A, IsUnit B>
+using UnitMult = Unit<typename A::type, UIMult<typename A::uid, typename B::uid>>;
