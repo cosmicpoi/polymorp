@@ -24,7 +24,7 @@ constexpr bool const_strcmp(const char* str1, const char* str2) {
     }
     
     // Return the difference between the ASCII values of the mismatched characters
-    return str1[idx] - str2[idx] > 0 ? true : false;
+    return str2[idx] - str1[idx] > 0 ? true : false;
 }
 
 // Comparing two StringLiteral types
