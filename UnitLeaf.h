@@ -14,16 +14,17 @@
  * These are constructed as a list of tuples of StringLiterals and ints
  */
 
-template <StringLiteral Symbol, int Exponent>
+template <StringLiteral Symbol, IsRatio Exponent>
 struct UnitLeaf
 {
     static constexpr StringLiteral symbol = Symbol;
-    static constexpr int exponent = Exponent;
+    using exponent = Exponent;
 
     static void Print()
     {
         PrintStrLit<Symbol>();
-        std::cout << " " << Exponent;
+        std::cout << " ";
+        PrintRatio<Exponent>();
     }
 };
 
@@ -36,7 +37,7 @@ struct IsUnitLeafHelper : std::false_type
 };
 
 // Specialization for the `Unit` template
-template <StringLiteral Symbol, int Exponent>
+template <StringLiteral Symbol, IsRatio Exponent>
 struct IsUnitLeafHelper<UnitLeaf<Symbol, Exponent>> : std::true_type
 {
 };
@@ -94,20 +95,13 @@ concept ULIsSameSymbol = IsUnitLeaf<A> && IsUnitLeaf<B> && _IsSameSymbol<A, B>;
 
 template <typename A>
 concept ULIsZero_ = requires {
-    { A::exponent } -> std::convertible_to<int>;
-} && (A::exponent == 0);
+    typename A::exponent;
+} && RatioIsZero<typename A::exponent>;
 
 template <typename A>
 concept ULIsZero = IsUnitLeaf<A> && ULIsZero_<A>;
 
 /** Comparison function */
-template <typename A, typename B>
-concept _CompareExp = requires {
-    { A::exponent } -> std::convertible_to<int>;
-    { B::exponent } -> std::convertible_to<int>;
-    A::exponent > B::exponent;
-} && (A::exponent < B::exponent);
-
 template <typename A, typename B>
 concept _CompareSymb = requires {
     A::symbol;
@@ -152,7 +146,7 @@ template <typename U, typename V>
     requires(IsUnitLeaf<U> && IsUnitLeaf<V> && ULIsSameSymbol<U, V>)
 struct ULCombine_<U, V>
 {
-    using type = UnitLeaf<U::symbol, U::exponent + V::exponent>;
+    using type = UnitLeaf<U::symbol, std::ratio_add<typename U::exponent, typename V::exponent>>;
 };
 
 template <typename U, typename V>
@@ -278,7 +272,7 @@ using ULRemoveFirst = typename ULRemoveFirst_<R, V>::type;
 
 /** Invert a UnitLeaf */
 template <IsUnitLeaf V>
-using ULInvert = UnitLeaf<V::symbol, -1 * V::exponent>;
+using ULInvert = UnitLeaf<V::symbol, std::ratio_multiply<typename V::exponent, std::ratio<-1>>>;
 
 // Invert a UnitLeafVector
 template <typename V>

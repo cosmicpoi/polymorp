@@ -7,12 +7,12 @@ template <typename V>
 concept UnitIdentifier = IsUnitLeafVector<V> && std::is_same_v<V, ULGetUnique<V>>;
 
 /* Also, alias UnitLeaf for a more intuitive name */
-template <StringLiteral Symbol, int Exponent>
+template <StringLiteral Symbol, IsRatio Exponent>
 using UnitBase = UnitLeaf<Symbol, Exponent>;
 
 /** Shorthand to make a UnitBase with exp 1 */
 template <StringLiteral Symbol>
-using UnitAtomic = UnitBase<Symbol, 1>;
+using UnitAtomic = UnitBase<Symbol, std::ratio<1>>;
 
 
 /** Other aliases */
