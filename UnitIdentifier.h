@@ -90,19 +90,74 @@ concept _IsSameSymbol = requires {
 template <typename A, typename B>
 concept ULIsSameSymbol = IsUnitLeaf<A> && IsUnitLeaf<B> && _IsSameSymbol<A, B>;
 
+/** Concept to match unit leaf with exp 0 */
+
+template <typename A>
+concept ULIsZero_ = requires {
+    { A::exponent } -> std::convertible_to<int>;
+} && (A::exponent == 0);
+
+template <typename A>
+concept ULIsZero = IsUnitLeaf<A> && ULIsZero_<A>;
+
+/** Comparison function */
+template <typename A, typename B>
+concept _CompareExp = requires {
+    { A::exponent } -> std::convertible_to<int>;
+    { B::exponent } -> std::convertible_to<int>;
+    A::exponent > B::exponent;
+} && (A::exponent < B::exponent);
+
+template <typename A, typename B>
+concept _CompareSymb = requires {
+    A::symbol;
+    B::symbol;
+} && (CompareStrings<A::symbol, B::symbol>::value);
+
+template <typename A, typename B>
+concept ULCompare = IsUnitLeaf<A> && IsUnitLeaf<B> && _CompareSymb<A, B>;
+// concept ULCompare = IsUnitLeaf<A> && IsUnitLeaf<B> && _CompareExp<A, B>;
+
+// Comparison selector SmallerOf
+template <typename A, typename B>
+    requires(IsUnitLeaf<A> && IsUnitLeaf<B>)
+struct ULSmallerOf_
+{
+};
+
+template <typename A, typename B>
+    requires(IsUnitLeaf<A> && IsUnitLeaf<B> && ULCompare<A, B>)
+struct ULSmallerOf_<A, B>
+{
+    using type = A;
+};
+
+template <typename A, typename B>
+    requires(IsUnitLeaf<A> && IsUnitLeaf<B> && !ULCompare<A, B>)
+struct ULSmallerOf_<A, B>
+{
+    using type = B;
+};
+
+template <typename A, typename B>
+    requires(IsUnitLeaf<A> && IsUnitLeaf<B>)
+using ULSmallerOf = typename ULSmallerOf_<A, B>::type;
+
 /** Combine two unitleaves (and add their exponents) */
-template <typename U, typename V> requires(IsUnitLeaf<U> && IsUnitLeaf<V>)
+template <typename U, typename V>
+    requires(IsUnitLeaf<U> && IsUnitLeaf<V>)
 struct ULCombine_;
 
-template <typename U, typename V> requires(IsUnitLeaf<U> && IsUnitLeaf<V> && ULIsSameSymbol<U, V>)
+template <typename U, typename V>
+    requires(IsUnitLeaf<U> && IsUnitLeaf<V> && ULIsSameSymbol<U, V>)
 struct ULCombine_<U, V>
 {
     using type = UnitLeaf<U::symbol, U::exponent + V::exponent>;
 };
 
-template <typename U, typename V> requires(IsUnitLeaf<U> && IsUnitLeaf<V> && ULIsSameSymbol<U, V>)
+template <typename U, typename V>
+    requires(IsUnitLeaf<U> && IsUnitLeaf<V> && ULIsSameSymbol<U, V>)
 using ULCombine = typename ULCombine_<U, V>::type;
-
 
 /** Prepend to a UnitLeafVector */
 
@@ -164,6 +219,17 @@ using ULAppend = typename ULAppendHelper<H, V>::type;
 //     using type = UnitLeafVector<T...>;
 // };
 
+/* popfront */
+template <typename T>
+    requires IsUnitLeafVector<T>
+struct ULPopFront;
+
+template <IsUnitLeaf H, IsUnitLeaf... T>
+struct ULPopFront<UnitLeafVector<H, T...>>
+{
+    using type = UnitLeafVector<T...>;
+};
+
 /** concat two lists */
 
 template <typename U, typename V>
@@ -209,49 +275,6 @@ struct ULRemoveFirst_<R, UnitLeafVector<T...>> // handle empty case
 template <typename R, typename V>
     requires(IsUnitLeaf<R> && IsUnitLeafVector<V>)
 using ULRemoveFirst = typename ULRemoveFirst_<R, V>::type;
-
-/** Comparison function */
-template <typename A, typename B>
-concept _CompareExp = requires {
-    { A::exponent } -> std::convertible_to<int>;
-    { B::exponent } -> std::convertible_to<int>;
-    A::exponent > B::exponent;
-} && (A::exponent < B::exponent);
-
-template <typename A, typename B>
-concept _CompareSymb = requires {
-    A::symbol;
-    B::symbol;
-} && (CompareStrings<A::symbol, B::symbol>::value);
-
-template <typename A, typename B>
-concept ULCompare = IsUnitLeaf<A> && IsUnitLeaf<B> && _CompareSymb<A, B>;
-// concept ULCompare = IsUnitLeaf<A> && IsUnitLeaf<B> && _CompareExp<A, B>;
-
-// Comparison selector SmallerOf
-template <typename A, typename B>
-    requires(IsUnitLeaf<A> && IsUnitLeaf<B>)
-struct ULSmallerOf_
-{
-};
-
-template <typename A, typename B>
-    requires(IsUnitLeaf<A> && IsUnitLeaf<B> && ULCompare<A, B>)
-struct ULSmallerOf_<A, B>
-{
-    using type = A;
-};
-
-template <typename A, typename B>
-    requires(IsUnitLeaf<A> && IsUnitLeaf<B> && !ULCompare<A, B>)
-struct ULSmallerOf_<A, B>
-{
-    using type = B;
-};
-
-template <typename A, typename B>
-    requires(IsUnitLeaf<A> && IsUnitLeaf<B>)
-using ULSmallerOf = typename ULSmallerOf_<A, B>::type;
 
 /** Define min */
 template <typename R, typename V>
@@ -325,7 +348,8 @@ template <typename V>
     requires(IsUnitLeafVector<V>)
 struct ULMerge_;
 
-template <IsUnitLeaf H1, IsUnitLeaf H2, IsUnitLeaf... T> requires ULIsSameSymbol<H1, H2>
+template <IsUnitLeaf H1, IsUnitLeaf H2, IsUnitLeaf... T>
+    requires ULIsSameSymbol<H1, H2>
 struct ULMerge_<UnitLeafVector<H1, H2, T...>> // if there are duplicates, merge
 {
     using Combined = ULCombine<H1, H2>;
@@ -345,6 +369,45 @@ struct ULMerge_<UnitLeafVector<T...>>
     using type = UnitLeafVector<T...>;
 };
 
-/** Remove exp 0 */
+template <typename V>
+    requires(IsUnitLeafVector<V>)
+using ULMerge = typename ULMerge_<V>::type;
 
-/** GetUnique - combine exponents and remove zeros */
+/** Remove exp 0 */
+template <typename V>
+    requires(IsUnitLeafVector<V>)
+struct ULRemoveZero_;
+
+template <IsUnitLeaf H, IsUnitLeaf... T>
+    requires(ULIsZero<H>)
+struct ULRemoveZero_<UnitLeafVector<H, T...>>
+{
+    using type = typename ULRemoveZero_<UnitLeafVector<T...>>::type;
+};
+
+template <IsUnitLeaf H, IsUnitLeaf... T>
+    requires(!ULIsZero<H>)
+struct ULRemoveZero_<UnitLeafVector<H, T...>>
+{
+    using type = ULPrepend<H, typename ULRemoveZero_<UnitLeafVector<T...>>::type>;
+};
+
+template <IsUnitLeaf... T>
+    requires(sizeof...(T) == 0)
+struct ULRemoveZero_<UnitLeafVector<T...>>
+{
+    using type = UnitLeafVector<T...>;
+};
+
+template <typename V>
+    requires(IsUnitLeafVector<V>)
+using ULRemoveZero = typename ULRemoveZero_<V>::type;
+
+/** GetUnique - sort, combine exponents and remove zeros */
+template <typename V>
+    requires(IsUnitLeafVector<V>)
+using ULGetUnique = ULRemoveZero<ULMerge<ULSort<V>>>;
+
+/** Finally, define UnitIdentifier, a concept that specifies whether a UnitLeafVector mathces ULGetUnique */
+template <typename V>
+concept UnitIdentifier = IsUnitLeafVector<V> && std::is_same_v<V, ULGetUnique<V>>;
