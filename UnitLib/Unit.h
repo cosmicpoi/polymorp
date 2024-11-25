@@ -265,14 +265,14 @@ public:
         }
     {
         using CommonType = std::common_type_t<Type, RHS_Type>;
-        
+
         constexpr auto fac1 = Ratio::num * RHS_Ratio::den;
         constexpr auto fac2 = RHS_Ratio::num * Ratio::den;
         constexpr auto facMax = fac1 > fac2 ? fac1 : fac2;
         constexpr CommonType eps1 = std::numeric_limits<Type>::epsilon();
         constexpr CommonType eps2 = std::numeric_limits<RHS_Type>::epsilon();
         constexpr CommonType eps = eps1 > eps2 ? eps1 : eps2;
-        
+
         constexpr CommonType epsilon = eps * facMax * EPS_TOLERANCE;
 
         CommonType val1 = (value * fac1);
@@ -353,12 +353,35 @@ using UnitAdd = decltype(std::declval<A>() + std::declval<B>());
 template <IsUnit A, IsUnit B>
 using UnitSubtract = decltype(std::declval<A>() - std::declval<B>());
 
+// Check if unit U can actually be exponentiated by ratio Exp
+template <typename U, typename Exp>
+concept UnitExpableRatio = requires {
+    requires IsUnit<U>;
+    requires IsRatio<Exp>;
+    typename U::ratio;
+    requires IsRatio<typename U::ratio>;
+    requires RatioCanExp<typename U::ratio, Exp>;
+};
+
+template <typename, typename>
+struct UnitExp_
+{
+};
+
 // Get type for exponentiated unit
 template <IsUnit U, IsRatio Exp>
-using UnitExp = Unit<
-    typename U::type,
-    UIExp<typename U::uid, Exp>,
-    typename U::ratio>;
+    // requires UnitExpableRatio<U, Exp>
+struct UnitExp_<U, Exp>
+{
+    using type = Unit<
+        typename U::type,
+        UIExp<typename U::uid, Exp>,
+        typename RatioExp<typename U::ratio, Exp>::value>;
+};
+
+template <IsUnit U, IsRatio Exp>
+    requires UnitExpableRatio<U, Exp>
+using UnitExp = typename UnitExp_<U, Exp>::type;
 
 // Shorthand for int exponents
 template <IsUnit U, int Exp>

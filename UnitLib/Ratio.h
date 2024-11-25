@@ -138,7 +138,7 @@ constexpr intmax_t _HighestRoot()
     }
     else
     {
-        return _HighestRoot<Val, N, midpoint+1, Right>();
+        return _HighestRoot<Val, N, midpoint + 1, Right>();
     }
 
     return 0;
@@ -172,3 +172,15 @@ struct RatioExp
     static constexpr bool hasValue = _numHasRoot && _denHasRoot;
     using value = std::ratio<_tempNum, _tempDen>;
 };
+
+template <IsRatio Ratio, IsRatio Exp>
+constexpr bool RatioCanExp_()
+{
+    return RatioExp<Ratio, Exp>::hasValue;
+}
+
+template <typename Ratio, typename Exp>
+concept RatioCanExp = requires {
+    requires IsRatio<Ratio>;
+    requires IsRatio<Exp>;
+} && RatioCanExp_<Ratio, Exp>();

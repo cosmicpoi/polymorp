@@ -64,15 +64,6 @@ constexpr bool _CanOp()
 template <typename A, StringLiteral str, typename B>
 concept CanOp = _CanOp<A, str, B>();
 
-using Meter = dAtomic<"meter">;
-using Meter_2 = UnitExpI<Meter, 2>;
-using fMeter = fAtomic<"meter">;
-using iMeter = iAtomic<"meter">;
-using Second = dAtomic<"second">;
-using Second__2 = UnitExpI<Meter, -2>;
-using Kilometer = UnitMultRatio<Meter, std::ratio<1000>>;
-using Kilometer_2 = UnitExpI<Kilometer, 2>;
-
 int main()
 {
     // ------------------------------------------------------------
@@ -110,11 +101,45 @@ int main()
         using Exp4 = RatioExp<std::ratio<64,729>, std::ratio<2, 3>>;
         static_assert(Exp4::hasValue);
         static_assert(std::is_same_v<typename Exp4::value, std::ratio<16, 81>>);
+
+        static_assert(!RatioCanExp<std::ratio<4>, std::ratio<1, 3>>);
+        static_assert(RatioCanExp<std::ratio<4>, std::ratio<1, 2>>);
     }
 
     // ------------------------------------------------------------
     // Run Unit tests
     // ------------------------------------------------------------
+
+    /** -- Define and test definitions */
+    using Meter = dAtomic<"meter">;
+    static_assert( UnitExpableRatio<Meter, std::ratio<2>> );
+    using Meter_2 = UnitExpI<Meter, 2>;
+    static_assert( UnitExpableRatio<Meter, std::ratio<1, 2>> );
+    using Meter_1_2 = UnitExp<Meter, std::ratio<1, 2>>;
+
+    static_assert((std::is_same_v<Meter_1_2::uid, MakeUnitIdentifier<UnitBase<"meter", std::ratio<1, 2>>>>));
+    static_assert((std::is_same_v<Meter_1_2::ratio, std::ratio<1>>));
+     
+    using fMeter = fAtomic<"meter">;
+    using iMeter = iAtomic<"meter">;
+    
+    using Kilometer = UnitMultRatio<Meter, std::ratio<1000>>;
+    static_assert( UnitExpableRatio<Meter, std::ratio<2>> );
+    using Kilometer_2 = UnitExpI<Kilometer, 2>;
+
+    static_assert((std::is_same_v<Kilometer_2::uid, MakeUnitIdentifier<UnitBase<"meter", std::ratio<2>>>>));
+    static_assert((std::is_same_v<Kilometer_2::ratio, std::ratio<1000000>>));
+
+    // Trying to construct this unit should fail because the ratio 1000 does not have a square root
+    // using Kilometer_1_2 = UnitExp<Kilometer, std::ratio<1,2>>;
+    static_assert( !UnitExpableRatio<Kilometer, std::ratio<1,2>> );
+    
+
+    using Second = dAtomic<"second">;
+    // using Second__2 = UnitExpI<Second, -2>;
+
+
+    // std::cout << Kilometer_1_2{} << std::endl;
 
     /** -- Run constructor tests --  */
     std::cout << "Running constructor tests" << std::endl;
@@ -155,6 +180,9 @@ int main()
 
         static_assert((CanOp<Meter, "=", Kilometer>));
         static_assert((CanOp<Meter, "=", iMeter>));
+
+        static_assert((CanOp<Kilometer, "=", fMeter>));
+        static_assert((CanOp<Kilometer, "=", Meter>));
 
         static_assert((!CanOp<Meter, "=", Second>));
         static_assert((!CanOp<Meter, "=", Meter_2>));
