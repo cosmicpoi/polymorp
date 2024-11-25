@@ -24,7 +24,6 @@
             "problemMatcher": [],
             "group": {
                 "kind": "build",
-                "isDefault": true
             },
             "presentation": {
                 "reveal": "always",
@@ -41,6 +40,23 @@
             "problemMatcher": [],
             "group": {
                 "kind": "build"
+            },
+            "presentation": {
+                "reveal": "always",
+                "panel": "shared"
+            },
+            "runOptions": {
+                "runOn": "default"
+            }
+        },
+        {
+            "label": "Build and Run (with tests)",
+            "type": "shell",
+            "command": "./run-tests.sh && make && ./main",
+            "problemMatcher": [],
+            "group": {
+                "kind": "build",
+                "isDefault": true
             },
             "presentation": {
                 "reveal": "always",

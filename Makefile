@@ -29,7 +29,7 @@ tests: _Tests/tests.o $(HEADERS)
 %.o: %.cpp $(HEADERS)
 	$(CXX) $(CXXFLAGS) -c $< -o $@
 
-tests.o:
+tests.o $(HEADERS):
 	$(CXX) $(CXXFLAGS) -c _Tests/tests.cpp -o -Tests/tests.o
 
 # Clean rule to remove generated files

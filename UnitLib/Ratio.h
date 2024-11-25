@@ -84,13 +84,14 @@ struct IntPow_<Base, 0>
 };
 
 template <intmax_t Base, intmax_t Exponent>
-constexpr intmax_t IntPow() {
+constexpr intmax_t IntPow()
+{
     return IntPow_<Base, Exponent>::value;
 }
 
 // Define static pow of ratio with intmax_t
 template <IsRatio Ratio, intmax_t Exponent>
-struct RatioPow_
+struct RatioPowI_
 {
     static const intmax_t _num = IntPow<Ratio::num, Exponent>();
     static const intmax_t _den = IntPow<Ratio::den, Exponent>();
@@ -98,15 +99,76 @@ struct RatioPow_
 };
 
 template <IsRatio Ratio>
-struct RatioPow_<Ratio, 0>
+struct RatioPowI_<Ratio, 0>
 {
     using type = std::ratio<1>;
 };
 
+template <IsRatio Ratio, intmax_t Exponent>
+using RatioPowI = typename RatioPowI_<Ratio, Exponent>::type;
 
-// template <IsRatio Ratio, IsRatio Exp>
-// using RatioExpI_ = std::ratio <
+// Check whether Root^N = Val
+template <intmax_t Val, intmax_t Root, intmax_t N>
+constexpr bool IsIntegralRoot()
+{
+    return (IntPow<Root, N>() == Val);
+}
 
-//                    struct RatioExp<IsRatio Ratio, IsRatio Exp>
-// {
-// };
+// Compute greatest possible root, i.e highest Root s.t. Root^N <= Val
+//    Algorithm is essentially binary search on [1, 1 + Val / N] (Val^(1/N) <= Val / N)
+//    If the root is non-integral, terminates on ceil(root)
+template <intmax_t Val, intmax_t N, intmax_t Left, intmax_t Right>
+constexpr intmax_t _HighestRoot()
+{
+    // std::cout << Left << " " << Right << std::endl;
+    if (Left == Right)
+    {
+        return Left;
+    }
+
+    constexpr intmax_t midpoint = (Left + Right) / 2;
+    constexpr intmax_t res = IntPow<midpoint, N>();
+    if constexpr (res == Val)
+    {
+        return midpoint;
+    }
+    else if constexpr (res > Val)
+    {
+        return _HighestRoot<Val, N, Left, midpoint>();
+    }
+    else
+    {
+        return _HighestRoot<Val, N, midpoint+1, Right>();
+    }
+
+    return 0;
+}
+
+template <intmax_t Val, intmax_t N>
+constexpr intmax_t HighestRoot()
+{
+    // std::cout << "Highest root" << std::endl;
+    static_assert(N > 0);
+    if (N == 1)
+    {
+        return Val;
+    }
+    return _HighestRoot<Val, N, 1, 1 + Val / N>();
+}
+
+template <intmax_t Val, intmax_t N>
+concept HasIntegralRoot = (IntPow<HighestRoot<Val, N>(), N>() == Val);
+
+template <IsRatio Ratio, IsRatio Exp>
+struct RatioExp
+{
+    using _temp = RatioPowI<Ratio, Exp::num>;
+    static constexpr bool _numHasRoot = HasIntegralRoot<_temp::num, Exp::den>;
+    static constexpr bool _denHasRoot = HasIntegralRoot<_temp::den, Exp::den>;
+    static constexpr intmax_t _tempNum = HighestRoot<_temp::num, Exp::den>();
+    static constexpr intmax_t _tempDen = HighestRoot<_temp::den, Exp::den>();
+
+    // Public values
+    static constexpr bool hasValue = _numHasRoot && _denHasRoot;
+    using value = std::ratio<_tempNum, _tempDen>;
+};

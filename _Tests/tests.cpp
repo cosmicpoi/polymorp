@@ -12,7 +12,7 @@ template <typename A, StringLiteral str, typename B>
 constexpr bool _CanOp()
 {
     // Assignment
-    if constexpr(StrEq<str, "=">::value)
+    if constexpr (StrEq<str, "=">::value)
     {
         return requires(A a, B b) { a = b; };
     }
@@ -62,7 +62,7 @@ constexpr bool _CanOp()
 }
 
 template <typename A, StringLiteral str, typename B>
-concept _CanOpC = _CanOp<A, str, B>();
+concept CanOp = _CanOp<A, str, B>();
 
 using Meter = dAtomic<"meter">;
 using Meter_2 = UnitExpI<Meter, 2>;
@@ -76,10 +76,47 @@ using Kilometer_2 = UnitExpI<Kilometer, 2>;
 int main()
 {
     // ------------------------------------------------------------
+    // Run Math, lib, util tests
+    // ------------------------------------------------------------
+    std::cout << "Running ratio tests" << std::endl;
+    /** -- Test helpers -- */
+    {
+        static_assert((IntPow<2, 10>() == 1024));
+        static_assert((std::is_same_v<RatioPowI<std::ratio<2, 3>, 3>, std::ratio<8, 27>>));
+        static_assert((IsIntegralRoot<1024, 2, 10>()));
+
+        static_assert((HighestRoot<100, 3>() == 5));
+        static_assert((HighestRoot<37, 1>() == 37));
+        static_assert((HighestRoot<9, 2>() == 3));
+        static_assert((HighestRoot<1000, 3>() == 10));
+        static_assert((HighestRoot<1000, 2>() == 32));
+        static_assert((HighestRoot<5, 2>() == 3));
+
+        static_assert((HasIntegralRoot<37, 1>));
+        static_assert((HasIntegralRoot<1000, 3>));
+        static_assert((!HasIntegralRoot<1000, 2>));
+
+        using Exp1 = RatioExp<std::ratio<4>, std::ratio<3>>;
+        static_assert(Exp1::hasValue);
+        static_assert(std::is_same_v<typename Exp1::value, std::ratio<64>>);
+
+        using Exp2 = RatioExp<std::ratio<4>, std::ratio<1, 2>>;
+        static_assert(Exp2::hasValue);
+        static_assert(std::is_same_v<typename Exp2::value, std::ratio<2>>);
+
+        using Exp3 = RatioExp<std::ratio<5>, std::ratio<1, 2>>;
+        static_assert(!Exp3::hasValue);
+
+        using Exp4 = RatioExp<std::ratio<64,729>, std::ratio<2, 3>>;
+        static_assert(Exp4::hasValue);
+        static_assert(std::is_same_v<typename Exp4::value, std::ratio<16, 81>>);
+    }
+
+    // ------------------------------------------------------------
     // Run Unit tests
     // ------------------------------------------------------------
 
-    /** -- Run constructor tests */
+    /** -- Run constructor tests --  */
     std::cout << "Running constructor tests" << std::endl;
     {
         Meter v0;
@@ -116,25 +153,25 @@ int main()
         Kilometer v1{0};
         assert((v1 = Meter{1001}) == Kilometer{1.001});
 
-        static_assert((_CanOpC<Meter, "=", Kilometer>));
-        static_assert((_CanOpC<Meter, "=", iMeter>));
+        static_assert((CanOp<Meter, "=", Kilometer>));
+        static_assert((CanOp<Meter, "=", iMeter>));
 
-        static_assert((!_CanOpC<Meter, "=", Second>));
-        static_assert((!_CanOpC<Meter, "=", Meter_2>));
+        static_assert((!CanOp<Meter, "=", Second>));
+        static_assert((!CanOp<Meter, "=", Meter_2>));
 
-        static_assert((_CanOpC<Meter, "=", typename Meter::type>));
-        static_assert((_CanOpC<Meter, "=", double>));
-        static_assert((_CanOpC<Meter, "=", int>));
-        static_assert((_CanOpC<Meter, "=", unsigned int>));
-        static_assert((_CanOpC<Meter, "=", float>));
+        static_assert((CanOp<Meter, "=", typename Meter::type>));
+        static_assert((CanOp<Meter, "=", double>));
+        static_assert((CanOp<Meter, "=", int>));
+        static_assert((CanOp<Meter, "=", unsigned int>));
+        static_assert((CanOp<Meter, "=", float>));
 
-        static_assert((_CanOpC<iMeter, "=", typename Meter::type>));
-        static_assert((_CanOpC<iMeter, "=", double>));
-        static_assert((_CanOpC<iMeter, "=", int>));
-        static_assert((_CanOpC<iMeter, "=", unsigned int>));
-        static_assert((_CanOpC<iMeter, "=", float>));
+        static_assert((CanOp<iMeter, "=", typename Meter::type>));
+        static_assert((CanOp<iMeter, "=", double>));
+        static_assert((CanOp<iMeter, "=", int>));
+        static_assert((CanOp<iMeter, "=", unsigned int>));
+        static_assert((CanOp<iMeter, "=", float>));
 
-        static_assert((!_CanOpC<typename Meter::type, "=", Meter>));
+        static_assert((!CanOp<typename Meter::type, "=", Meter>));
     }
 
     /** -- Run arithmetic tests --  */
@@ -146,9 +183,9 @@ int main()
         assert((Meter{1} + Kilometer{1}) == Kilometer{1.001});
         assert((Meter{1} + Kilometer{1}) == Meter{1001});
 
-        static_assert((_CanOpC<Meter, "+", Kilometer>));
-        static_assert((!_CanOpC<Meter, "+", double>));
-        static_assert((!_CanOpC<double, "+", Meter>));
+        static_assert((CanOp<Meter, "+", Kilometer>));
+        static_assert((!CanOp<Meter, "+", double>));
+        static_assert((!CanOp<double, "+", Meter>));
     }
     // Test subtraction
     {
@@ -156,9 +193,9 @@ int main()
         assert((Meter{1} - Kilometer{1}) == Kilometer{-0.999});
         assert((Meter{1} - Kilometer{1}) == Meter{-999});
 
-        static_assert((_CanOpC<Meter, "-", Kilometer>));
-        static_assert((!_CanOpC<Meter, "-", double>));
-        static_assert((!_CanOpC<double, "-", Meter>));
+        static_assert((CanOp<Meter, "-", Kilometer>));
+        static_assert((!CanOp<Meter, "-", double>));
+        static_assert((!CanOp<double, "-", Meter>));
     }
     // Test multiplication with units
     {
@@ -166,9 +203,9 @@ int main()
         // assert((Meter{1} * Kilometer{1}) == Kilometer{1});
         assert((Meter{1} * Kilometer{1}) == Meter_2{1000});
 
-        static_assert((_CanOpC<Meter, "-", Kilometer>));
-        static_assert((!_CanOpC<Meter, "-", double>));
-        static_assert((!_CanOpC<double, "-", Meter>));
+        static_assert((CanOp<Meter, "-", Kilometer>));
+        static_assert((!CanOp<Meter, "-", double>));
+        static_assert((!CanOp<double, "-", Meter>));
     }
 
     // Test multiplication with scalars (right and left)
@@ -195,7 +232,7 @@ int main()
         GeneralScalar auto myV = 10.0;
         GeneralScalar auto myV2 = 10.0;
         GeneralScalar auto myV3 = Meter{1};
-        static_assert((_CanOpC<decltype(myV), "+", decltype(myV2)>));
+        static_assert((CanOp<decltype(myV), "+", decltype(myV2)>));
         // myV + myV3;
     }
 
