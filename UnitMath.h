@@ -3,26 +3,69 @@
 #include <cmath>
 #include "Unit.h"
 
-// Maintain ratio while computing sqrt
-template <IsUnit U>
-inline UnitExp<U, std::ratio<1, 2>> unit_sqrt(U val)
+// GeneralScalar - generalized concept to represent anything that can be multiplied by a unit
+template <typename T>
+concept PrimitiveScalar = !IsUnit<T> && (std::convertible_to<T, int>       //
+                                         || std::convertible_to<T, float>  //
+                                         || std::convertible_to<T, double> //
+                                         || std::convertible_to<T, long>);
+template <typename T>
+concept GeneralScalar = IsUnit<T> || PrimitiveScalar<T>; //
+
+template <GeneralScalar T, IsRatio Exp>
+struct ScalarExp_
 {
-    using Type = typename U::type;
-    using Ratio = typename U::ratio;
+};
 
-    Type actual_val = RatioMult<Type, Ratio>(val.value);
+template <IsUnit U, IsRatio Exp>
+struct ScalarExp_<U, Exp>
+{
+    using type = UnitExp<U, Exp>;
+};
 
-    return RatioDiv<Type, Ratio>(std::sqrt(actual_val));
+template <PrimitiveScalar T, IsRatio Exp>
+struct ScalarExp_<T, Exp>
+{
+    using type = T;
+};
+
+template <GeneralScalar T, IsRatio Exp>
+using ScalarExp = typename ScalarExp_<T, Exp>::type;
+
+// Maintain ratio while computing sqrt
+template <GeneralScalar U>
+inline ScalarExp<U, std::ratio<1, 2>> unit_sqrt(U val)
+{
+    if constexpr (IsUnit<U>)
+    {
+        using Type = typename U::type;
+        using Ratio = typename U::ratio;
+
+        Type actual_val = RatioMult<Type, Ratio>(val.value);
+
+        return RatioDiv<Type, Ratio>(std::sqrt(actual_val));
+    }
+    else
+    {
+        return std::sqrt(val);
+    }
 }
 
 // Maintain ratio while computing pow
-template <IsRatio Exp, IsUnit U>
-inline UnitExp<U, Exp> unit_pow(U val)
+template <IsRatio Exp, GeneralScalar U>
+inline ScalarExp<U, Exp> unit_pow(U val)
 {
-    using Type = typename U::type;
-    using Ratio = typename U::ratio;
+    if constexpr (IsUnit<U>)
+    {
+        using Type = typename U::type;
+        using Ratio = typename U::ratio;
 
-    Type actual_val = RatioMult<Type, Ratio>(val.value);
+        Type actual_val = RatioMult<Type, Ratio>(val.value);
 
-    return RatioDiv<Type, Ratio>(std::pow(actual_val, RatioAsDouble<Exp>()));
+        return RatioDiv<Type, Ratio>(std::pow(actual_val, RatioAsDouble<Exp>()));
+    }
+    else
+    {
+        return std::pow(val, RatioAsDouble<Exp>());
+    }
 }

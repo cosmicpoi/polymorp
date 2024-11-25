@@ -9,14 +9,6 @@ concept HasPrint = requires(std::ostream &os) {
     { T::Print(os) } -> std::same_as<void>;
 };
 
-/** Function to print integer sequences */
-template <typename T, T... Ints>
-void print_integer_sequence(std::integer_sequence<T, Ints...>)
-{
-    ((std::cout << Ints << " "), ...);
-    std::cout << std::endl;
-}
-
 // Helper function to create a compile-time zero-initialized array of type T and size N
 template <typename T, size_t N>
 constexpr std::array<T, N> create_array()

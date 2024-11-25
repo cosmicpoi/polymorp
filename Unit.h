@@ -76,6 +76,11 @@ public:
     inline Unit(T val)
         : value(val){};
 
+    inline bool IsZero() const
+    {
+        return value == 0 || Ratio::num == 0;
+    }
+
     /**
      * Copy assignments
      */
@@ -94,7 +99,7 @@ public:
 
     /** @brief Multiply with another unit. Follow default language promotion rules */
     template <typename RHS_Type, UnitIdentifier RHS_UID, IsRatio RHS_Ratio>
-    inline auto operator*(Unit<RHS_Type, RHS_UID, RHS_Ratio> rhs)
+    inline auto operator*(Unit<RHS_Type, RHS_UID, RHS_Ratio> rhs) const
     {
         using ResType = std::common_type_t<Type, RHS_Type>;
         return Unit<ResType, UIMult<UID, RHS_UID>, std::ratio_multiply<Ratio, RHS_Ratio>>{value * rhs.value};
@@ -103,7 +108,7 @@ public:
     /** @brief Multiply with unitless scalar. */
     template <typename RHS>
         requires std::is_convertible_v<RHS, Type>
-    inline auto operator*(RHS rhs)
+    inline auto operator*(RHS rhs) const
     {
         using ResType = std::common_type_t<Type, RHS>;
         return operator*(Unit<ResType, EmptyUid>{rhs});
@@ -111,14 +116,14 @@ public:
 
     /** @brief Divide by another unit. Follow default language promotion rules */
     template <typename RHS_Type, UnitIdentifier RHS_UID, IsRatio RHS_Ratio>
-    inline auto operator/(Unit<RHS_Type, RHS_UID, RHS_Ratio> rhs)
+    inline auto operator/(Unit<RHS_Type, RHS_UID, RHS_Ratio> rhs) const
     {
         using ResType = std::common_type_t<Type, RHS_Type>;
         return Unit<ResType, UIDivide<UID, RHS_UID>, std::ratio_divide<Ratio, RHS_Ratio>>{value / rhs.value};
     }
 
     /** @brief Divide by unitless scalar. */
-    inline auto operator/(Type rhs)
+    inline auto operator/(Type rhs) const
     {
         return Unit<Type, UID, Ratio>{value / rhs};
     }
@@ -135,7 +140,7 @@ public:
 
     /** @brief Add with another unit, only if UIDs match. Follow default language promotion rules */
     template <typename RHS_Type, UnitIdentifier RHS_UID, IsRatio RHS_Ratio>
-    inline auto operator+(Unit<RHS_Type, RHS_UID, RHS_Ratio> rhs)
+    inline auto operator+(Unit<RHS_Type, RHS_UID, RHS_Ratio> rhs) const
         requires(std::is_same_v<UID, RHS_UID>)
     {
         using ResType = std::common_type_t<Type, RHS_Type>;
@@ -146,7 +151,7 @@ public:
 
     /** @brief Subtract with another unit, only if UIDs match. Follow default language promotion rules */
     template <typename RHS_Type, UnitIdentifier RHS_UID, IsRatio RHS_Ratio>
-    inline auto operator-(Unit<RHS_Type, RHS_UID, RHS_Ratio> rhs)
+    inline auto operator-(Unit<RHS_Type, RHS_UID, RHS_Ratio> rhs) const
         requires(std::is_same_v<UID, RHS_UID>)
     {
         return operator+(rhs * -1);
@@ -174,7 +179,7 @@ public:
     /** Comparison */
 
     template <typename RHS_Type, UnitIdentifier RHS_UID, IsRatio RHS_Ratio>
-    inline auto operator<=>(Unit<RHS_Type, RHS_UID, RHS_Ratio> rhs)
+    inline auto operator<=>(Unit<RHS_Type, RHS_UID, RHS_Ratio> rhs) const
         requires requires(RHS_Type A, Type B) {
             requires std::is_same_v<UID, RHS_UID>;
             A <=> B;
@@ -185,14 +190,14 @@ public:
     }
 
     template <typename RHS_Type, UnitIdentifier RHS_UID, IsRatio RHS_Ratio>
-    inline bool operator==(Unit<RHS_Type, RHS_UID, RHS_Ratio> rhs)
+    inline bool operator==(Unit<RHS_Type, RHS_UID, RHS_Ratio> rhs) const
         requires requires(RHS_Type A, Type B) {
             requires std::is_same_v<UID, RHS_UID>;
-            A == B;
+            { A == B } -> std::convertible_to<bool>;
         }
     {
         auto diff = *this - rhs;
-        return diff.value == 0 || decltype(diff)::ratio::num == 0;
+        return diff.IsZero();
     }
 
     std::ostream &operator<<(std::ostream &os) const
@@ -233,15 +238,17 @@ std::ostream &operator<<(std::ostream &os, Unit<Type, UID, Ratio> val)
     return val.operator<<(os);
 }
 
-/** @brief Multiply with another unit. Follow default language promotion rules */
+/** @brief Left-multiply by scalar */
 template <typename LHS, IsUnit Unit_RHS>
+    requires requires(LHS a, Unit_RHS b) { b.operator*(a); }
 auto operator*(LHS lhs, Unit_RHS rhs)
 {
     return rhs * lhs;
 }
 
-/** @brief Divide with another unit. Follow default language promotion rules */ // template <typename LHS, IsUnit Unit_RHS>
+/** @brief Left-divide with scalar */
 template <typename LHS, IsUnit Unit_RHS>
+    requires requires(LHS a, Unit_RHS b) { a.operator*(b); }
 auto operator/(LHS lhs, Unit_RHS rhs)
 {
     return lhs * unit_pow<std::ratio<-1>>(rhs);
@@ -251,6 +258,17 @@ auto operator/(LHS lhs, Unit_RHS rhs)
 template <IsUnit A, IsUnit B>
 using UnitMult = decltype(std::declval<A>() * std::declval<B>());
 
+// Get the resulting unit from adding two units of type A and B.
+// Note this doesn't actually "add units" (because what does that even mean),
+// it just computes the type of Unit A + Unit B.
+template <IsUnit A, IsUnit B>
+using UnitAdd = decltype(std::declval<A>() + std::declval<B>());
+
+// In principle this should be the same as add, but if we get zero values
+// weird things can happen
+template <IsUnit A, IsUnit B>
+using UnitSubtract = decltype(std::declval<A>() + std::declval<B>());
+
 // Get type for exponentiated unit
 template <IsUnit U, IsRatio Exp>
 using UnitExp = Unit<
@@ -258,8 +276,16 @@ using UnitExp = Unit<
     UIExp<typename U::uid, Exp>,
     typename U::ratio>;
 
+// Shorthand for int exponents
 template <IsUnit U, int Exp>
 using UnitExpI = UnitExp<U, std::ratio<Exp>>;
+
+// Multiply an existing unit by a ratio
+template <IsUnit U, IsRatio Ratio>
+using UnitMultRatio = Unit<
+    typename U::type,
+    typename U::uid,
+    std::ratio_multiply<Ratio, typename U::ratio>>;
 
 /**
  * Some template shorthands for easier deduction
@@ -273,3 +299,6 @@ using dAtomic = TypeAtomic<double, Symbol>;
 
 template <StringLiteral Symbol>
 using fAtomic = TypeAtomic<float, Symbol>;
+
+template <StringLiteral Symbol>
+using iAtomic = TypeAtomic<int, Symbol>;
