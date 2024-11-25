@@ -2,7 +2,6 @@
 
 #include <type_traits>
 #include <ratio>
-#include <iomanip>
 #include "_Consts.h"
 #include "UnitIdentifier.h"
 #include "TypeUtils.h"
@@ -98,7 +97,7 @@ public:
      * Copy assignments
      */
     template <UnitIsConvertible_<ThisType> RHS>
-    inline ThisType &operator=(RHS rhs)
+    inline ThisType &operator=(const RHS &rhs)
     {
         if constexpr (UnitSameRatio_<ThisType, RHS>)
         {
@@ -135,7 +134,7 @@ public:
 
     /** @brief Multiply with another unit. Follow default language promotion rules */
     template <typename RHS_Type, UnitIdentifier RHS_UID, IsRatio RHS_Ratio>
-    inline UnitMultBy_<Unit<RHS_Type, RHS_UID, RHS_Ratio>> operator*(Unit<RHS_Type, RHS_UID, RHS_Ratio> rhs) const
+    inline UnitMultBy_<Unit<RHS_Type, RHS_UID, RHS_Ratio>> operator*(const Unit<RHS_Type, RHS_UID, RHS_Ratio> &rhs) const
         requires CanMultiply<Type, RHS_Type>
     {
         return UnitMultBy_<Unit<RHS_Type, RHS_UID, RHS_Ratio>>{value * rhs.GetValue()};
@@ -143,7 +142,7 @@ public:
 
     /** @brief Multiply with unitless scalar. */
     template <std::convertible_to<Type> RHS>
-    inline UseWithScalar_<RHS> operator*(RHS rhs) const
+    inline UseWithScalar_<RHS> operator*(const RHS &rhs) const
         requires CanMultiply<Type, RHS>
     {
         return UseWithScalar_<RHS>{value * rhs};
@@ -151,7 +150,7 @@ public:
 
     /** @brief Divide by another unit. Follow default language promotion rules */
     template <typename RHS_Type, UnitIdentifier RHS_UID, IsRatio RHS_Ratio>
-    inline UnitDivBy_<Unit<RHS_Type, RHS_UID, RHS_Ratio>> operator/(Unit<RHS_Type, RHS_UID, RHS_Ratio> rhs) const
+    inline UnitDivBy_<Unit<RHS_Type, RHS_UID, RHS_Ratio>> operator/(const Unit<RHS_Type, RHS_UID, RHS_Ratio> &rhs) const
         requires CanDivide<Type, RHS_Type>
     {
         return UnitDivBy_<Unit<RHS_Type, RHS_UID, RHS_Ratio>>{value / rhs.GetValue()};
@@ -159,7 +158,7 @@ public:
 
     /** @brief Divide by unitless scalar. */
     template <std::convertible_to<Type> RHS>
-    inline UseWithScalar_<RHS> operator/(RHS rhs) const
+    inline UseWithScalar_<RHS> operator/(const RHS &rhs) const
         requires CanDivide<Type, RHS>
     {
         return UseWithScalar_<RHS>{value / rhs};
@@ -184,7 +183,7 @@ public:
 
     /** @brief Add with another unit, only if UIDs match. Follow default language promotion rules */
     template <typename RHS_Type, UnitIdentifier RHS_UID, IsRatio RHS_Ratio>
-    inline UnitAdd_<Unit<RHS_Type, RHS_UID, RHS_Ratio>> operator+(Unit<RHS_Type, RHS_UID, RHS_Ratio> rhs) const
+    inline UnitAdd_<Unit<RHS_Type, RHS_UID, RHS_Ratio>> operator+(const Unit<RHS_Type, RHS_UID, RHS_Ratio> &rhs) const
         requires CanRatioAdd<Type, RHS_Type> && std::is_same_v<UID, RHS_UID>
     {
         using ResType = std::common_type_t<Type, RHS_Type>;
@@ -195,7 +194,7 @@ public:
 
     /** @brief Subtract with another unit, only if UIDs match. Follow default language promotion rules */
     template <typename RHS_Type, UnitIdentifier RHS_UID, IsRatio RHS_Ratio>
-    inline UnitAdd_<Unit<RHS_Type, RHS_UID, RHS_Ratio>> operator-(Unit<RHS_Type, RHS_UID, RHS_Ratio> rhs) const
+    inline UnitAdd_<Unit<RHS_Type, RHS_UID, RHS_Ratio>> operator-(const Unit<RHS_Type, RHS_UID, RHS_Ratio> &rhs) const
         requires CanRatioSubtract<Type, RHS_Type> && std::is_same_v<UID, RHS_UID>
     {
         using ResType = std::common_type_t<Type, RHS_Type>;
@@ -209,7 +208,7 @@ public:
      */
     template <typename T>
         requires requires(ThisType a, T b) { a * b; a = b; a = a * b; }
-    inline ThisType &operator*=(T rhs)
+    inline ThisType &operator*=(const T &rhs)
     {
         value = ThisType{operator*(rhs)}.value;
         return *this;
@@ -217,7 +216,7 @@ public:
 
     template <typename T>
         requires requires(ThisType a, T b) { a / b; a = b; a = a / b; }
-    inline ThisType &operator/=(T rhs)
+    inline ThisType &operator/=(const T &rhs)
     {
         value = ThisType{operator/(rhs)}.value;
         return *this;
@@ -225,7 +224,7 @@ public:
 
     template <typename T>
         requires requires(ThisType a, T b) { a + b; a = b; a = a + b; }
-    inline ThisType &operator+=(T rhs)
+    inline ThisType &operator+=(const T &rhs)
     {
         value = ThisType{operator+(rhs)}.value;
         return *this;
@@ -233,7 +232,7 @@ public:
 
     template <typename T>
         requires requires(ThisType a, T b) { a - b; a = b; a = a - b; }
-    inline ThisType &operator-=(T rhs)
+    inline ThisType &operator-=(const T &rhs)
     {
         value = ThisType{operator-(rhs)}.value;
         return *this;
@@ -242,7 +241,7 @@ public:
     /** Comparison */
 
     template <typename RHS_Type, UnitIdentifier RHS_UID, IsRatio RHS_Ratio>
-    inline auto operator<=>(Unit<RHS_Type, RHS_UID, RHS_Ratio> rhs) const
+    inline auto operator<=>(const Unit<RHS_Type, RHS_UID, RHS_Ratio> &rhs) const
         requires requires(RHS_Type A, Type B) {
             requires std::is_same_v<UID, RHS_UID>;
             A <=> B;
@@ -258,7 +257,7 @@ public:
     }
 
     template <typename RHS_Type, UnitIdentifier RHS_UID, IsRatio RHS_Ratio>
-    inline bool operator==(Unit<RHS_Type, RHS_UID, RHS_Ratio> rhs) const
+    inline bool operator==(const Unit<RHS_Type, RHS_UID, RHS_Ratio> &rhs) const
         requires requires(RHS_Type A, Type B) {
             requires std::is_same_v<UID, RHS_UID>;
             { A == B } -> std::convertible_to<bool>;
@@ -279,6 +278,8 @@ public:
         CommonType val2 = (rhs.GetValue() * fac2);
         return std::abs(val1 - val2) < epsilon;
     }
+
+    // template <typename RHS>
 
     std::ostream &operator<<(std::ostream &os) const
     {
@@ -370,7 +371,7 @@ struct UnitExp_
 
 // Get type for exponentiated unit
 template <IsUnit U, IsRatio Exp>
-    // requires UnitExpableRatio<U, Exp>
+// requires UnitExpableRatio<U, Exp>
 struct UnitExp_<U, Exp>
 {
     using type = Unit<
