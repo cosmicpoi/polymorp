@@ -219,6 +219,11 @@ int main()
         assert((!CanOp<typename Meter::type, "=", Meter>()));
     }
 
+    // Conversion between empty types and plain scalars
+    {
+        
+    }
+
     /** -- Run arithmetic tests --  */
     std::cout << "Running arithmetic tests" << std::endl;
 

@@ -45,6 +45,10 @@ constexpr void PrintRatio(std::ostream &os = std::cout)
 template <IsRatio R, typename T>
 T MultByRatio(T val)
 {
+    if (R::num == 1 && R::den == 1)
+    {
+        return val;
+    }
     return (T)(val * ((T)R::num) / ((T)R::den));
 }
 
@@ -52,6 +56,10 @@ T MultByRatio(T val)
 template <IsRatio R, typename T>
 T DivideByRatio(T val)
 {
+    if (R::num == 1 && R::den == 1)
+    {
+        return val;
+    }
     return (T)(val * ((T)R::den) / ((T)R::num));
 };
 
