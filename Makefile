@@ -6,7 +6,7 @@ CXXFLAGS = -Wall -Wextra -std=c++20
 
 # Source files (all .cpp files in the directory)
 SOURCES = $(wildcard *.cpp)
-HEADERS = $(wildcard *.h)
+HEADERS = $(wildcard *.h) $(wildcard UnitLib/*.h)
 
 # Object files (replace .cpp with .o for each source file)
 OBJECTS = $(SOURCES:.cpp=.o)
