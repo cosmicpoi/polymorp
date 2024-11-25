@@ -43,13 +43,13 @@ constexpr void PrintRatio(std::ostream &os = std::cout)
 }
 
 /** Function to multiply out a ratio */
-template <typename T, IsRatio R>
+template <IsRatio R, typename T>
 T RatioMult(T val)
 {
     return (T)(val * ((T)R::num) / ((T)R::den));
 }
 
-template <typename T, IsRatio R>
+template <IsRatio R, typename T>
 T RatioDiv(T val)
 {
     return (T)(val * ((T)R::den) / ((T)R::num));

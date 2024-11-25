@@ -196,8 +196,7 @@ public:
             { A == B } -> std::convertible_to<bool>;
         }
     {
-        auto diff = *this - rhs;
-        return diff.IsZero();
+        return value * Ratio::num * RHS_Ratio::den == rhs.value * RHS_Ratio::num * Ratio::den;
     }
 
     std::ostream &operator<<(std::ostream &os) const

@@ -14,7 +14,7 @@ inline ScalarExp<U, std::ratio<1, 2>> unit_sqrt(U val)
         using Type = typename U::type;
         using Ratio = typename U::ratio;
 
-        Type actual_val = RatioMult<Type, Ratio>(val.value);
+        Type actual_val = RatioMult<Ratio>(val.value);
 
         return RatioDiv<Type, Ratio>(std::sqrt(actual_val));
     }
