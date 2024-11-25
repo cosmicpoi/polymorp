@@ -77,11 +77,11 @@ void ScalarPrintInfo(std::ostream &os = std::cout)
 
 // Get the value
 template <GeneralScalar T>
-GetUnderlying<T> ScalarGetValue(T val)
+const GetUnderlying<T> ScalarGetValue(const T val)
 {
     if constexpr (IsUnit<T>)
     {
-        return val.value;
+        return val.GetValue();
     }
     else
     {
@@ -92,6 +92,6 @@ GetUnderlying<T> ScalarGetValue(T val)
 // Conversion helper
 
 template <typename From, typename To>
-concept ScalarIsConvertible = 
+concept ScalarIsConvertible =
     (IsUnit<From> && IsUnit<To> && UnitIsConvertible<From, To>) ||
     (PrimitiveScalar<From> && PrimitiveScalar<To> && std::is_convertible_v<From, To>);

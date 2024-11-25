@@ -33,6 +33,22 @@
             "runOptions": {
                 "runOn": "default"
             }
+        },
+        {
+            "label": "Run tests",
+            "type": "shell",
+            "command": "./run-tests.sh",
+            "problemMatcher": [],
+            "group": {
+                "kind": "build"
+            },
+            "presentation": {
+                "reveal": "always",
+                "panel": "shared"
+            },
+            "runOptions": {
+                "runOn": "default"
+            }
         }
     ]
 }

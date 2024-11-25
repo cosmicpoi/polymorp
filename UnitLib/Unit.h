@@ -2,6 +2,7 @@
 
 #include <type_traits>
 #include <ratio>
+#include <iomanip>
 #include "UnitIdentifier.h"
 #include "TypeUtils.h"
 
@@ -82,10 +83,15 @@ public:
     inline Unit(T val)
         : value(val){};
 
+    // Check is zero
     inline bool IsZero() const
     {
         return value == 0 || Ratio::num == 0;
     }
+
+    // Value getters
+    inline Type &GetValue() { return value; }
+    inline const Type &GetValue() const { return value; }
 
     /**
      * Copy assignments
@@ -95,12 +101,12 @@ public:
     {
         if constexpr (UnitSameRatio_<ThisType, RHS>)
         {
-            value = rhs.value;
+            value = rhs.GetValue();
             return *this;
         }
         else
         {
-            Type product = RatioMult<typename RHS::ratio>(rhs.value);
+            Type product = RatioMult<typename RHS::ratio>(rhs.GetValue());
             value = RatioDiv<Ratio>(product);
             return *this;
         }
@@ -131,7 +137,7 @@ public:
     inline UnitMultBy_<Unit<RHS_Type, RHS_UID, RHS_Ratio>> operator*(Unit<RHS_Type, RHS_UID, RHS_Ratio> rhs) const
         requires CanMultiply<Type, RHS_Type>
     {
-        return UnitMultBy_<Unit<RHS_Type, RHS_UID, RHS_Ratio>>{value * rhs.value};
+        return UnitMultBy_<Unit<RHS_Type, RHS_UID, RHS_Ratio>>{value * rhs.GetValue()};
     }
 
     /** @brief Multiply with unitless scalar. */
@@ -147,7 +153,7 @@ public:
     inline UnitDivBy_<Unit<RHS_Type, RHS_UID, RHS_Ratio>> operator/(Unit<RHS_Type, RHS_UID, RHS_Ratio> rhs) const
         requires CanDivide<Type, RHS_Type>
     {
-        return UnitDivBy_<Unit<RHS_Type, RHS_UID, RHS_Ratio>>{value / rhs.value};
+        return UnitDivBy_<Unit<RHS_Type, RHS_UID, RHS_Ratio>>{value / rhs.GetValue()};
     }
 
     /** @brief Divide by unitless scalar. */
@@ -182,7 +188,7 @@ public:
     {
         using ResType = std::common_type_t<Type, RHS_Type>;
         return UnitAdd_<Unit<RHS_Type, RHS_UID, RHS_Ratio>>{
-            (((ResType)value) / (Ratio::den * RHS_Ratio::num)) + (((ResType)rhs.value) / (RHS_Ratio::den * Ratio::num)) //
+            (((ResType)value) / (Ratio::den * RHS_Ratio::num)) + (((ResType)rhs.GetValue()) / (RHS_Ratio::den * Ratio::num)) //
         };
     }
 
@@ -193,7 +199,7 @@ public:
     {
         using ResType = std::common_type_t<Type, RHS_Type>;
         return UnitAdd_<Unit<RHS_Type, RHS_UID, RHS_Ratio>>{
-            (((ResType)value) / (Ratio::den * RHS_Ratio::num)) - (((ResType)rhs.value) / (RHS_Ratio::den * Ratio::num)) //
+            (((ResType)value) / (Ratio::den * RHS_Ratio::num)) - (((ResType)rhs.GetValue()) / (RHS_Ratio::den * Ratio::num)) //
         };
     }
 
@@ -216,6 +222,22 @@ public:
         return *this;
     }
 
+    template <typename T>
+        requires requires(ThisType a, T b) { a + b; a = b; a = a + b; }
+    inline ThisType &operator+=(T rhs)
+    {
+        value = ThisType{operator+(rhs)}.value;
+        return *this;
+    }
+
+    template <typename T>
+        requires requires(ThisType a, T b) { a - b; a = b; a = a - b; }
+    inline ThisType &operator-=(T rhs)
+    {
+        value = ThisType{operator-(rhs)}.value;
+        return *this;
+    }
+
     /** Comparison */
 
     template <typename RHS_Type, UnitIdentifier RHS_UID, IsRatio RHS_Ratio>
@@ -225,8 +247,13 @@ public:
             A <=> B;
         }
     {
-        auto diff = *this - rhs;
-        return diff.value <=> 0;
+        constexpr auto fac1 = Ratio::num * RHS_Ratio::den;
+        constexpr auto fac2 = RHS_Ratio::num * Ratio::den;
+
+        Type val1 = (value * fac1);
+        RHS_Type val2 = (rhs.GetValue() * fac2);
+
+        return val1 <=> val2;
     }
 
     template <typename RHS_Type, UnitIdentifier RHS_UID, IsRatio RHS_Ratio>
@@ -236,7 +263,15 @@ public:
             { A == B } -> std::convertible_to<bool>;
         }
     {
-        return value * Ratio::num * RHS_Ratio::den == rhs.value * RHS_Ratio::num * Ratio::den;
+        using CommonType = std::common_type_t<Type, RHS_Type>;
+        constexpr auto fac1 = Ratio::num * RHS_Ratio::den;
+        constexpr auto fac2 = RHS_Ratio::num * Ratio::den;
+        constexpr CommonType eps = std::numeric_limits<CommonType>::epsilon();
+        constexpr CommonType epsilon = eps * std::max(fac1, fac2);
+
+        CommonType val1 = (value * fac1);
+        CommonType val2 = (rhs.GetValue() * fac2);
+        return std::abs(val1 - val2) < epsilon;
     }
 
     std::ostream &operator<<(std::ostream &os) const
@@ -245,6 +280,7 @@ public:
         return os;
     }
 
+private:
     /** @brief Underlying value */
     Type value = 0;
 };
