@@ -3,6 +3,7 @@
 #include <type_traits>
 #include <ratio>
 #include <iomanip>
+#include "_Consts.h"
 #include "UnitIdentifier.h"
 #include "TypeUtils.h"
 
@@ -106,8 +107,8 @@ public:
         }
         else
         {
-            Type product = RatioMult<typename RHS::ratio>(rhs.GetValue());
-            value = RatioDiv<Ratio>(product);
+            Type product = MultByRatio<typename RHS::ratio>(rhs.GetValue());
+            value = DivideByRatio<Ratio>(product);
             return *this;
         }
     }
@@ -264,10 +265,15 @@ public:
         }
     {
         using CommonType = std::common_type_t<Type, RHS_Type>;
+        
         constexpr auto fac1 = Ratio::num * RHS_Ratio::den;
         constexpr auto fac2 = RHS_Ratio::num * Ratio::den;
-        constexpr CommonType eps = std::numeric_limits<CommonType>::epsilon();
-        constexpr CommonType epsilon = eps * std::max(fac1, fac2);
+        constexpr auto facMax = fac1 > fac2 ? fac1 : fac2;
+        constexpr CommonType eps1 = std::numeric_limits<Type>::epsilon();
+        constexpr CommonType eps2 = std::numeric_limits<RHS_Type>::epsilon();
+        constexpr CommonType eps = eps1 > eps2 ? eps1 : eps2;
+        
+        constexpr CommonType epsilon = eps * facMax * EPS_TOLERANCE;
 
         CommonType val1 = (value * fac1);
         CommonType val2 = (rhs.GetValue() * fac2);

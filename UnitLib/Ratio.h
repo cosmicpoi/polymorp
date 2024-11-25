@@ -3,7 +3,6 @@
 #include <concepts>
 #include <ratio>
 
-
 /** Concept to match ratio */
 
 // Define the trait
@@ -42,15 +41,16 @@ constexpr void PrintRatio(std::ostream &os = std::cout)
     }
 }
 
-/** Function to multiply out a ratio */
+/** Function to multiply out a ratio: Compute val * R */
 template <IsRatio R, typename T>
-T RatioMult(T val)
+T MultByRatio(T val)
 {
     return (T)(val * ((T)R::num) / ((T)R::den));
 }
 
+/** Function to divide out a ratio* Compute val / R */
 template <IsRatio R, typename T>
-T RatioDiv(T val)
+T DivideByRatio(T val)
 {
     return (T)(val * ((T)R::den) / ((T)R::num));
 };
@@ -65,3 +65,48 @@ constexpr double RatioAsDouble()
 /** Helper function for adding/subtracting ratios */
 template <IsRatio R1, IsRatio R2>
 using CombineRatio = std::ratio<R1::num * R2::num>;
+
+/** Helper for exponentiating ratios: compute Ratio ^ Exp (when possible) */
+// Reference: https://stackoverflow.com/questions/19823216/stdratio-power-of-a-stdratio-at-compile-time
+
+// Define static pow of two intmax_t
+template <intmax_t Base, intmax_t Exponent>
+struct IntPow_
+{
+    static const intmax_t _temp = IntPow_<Base, Exponent / 2>::value;
+    static const intmax_t value = _temp * _temp * (Exponent % 2 == 1 ? Base : 1);
+};
+
+template <intmax_t Base>
+struct IntPow_<Base, 0>
+{
+    static const intmax_t value = 1;
+};
+
+template <intmax_t Base, intmax_t Exponent>
+constexpr intmax_t IntPow() {
+    return IntPow_<Base, Exponent>::value;
+}
+
+// Define static pow of ratio with intmax_t
+template <IsRatio Ratio, intmax_t Exponent>
+struct RatioPow_
+{
+    static const intmax_t _num = IntPow<Ratio::num, Exponent>();
+    static const intmax_t _den = IntPow<Ratio::den, Exponent>();
+    using type = std::ratio<_num, _den>;
+};
+
+template <IsRatio Ratio>
+struct RatioPow_<Ratio, 0>
+{
+    using type = std::ratio<1>;
+};
+
+
+// template <IsRatio Ratio, IsRatio Exp>
+// using RatioExpI_ = std::ratio <
+
+//                    struct RatioExp<IsRatio Ratio, IsRatio Exp>
+// {
+// };

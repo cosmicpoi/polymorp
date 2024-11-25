@@ -24,7 +24,6 @@ inline Meter operator"" _meter(long double value)
 
 int main()
 {
-    // std::cout << GeneralScalar<Test> << std::endl;
     Vector2<Meter> myV{1000, 1000};
     Vector2<Kilometer> myVi{1.0, 1.01};
 
