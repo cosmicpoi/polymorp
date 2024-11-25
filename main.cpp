@@ -29,7 +29,7 @@ int main()
     Vector2<Meter> myV{1000, 1000};
     Vector2<Kilometer> myVi{1.0, 1};
 
-    std::cout << Vector2<Meter>{2, 0}.Norm() << std::endl;
+    std::cout << (myV == myVi) << std::endl;
     // std::cout << myV << std::endl;
     // std::cout << myVi << std::endl;
     // std::cout << unit_pow<std::ratio<1, 3>>(Meter{100.0}) << std::endl;

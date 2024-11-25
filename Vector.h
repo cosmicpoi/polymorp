@@ -10,12 +10,11 @@
 #include <initializer_list>
 #include "Unit.h"
 #include "UnitMath.h"
+#include "Scalar.h"
 
 //--------------------------------------------------------------------------------
 // Vector class
 //--------------------------------------------------------------------------------
-
-
 
 /**
  * @brief Base class for Vector with units. Provides optimized versions for N=2, 3, 4, corresponding to `Vector2`, `Vector3`, and `Vector4`, but any length is actually supported.
@@ -32,14 +31,7 @@ public:
 
     static constexpr void PrintInfo(std::ostream &os = std::cout)
     {
-        if constexpr (IsUnit<Type>)
-        {
-            Type::PrintInfo(os);
-        }
-        else
-        {
-            os << typeid(Type).name() << "; ";
-        }
+        ScalarPrintInfo<Type>();
         os << "[N=" << N << "];";
     }
 
@@ -188,8 +180,10 @@ public:
     inline bool operator==(VectorN<RHS> rhs)
         requires requires(Type a, RHS b) { {a == b} -> std::convertible_to<bool>; }
     {
-        auto diff = *this - rhs;
-        return diff.IsZero();
+        return ([this, &rhs]<std::size_t... Is>(std::index_sequence<Is...>)
+                {
+                    return ((_v[Is] == rhs[Is]) && ...); // Expands the expression for each index
+                })(std::make_index_sequence<N>{});
     }
 
     /**

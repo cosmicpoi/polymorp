@@ -4,6 +4,7 @@
 #pragma once
 
 #include <iostream>
+#include "Ratio.h"
 #include "StringLiteral.h"
 #include "TypeUtils.h"
 #include <string>
