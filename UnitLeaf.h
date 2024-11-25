@@ -86,7 +86,8 @@ template <typename A, typename B>
 concept _IsSameSymbol = requires {
     A::symbol;
     B::symbol;
-} && (StrEq<A::symbol, B::symbol>::value);
+    requires StrEq<A::symbol, B::symbol>::value;
+};
 
 template <typename A, typename B>
 concept ULIsSameSymbol = IsUnitLeaf<A> && IsUnitLeaf<B> && _IsSameSymbol<A, B>;
@@ -96,7 +97,8 @@ concept ULIsSameSymbol = IsUnitLeaf<A> && IsUnitLeaf<B> && _IsSameSymbol<A, B>;
 template <typename A>
 concept ULIsZero_ = requires {
     typename A::exponent;
-} && RatioIsZero<typename A::exponent>;
+    requires RatioIsZero<typename A::exponent>;
+};
 
 template <typename A>
 concept ULIsZero = IsUnitLeaf<A> && ULIsZero_<A>;
@@ -106,11 +108,11 @@ template <typename A, typename B>
 concept _CompareSymb = requires {
     A::symbol;
     B::symbol;
-} && (CompareStrings<A::symbol, B::symbol>::value);
+    requires CompareStrings<A::symbol, B::symbol>::value;
+};
 
 template <typename A, typename B>
 concept ULCompare = IsUnitLeaf<A> && IsUnitLeaf<B> && _CompareSymb<A, B>;
-// concept ULCompare = IsUnitLeaf<A> && IsUnitLeaf<B> && _CompareExp<A, B>;
 
 // Comparison selector SmallerOf
 template <typename A, typename B>

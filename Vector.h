@@ -50,38 +50,38 @@ public:
         os << ") }";
     }
 
-    std::ostream &operator<<(std::ostream &os) const
+    inline std::ostream &operator<<(std::ostream &os) const
     {
         Print(os);
         return os;
     }
 
     /** Accessors */
-    U &x()
+    inline U &x()
         requires(N >= 1)
     {
         return _v[0];
     };
 
-    U &y()
+    inline U &y()
         requires(N >= 2)
     {
         return _v[1];
     };
 
-    U &z()
+    inline U &z()
         requires(N >= 3)
     {
         return _v[2];
     };
 
-    U &w()
+    inline U &w()
         requires(N >= 4)
     {
         return _v[3];
     };
 
-    U &operator[](std::size_t index)
+    inline U &operator[](std::size_t index)
     {
         if (index >= N)
         {
@@ -90,7 +90,7 @@ public:
         return _v[index];
     }
 
-    const U &operator[](std::size_t index) const
+    inline const U &operator[](std::size_t index) const
     {
         if (index >= N)
         {
@@ -119,7 +119,7 @@ public:
      */
     inline ExpUnit_T<U, std::ratio<2>> NormSq()
     {
-        // Zero-overhead solution: generate the expression (_v[0] * rhs, _v[1] * rhs ...) at compile time
+        // Zero-overhead solution: generate the expression (_v[0] * rhs + _v[1] * rhs ...) at compile time
         return ([this]<std::size_t... Is>(std::index_sequence<Is...>)
                 {
                     return ((_v[Is] * _v[Is]) + ...); // Fold expression
@@ -129,7 +129,7 @@ public:
     /**
      * @brief Compute norm of this vector (in the underlying unit)
      */
-    U Norm()
+    inline U Norm()
     {
         return unit_sqrt(NormSq());
     }
@@ -137,7 +137,7 @@ public:
     /**
      * @brief Compute norm of this vector as a double
      */
-    double Norm_d()
+    inline double Norm_d()
     {
         return std::sqrt((double)NormSq().value);
     }
@@ -146,7 +146,7 @@ public:
      * @brief Multiplication by scalar unit
      */
     template <IsUnit RHS>
-    VectorN<UnitMult<U, RHS>> operator*(RHS rhs)
+    inline VectorN<UnitMult<U, RHS>> operator*(RHS rhs)
     {
         using MultVectorN = VectorN<UnitMult<U, RHS>>;
         // Zero-overhead solution: generate the expression (_v[0] * rhs, _v[1] * rhs ...) at compile time
@@ -158,7 +158,7 @@ public:
 
     /** @brief Dot product */
     template <IsUnit RHS>
-    UnitMult<U, RHS> Dot(VectorN<RHS> rhs)
+    inline UnitMult<U, RHS> Dot(VectorN<RHS> rhs)
     {
         // Zero-overhead solution: generate the expression (_v[0] * rhs, _v[1] * rhs ...) at compile time
         return ([this, &rhs]<std::size_t... Is>(std::index_sequence<Is...>)
@@ -168,6 +168,11 @@ public:
     }
 
     /** @brief Shorthand for dot product */
+    template <IsUnit RHS>
+    inline UnitMult<U, RHS> operator^(VectorN<RHS> rhs)
+    {
+        return Dot(rhs);
+    }
 
 private:
     std::array<U, N> _v;
@@ -218,7 +223,8 @@ concept IsVector = IsVectorHelper<T>::value;
 template <size_t N, typename T>
 concept IsOfSize = requires {
     { T::n } -> std::same_as<const size_t &>;
-} && (T::n == N);
+    requires(T::n == N);
+};
 
 template <size_t N, typename T>
 concept IsVectorN = IsVector<T> && IsOfSize<N, T>;

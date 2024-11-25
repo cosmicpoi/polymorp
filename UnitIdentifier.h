@@ -14,6 +14,9 @@ using UnitBase = UnitLeaf<Symbol, Exponent>;
 template <StringLiteral Symbol>
 using UnitAtomic = UnitBase<Symbol, std::ratio<1>>;
 
+/** Empty UID (unitless scalars) */
+using EmptyUid = UnitLeafVector<>;
+
 
 /** Other aliases */
 template <UnitIdentifier V>

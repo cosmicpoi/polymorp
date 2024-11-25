@@ -17,7 +17,6 @@ void print_integer_sequence(std::integer_sequence<T, Ints...>)
     std::cout << std::endl;
 }
 
-
 // Helper function to create a compile-time zero-initialized array of type T and size N
 template <typename T, size_t N>
 constexpr std::array<T, N> create_array()
@@ -25,7 +24,6 @@ constexpr std::array<T, N> create_array()
     return ([]<std::size_t... Is>(std::index_sequence<Is...>) -> std::array<T, N>
             { return {((void)Is, 0)...}; })(std::make_index_sequence<N>{});
 }
-
 
 /** Concept to match ratio */
 
@@ -47,8 +45,9 @@ concept IsRatio = IsRatio_<T>::value;
 /** Concept to check for zero ratio */
 template <typename T>
 concept RatioIsZero_ = requires {
-    T::num == 0;
-} && T::num == 0;
+    { T::num } -> std::convertible_to<int>;
+    requires T::num == 0;
+};
 
 template <typename T>
 concept RatioIsZero = IsRatio<T> && RatioIsZero_<T>;
@@ -66,13 +65,13 @@ constexpr void PrintRatio(std::ostream &os = std::cout)
 
 /** Function to multiply out a ratio */
 template <typename T, IsRatio R>
-T MultRatio(T val)
+T RatioMult(T val)
 {
     return (T)(val * ((T)R::num) / ((T)R::den));
 }
 
 template <typename T, IsRatio R>
-T DivRatio(T val)
+T RatioDiv(T val)
 {
     return (T)(val * ((T)R::den) / ((T)R::num));
 };
@@ -83,3 +82,7 @@ constexpr double RatioAsDouble()
 {
     return ((double)R::num) / ((double)R::den);
 }
+
+/** Helper function for adding/subtracting ratios */
+template <IsRatio R1, IsRatio R2>
+using CombineRatio = std::ratio<R1::num * R2::num>;

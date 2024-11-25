@@ -17,9 +17,9 @@ inline ExpUnit_T<U, std::ratio<1, 2>> unit_sqrt(U val)
     using Type = typename U::type;
     using Ratio = typename U::ratio;
 
-    Type actual_val = MultRatio<Type, Ratio>(val.value);
+    Type actual_val = RatioMult<Type, Ratio>(val.value);
 
-    return DivRatio<Type, Ratio>(std::sqrt(actual_val));
+    return RatioDiv<Type, Ratio>(std::sqrt(actual_val));
 }
 
 // Maintain ratio while computing pow
@@ -29,7 +29,7 @@ inline ExpUnit_T<U, Exp> unit_pow(U val)
     using Type = typename U::type;
     using Ratio = typename U::ratio;
 
-    Type actual_val = MultRatio<Type, Ratio>(val.value);
+    Type actual_val = RatioMult<Type, Ratio>(val.value);
 
-    return DivRatio<Type, Ratio>(std::pow(actual_val, RatioAsDouble<Exp>()));
+    return RatioDiv<Type, Ratio>(std::pow(actual_val, RatioAsDouble<Exp>()));
 }
