@@ -27,8 +27,7 @@ int main()
     // myVal += 5;
     std::cout << myVal << std::endl;
 
-    std::cout << Kilometer{1} << std::endl;
-    std::cout << 1 / Meter{5} << std::endl;
+    std::cout << ( Meter{999} > Kilometer{1}) << std::endl;
     // std::cout << (Meter{1} + Kilometer{1}) * 5.0_meter << std::endl;
     // std::cout << Kilometer{1} - Meter{1} << std::endl;
 }
