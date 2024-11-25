@@ -32,6 +32,45 @@ struct ScalarExp_<T, Exp>
 template <GeneralScalar T, IsRatio Exp>
 using ScalarExp = typename ScalarExp_<T, Exp>::type;
 
+// Get type of underlying value
+template <GeneralScalar T>
+struct GetUnderlying_
+{
+};
+
+template <IsUnit U>
+struct GetUnderlying_<U>
+{
+    using type = typename U::type;
+};
+
+template <PrimitiveScalar T>
+struct GetUnderlying_<T>
+{
+    using type = T;
+};
+
+template <GeneralScalar T>
+using GetUnderlying = typename GetUnderlying_<T>::type;
+
+// General print info
+
+// TODO implement
+
+// Get the value
+template <GeneralScalar T>
+GetUnderlying<T> ScalarGetValue(T val)
+{
+    if constexpr (IsUnit<T>)
+    {
+        return val.value;
+    }
+    else
+    {
+        return val;
+    }
+}
+
 // Maintain ratio while computing sqrt
 template <GeneralScalar U>
 inline ScalarExp<U, std::ratio<1, 2>> unit_sqrt(U val)

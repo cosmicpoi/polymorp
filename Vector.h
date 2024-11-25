@@ -50,14 +50,7 @@ public:
         os << " (";
         for (uint i = 0; i < N; i++)
         {
-            if constexpr (IsUnit<Type>)
-            {
-                os << _v[i].value;
-            }
-            else
-            {
-                os << _v[i];
-            }
+            os << ScalarGetValue<Type>(_v[i]);
 
             if (i != N - 1)
             {
@@ -202,7 +195,7 @@ public:
     /**
      * @brief Compute norm-squared of this vector
      */
-    inline auto NormSq()
+    inline ScalarExp<Type, std::ratio<2>> NormSq()
     {
         // Zero-overhead solution: generate the expression (_v[0] * rhs + _v[1] * rhs ...) at compile time
         return ([this]<std::size_t... Is>(std::index_sequence<Is...>)
@@ -214,18 +207,18 @@ public:
     /**
      * @brief Compute norm of this vector (in the underlying unit)
      */
-    // inline Type Norm()
-    // {
-    //     return unit_sqrt(NormSq());
-    // }
+    inline Type Norm()
+    {
+        return unit_sqrt(NormSq());
+    }
 
     /**
      * @brief Compute norm of this vector as a double
      */
-    // inline double Norm_d()
-    // {
-    //     return std::sqrt((double)NormSq().value);
-    // }
+    inline double Norm_d()
+    {
+        return std::sqrt((double)NormSq().value);
+    }
 
     /** @brief Dot product */
     // template <IsUnit RHS>
