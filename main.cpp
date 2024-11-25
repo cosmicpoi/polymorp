@@ -40,7 +40,8 @@ int main()
     vx = vy;
 
 
-    std::cout << UnitIsConvertible_<Kilometer, Meter> << std::endl;
+    // std::cout << (true * 10) << std::endl;
+    std::cout << Meter{1} - Kilometer{1} << std::endl;
     std::cout << vx << std::endl;
     // std::cout << myV << std::endl;
     // std::cout << myVi << std::endl;

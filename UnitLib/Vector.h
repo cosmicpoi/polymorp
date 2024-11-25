@@ -198,9 +198,7 @@ public:
                     } })(std::make_index_sequence<N>{});
     }
 
-    /**
-     * @brief Multiplication by scalar (unit or plain type)
-     */
+    /** @brief Multiplication by scalar (unit or plain type) */
     template <typename RHS>
     inline VectorN<ScalarMult<Type, RHS>> operator*(RHS rhs) const
         requires requires(Type a, RHS b) { {a * b} -> GeneralScalar; }
@@ -211,6 +209,18 @@ public:
                     return VectorN<ScalarMult<Type, RHS>>{(_v[Is] * rhs)...}; // Expands the expression for each index
                 })(std::make_index_sequence<N>{});
     }
+
+    /** @brief Division by scalar (unit or plain type) */
+    // template <typename RHS>
+    // inline VectorN<ScalarMult<Type, RHS>> operator*(RHS rhs) const
+    //     requires requires(Type a, RHS b) { {a * b} -> GeneralScalar; }
+    // {
+    //     // Zero-overhead solution: generate the expression (_v[0] * rhs, _v[1] * rhs ...) at compile time
+    //     return ([this, &rhs]<std::size_t... Is>(std::index_sequence<Is...>)
+    //             {
+    //                 return VectorN<ScalarMult<Type, RHS>>{(_v[Is] * rhs)...}; // Expands the expression for each index
+    //             })(std::make_index_sequence<N>{});
+    // }
 
     /** @brief Addition with another vector */
     template <typename RHS>

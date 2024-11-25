@@ -110,34 +110,52 @@ public:
      *  Multiplication and Division
      */
 
+    // Helper types
+    template <UnitLike RHS>
+    using UnitMultBy_ = Unit<
+        std::common_type_t<Type, typename RHS::type>,
+        UIMult<UID, typename RHS::uid>,
+        std::ratio_multiply<Ratio, typename RHS::ratio>>;
+
+    template <UnitLike RHS>
+    using UnitDivBy_ = Unit<
+        std::common_type_t<Type, typename RHS::type>,
+        UIDivide<UID, typename RHS::uid>,
+        std::ratio_divide<Ratio, typename RHS::ratio>>;
+
+    template <typename RHS>
+    using UseWithScalar_ = Unit<std::common_type_t<Type, RHS>, UID, Ratio>;
+
     /** @brief Multiply with another unit. Follow default language promotion rules */
     template <typename RHS_Type, UnitIdentifier RHS_UID, IsRatio RHS_Ratio>
-    inline auto operator*(Unit<RHS_Type, RHS_UID, RHS_Ratio> rhs) const
+    inline UnitMultBy_<Unit<RHS_Type, RHS_UID, RHS_Ratio>> operator*(Unit<RHS_Type, RHS_UID, RHS_Ratio> rhs) const
+        requires CanMultiply<Type, RHS_Type>
     {
-        using ResType = std::common_type_t<Type, RHS_Type>;
-        return Unit<ResType, UIMult<UID, RHS_UID>, std::ratio_multiply<Ratio, RHS_Ratio>>{value * rhs.value};
+        return UnitMultBy_<Unit<RHS_Type, RHS_UID, RHS_Ratio>>{value * rhs.value};
     }
 
     /** @brief Multiply with unitless scalar. */
     template <std::convertible_to<Type> RHS>
-    inline auto operator*(RHS rhs) const
+    inline UseWithScalar_<RHS> operator*(RHS rhs) const
+        requires CanMultiply<Type, RHS>
     {
-        using ResType = std::common_type_t<Type, RHS>;
-        return operator*(Unit<ResType, EmptyUid>{rhs});
+        return UseWithScalar_<RHS>{value * rhs};
     }
 
     /** @brief Divide by another unit. Follow default language promotion rules */
     template <typename RHS_Type, UnitIdentifier RHS_UID, IsRatio RHS_Ratio>
-    inline auto operator/(Unit<RHS_Type, RHS_UID, RHS_Ratio> rhs) const
+    inline UnitDivBy_<Unit<RHS_Type, RHS_UID, RHS_Ratio>> operator/(Unit<RHS_Type, RHS_UID, RHS_Ratio> rhs) const
+        requires CanDivide<Type, RHS_Type>
     {
-        using ResType = std::common_type_t<Type, RHS_Type>;
-        return Unit<ResType, UIDivide<UID, RHS_UID>, std::ratio_divide<Ratio, RHS_Ratio>>{value / rhs.value};
+        return UnitDivBy_<Unit<RHS_Type, RHS_UID, RHS_Ratio>>{value / rhs.value};
     }
 
     /** @brief Divide by unitless scalar. */
-    inline auto operator/(Type rhs) const
+    template <std::convertible_to<Type> RHS>
+    inline UseWithScalar_<RHS> operator/(RHS rhs) const
+        requires CanDivide<Type, RHS>
     {
-        return Unit<Type, UID, Ratio>{value / rhs};
+        return UseWithScalar_<RHS>{value / rhs};
     }
 
     /**
@@ -150,23 +168,33 @@ public:
      *      Kilometer v = Kilometer{1} + Meter{1}; // expect 1.001km, not 1001m
      */
 
+    // Helper for adding OR subtracting
+    template <UnitLike RHS>
+    using UnitAdd_ = Unit<
+        std::common_type_t<Type, typename RHS::type>,
+        UID, // requires is_same_v<UID, RHS::uid>
+        CombineRatio<Ratio, typename RHS::ratio>>;
+
     /** @brief Add with another unit, only if UIDs match. Follow default language promotion rules */
     template <typename RHS_Type, UnitIdentifier RHS_UID, IsRatio RHS_Ratio>
-    inline auto operator+(Unit<RHS_Type, RHS_UID, RHS_Ratio> rhs) const
-        requires(std::is_same_v<UID, RHS_UID>)
+    inline UnitAdd_<Unit<RHS_Type, RHS_UID, RHS_Ratio>> operator+(Unit<RHS_Type, RHS_UID, RHS_Ratio> rhs) const
+        requires CanRatioAdd<Type, RHS_Type> && std::is_same_v<UID, RHS_UID>
     {
         using ResType = std::common_type_t<Type, RHS_Type>;
-        return Unit<ResType, UID, CombineRatio<Ratio, RHS_Ratio>>{
-            (value / (Ratio::den * RHS_Ratio::num)) + (rhs.value / (RHS_Ratio::den * Ratio::num)) //
+        return UnitAdd_<Unit<RHS_Type, RHS_UID, RHS_Ratio>>{
+            (((ResType)value) / (Ratio::den * RHS_Ratio::num)) + (((ResType)rhs.value) / (RHS_Ratio::den * Ratio::num)) //
         };
     }
 
     /** @brief Subtract with another unit, only if UIDs match. Follow default language promotion rules */
     template <typename RHS_Type, UnitIdentifier RHS_UID, IsRatio RHS_Ratio>
-    inline auto operator-(Unit<RHS_Type, RHS_UID, RHS_Ratio> rhs) const
-        requires(std::is_same_v<UID, RHS_UID>)
+    inline UnitAdd_<Unit<RHS_Type, RHS_UID, RHS_Ratio>> operator-(Unit<RHS_Type, RHS_UID, RHS_Ratio> rhs) const
+        requires CanRatioSubtract<Type, RHS_Type> && std::is_same_v<UID, RHS_UID>
     {
-        return operator+(rhs * -1);
+        using ResType = std::common_type_t<Type, RHS_Type>;
+        return UnitAdd_<Unit<RHS_Type, RHS_UID, RHS_Ratio>>{
+            (((ResType)value) / (Ratio::den * RHS_Ratio::num)) - (((ResType)rhs.value) / (RHS_Ratio::den * Ratio::num)) //
+        };
     }
 
     /**
@@ -281,7 +309,7 @@ using UnitAdd = decltype(std::declval<A>() + std::declval<B>());
 // In principle this should be the same as add, but if we get zero values
 // weird things can happen
 template <IsUnit A, IsUnit B>
-using UnitSubtract = decltype(std::declval<A>() + std::declval<B>());
+using UnitSubtract = decltype(std::declval<A>() - std::declval<B>());
 
 // Get type for exponentiated unit
 template <IsUnit U, IsRatio Exp>
