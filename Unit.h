@@ -249,4 +249,27 @@ auto operator/(LHS lhs, Unit_RHS rhs)
 
 // Get the resulant unit from multiplying two units. Left-side type always dominates.
 template <IsUnit A, IsUnit B>
-using UnitMult = Unit<typename A::type, UIMult<typename A::uid, typename B::uid>>;
+using UnitMult = decltype(std::declval<A>() * std::declval<B>());
+
+// Get type for exponentiated unit
+template <IsUnit U, IsRatio Exp>
+using UnitExp = Unit<
+    typename U::type,
+    UIExp<typename U::uid, Exp>,
+    typename U::ratio>;
+
+template <IsUnit U, int Exp>
+using UnitExpI = UnitExp<U, std::ratio<Exp>>;
+
+/**
+ * Some template shorthands for easier deduction
+ */
+
+template <typename T, StringLiteral Symbol>
+using TypeAtomic = Unit<T, MakeUnitIdentifier<UnitAtomic<Symbol>>>;
+
+template <StringLiteral Symbol>
+using dAtomic = TypeAtomic<double, Symbol>;
+
+template <StringLiteral Symbol>
+using fAtomic = TypeAtomic<float, Symbol>;

@@ -117,7 +117,7 @@ public:
     /**
      * @brief Compute norm-squared of this vector
      */
-    inline ExpUnit_T<U, std::ratio<2>> NormSq()
+    inline UnitExp<U, std::ratio<2>> NormSq()
     {
         // Zero-overhead solution: generate the expression (_v[0] * rhs + _v[1] * rhs ...) at compile time
         return ([this]<std::size_t... Is>(std::index_sequence<Is...>)
