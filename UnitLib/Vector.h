@@ -157,9 +157,9 @@ public:
     }
 
     /** @brief Variadic constructor - can take any types convertible to U.  */
-    template <typename... Args>
+    template <std::convertible_to<Type>... Args>
+        requires(sizeof...(Args) <= N)
     inline Vector(Args... initList)
-        requires((std::is_convertible_v<Args, Type> && ...) && sizeof...(initList) <= N)
         : _v{static_cast<Type>(initList)...}
     {
     }

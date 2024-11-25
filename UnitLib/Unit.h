@@ -78,8 +78,7 @@ public:
     }
 
     /** @brief Constructor for converting from literal */
-    template <typename T>
-        requires std::is_convertible_v<T, Type>
+    template <std::convertible_to<Type> T>
     inline Unit(T val)
         : value(val){};
 
@@ -120,8 +119,7 @@ public:
     }
 
     /** @brief Multiply with unitless scalar. */
-    template <typename RHS>
-        requires std::is_convertible_v<RHS, Type>
+    template <std::convertible_to<Type> RHS>
     inline auto operator*(RHS rhs) const
     {
         using ResType = std::common_type_t<Type, RHS>;
