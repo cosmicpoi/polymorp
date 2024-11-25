@@ -24,7 +24,6 @@ inline Meter operator"" _meter(long double value)
 
 int main()
 {
-    std::cout << Vector2<Meter>{10.0} + Vector2<Kilometer>{20} << std::endl;  
     // std::cout << GeneralScalar<Test> << std::endl;
     Vector2<Meter> myV{1000, 1000};
     Vector2<Kilometer> myVi{1.0, 1.01};
@@ -32,8 +31,17 @@ int main()
     Vector3<Meter> i{1, 0, 0};
     Vector3<Meter> j{0, 1, 0};
 
+    Meter val{1000};
+    Kilometer val2{1.2};
 
-    std::cout << (i % j) << std::endl;
+    Vector2<Meter> vx;
+    Vector2<Meter> vy{1, 1};
+
+    vx = vy;
+
+
+    std::cout << UnitIsConvertible_<Kilometer, Meter> << std::endl;
+    std::cout << vx << std::endl;
     // std::cout << myV << std::endl;
     // std::cout << myVi << std::endl;
     // std::cout << unit_pow<std::ratio<1, 3>>(Meter{100.0}) << std::endl;

@@ -12,6 +12,25 @@
 #include "UnitMath.h"
 #include "Scalar.h"
 
+template <typename A>
+concept VectorLike = requires(A a, A b) {
+    typename A::type;
+    { A::n } -> std::same_as<const size_t &>;
+    requires GeneralScalar<typename A::type>;
+    a.Dot(b);
+};
+
+template <typename From, typename To>
+concept VectorIsConvertible_ = requires {
+    requires VectorLike<From>;
+    requires VectorLike<To>;
+    typename From::type;
+    typename To::type;
+    requires GeneralScalar<typename From::type>;
+    requires GeneralScalar<typename To::type>;
+    requires ScalarIsConvertible<typename From::type, typename To::type>;
+};
+
 //--------------------------------------------------------------------------------
 // Vector class
 //--------------------------------------------------------------------------------
@@ -59,10 +78,27 @@ public:
     }
 
     /** Accessors */
+    inline const std::array<Type, N> GetData() const
+    {
+        return _v;
+    }
+
+    const inline Type &x() const
+        requires(N >= 1)
+    {
+        return _v[0];
+    };
+
     inline Type &x()
         requires(N >= 1)
     {
         return _v[0];
+    };
+
+    const inline Type &y() const
+        requires(N >= 2)
+    {
+        return _v[1];
     };
 
     inline Type &y()
@@ -71,10 +107,22 @@ public:
         return _v[1];
     };
 
+    const inline Type &z() const
+        requires(N >= 3)
+    {
+        return _v[2];
+    };
+
     inline Type &z()
         requires(N >= 3)
     {
         return _v[2];
+    };
+
+    const inline Type &w() const
+        requires(N >= 4)
+    {
+        return _v[3];
     };
 
     inline Type &w()
@@ -114,6 +162,25 @@ public:
         requires((std::is_convertible_v<Args, Type> && ...) && sizeof...(initList) <= N)
         : _v{static_cast<Type>(initList)...}
     {
+    }
+
+    /** @brief Copy assignment */
+    template <VectorIsConvertible_<VectorN<Type>> RHS>
+    inline VectorN<Type> &operator=(RHS rhs)
+    {
+        if constexpr (std::is_same_v<Type, typename RHS::type>)
+        {
+            _v = rhs.GetData();
+            return *this;
+        }
+        else
+        {
+            ([this, &rhs]<std::size_t... Is>(std::index_sequence<Is...>)
+             {
+                 ((_v[Is] = rhs[Is]), ...); //
+             })(std::make_index_sequence<N>{});
+            return *this;
+        }
     }
 
     /** Check is zero */

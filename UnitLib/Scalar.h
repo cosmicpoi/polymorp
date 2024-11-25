@@ -88,3 +88,10 @@ GetUnderlying<T> ScalarGetValue(T val)
         return val;
     }
 }
+
+// Conversion helper
+
+template <typename From, typename To>
+concept ScalarIsConvertible = 
+    (IsUnit<From> && IsUnit<To> && UnitIsConvertible<From, To>) ||
+    (PrimitiveScalar<From> && PrimitiveScalar<To> && std::is_convertible_v<From, To>);

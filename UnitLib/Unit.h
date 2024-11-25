@@ -23,11 +23,18 @@ concept SameUid_ = requires {
 };
 
 template <typename A, typename B>
-concept SameUidAndType_ = requires {
+concept UnitSameRatio_ = requires {
     requires UnitLike<A>;
     requires UnitLike<B>;
-    requires std::is_same_v<typename A::uid, typename B::uid>;
-    requires std::is_same_v<typename A::type, typename B::type>;
+    requires std::is_same_v<typename A::ratio, typename B::ratio>;
+};
+
+template <typename From, typename To>
+concept UnitIsConvertible_ = requires {
+    requires UnitLike<From>;
+    requires UnitLike<To>;
+    requires SameUid_<From, To>;
+    requires std::is_convertible_v<typename From::type, typename To::type>;
 };
 
 /** @brief Unit definition */
@@ -84,13 +91,20 @@ public:
     /**
      * Copy assignments
      */
-    template <UnitLike RHS>
-    inline Unit<Type, UID, Ratio> &operator=(RHS rhs)
-        requires SameUid_<ThisType, RHS> && std::is_convertible_v<typename RHS::type, Type>
+    template <UnitIsConvertible_<ThisType> RHS>
+    inline ThisType &operator=(RHS rhs)
     {
-        Type product = RatioMult<Type, typename RHS::ratio>(value * rhs.value);
-        value = RatioDiv<Type, Ratio>(product);
-        return *this;
+        if constexpr (UnitSameRatio_<ThisType, RHS>)
+        {
+            value = rhs.value;
+            return *this;
+        }
+        else
+        {
+            Type product = RatioMult<typename RHS::ratio>(rhs.value);
+            value = RatioDiv<Ratio>(product);
+            return *this;
+        }
     }
 
     /**
@@ -228,7 +242,10 @@ template <typename A, typename B>
 concept SameUid = IsUnit<A> && IsUnit<B> && SameUid_<A, B>;
 
 template <typename A, typename B>
-concept SameUidAndType = IsUnit<A> && IsUnit<B> && SameUidAndType_<A, B>;
+concept UnitSameRatio = IsUnit<A> && IsUnit<B> && UnitSameRatio_<A, B>;
+
+template <typename From, typename To>
+concept UnitIsConvertible = IsUnit<From> && IsUnit<To> && UnitIsConvertible_<From, To>;
 
 // Other operator overloads
 template <typename Type, UnitIdentifier UID, IsRatio Ratio>
