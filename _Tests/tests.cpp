@@ -611,7 +611,7 @@ int main()
 
         assert(v1 == v3);
         assert(v1 == v2);
-        
+
         v2[0] = Meter{10};
         assert(v1 != v2);
 
@@ -621,7 +621,7 @@ int main()
         Vector2<double> v4{1, 2};
         Vector2<dUEmpty> v5{1, 2};
         static_assert(sizeof(Vector2<double>) == sizeof(Vector2<EmptyUnit<double>>),
-              "Vector storage size mismatch");
+                      "Vector storage size mismatch");
         assert((CanOp<Vector3<double>, "==", Vector3<EmptyUnit<double>>>()));
 
         assert(v4 == v5);
@@ -653,12 +653,49 @@ int main()
     std::cout << "Running arithmetic tests" << std::endl;
     // Componentwise Addition
     {
+        assert((Vector3<Kilometer>{1, 1, 1} + Vector3<Meter>{1, 1, 1} == Vector3<Meter>{1001, 1001, 1001}));
+        assert((Vector3<Kilometer>{1, 1, 1} + Vector3<Meter>{1, 1, 1} == Vector3<Kilometer>{1.001, 1.001, 1.001}));
+        assert((Vector3<double>{1.2, 1.2, 1.2} + Vector3<int>{1, 1, 1} == Vector3<double>{2.2, 2.2, 2.2}));
+
+        assert((CanOp<Vector3<Meter>, "+", Vector3<Kilometer>>()));
+        assert((!CanOp<Vector3<Meter>, "+", Vector3<double>>()));
+        // assert((CanOp< Vector3<float>, "+", Vector3<dUEmpty> >()));
     };
     // Componentwise Subtraction
+    {
+        assert((Vector3<int>{5, 5, 5} - Vector3<int>{3, 3, 3} == Vector3<int>{2, 2, 2}));
+        assert((Vector3<double>{5.5, 5.5, 5.5} - Vector3<int>{2, 2, 2} == Vector3<double>{3.5, 3.5, 3.5}));
+        assert((Vector3<Kilometer>{5, 5, 5} - Vector3<Meter>{500, 500, 500} == Vector3<Kilometer>{4.5, 4.5, 4.5}));
 
-    // Componentwise multiplication
+        assert((CanOp<Vector3<int>, "-", Vector3<int>>()));
+        assert((CanOp<Vector3<Kilometer>, "-", Vector3<Meter>>()));
+        assert((!CanOp<Vector3<Meter>, "-", Vector3<double>>()));
+    };
 
-    // Componentwise division
+    // Componentwise Multiplication
+    {
+        assert((Vector3<int>{2, 2, 2} * Vector3<int>{3, 3, 3} == Vector3<int>{6, 6, 6}));
+        assert((Vector3<double>{1.5, 1.5, 1.5} * Vector3<int>{2, 2, 2} == Vector3<double>{3.0, 3.0, 3.0}));
+        assert((Vector3<Meter>{2, 2, 2} * Vector3<int>{3, 3, 3} == Vector3<Meter>{6, 6, 6}));
+        assert((Vector3<Meter>{2, 2, 2} * Vector3<Meter>{2, 2, 2} == Vector3<Meter_2>{4, 4, 4}));
+
+        assert((CanOp<Vector3<int>, "*", Vector3<int>>()));
+        assert((CanOp<Vector3<Meter>, "*", Vector3<int>>()));
+        assert((CanOp<Vector3<Meter>, "*", Vector3<double>>()));
+    };
+
+    // Componentwise Division
+    {
+        assert((Vector3<int>{6, 6, 6} / Vector3<int>{3, 3, 3} == Vector3<int>{2, 2, 2}));
+        assert((Vector3<double>{6.0, 6.0, 6.0} / Vector3<int>{2, 2, 2} == Vector3<double>{3.0, 3.0, 3.0}));
+        assert((Vector3<Meter>{500, 500, 500} / Vector3<int>{2, 2, 2} == Vector3<Meter>{250, 250, 250}));
+        assert((Vector3<Meter>{4, 4, 4} / Vector3<Meter>{2, 2, 2} == Vector3<dUEmpty>{2, 2, 2}));
+        assert((Vector3<Meter>{4, 4, 4} / Vector3<Meter>{2, 2, 2} == Vector3<double>{2, 2, 2}));
+
+        assert((CanOp<Vector3<int>, "/", Vector3<int>>()));
+        assert((CanOp<Vector3<Meter>, "/", Vector3<int>>()));
+        assert((CanOp<Vector3<Meter>, "/", Vector3<double>>()));
+    };
 
     // Scalar multiplication (right and left)
     {
@@ -688,7 +725,6 @@ int main()
         assert((CanOp<Vector3<Meter>, "/", dUEmpty>()));
     }
 
-    
     std::cout << "Running arithmetic assignment tests" << std::endl;
 
     std::cout << "Running product tests" << std::endl;

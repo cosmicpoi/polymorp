@@ -231,7 +231,6 @@ public:
     inline VectorN<DivideType<Type, RHS>> operator/(const RHS &rhs) const
         requires CanDivide<Type, RHS>
     {
-        // Zero-overhead solution: generate the expression (_v[0] * rhs, _v[1] * rhs ...) at compile time
         return ([this, &rhs]<std::size_t... Is>(std::index_sequence<Is...>)
                 {
                     return VectorN<DivideType<Type, RHS>>{(_v[Is] / rhs)...}; // Expands the expression for each index
@@ -239,28 +238,48 @@ public:
     }
 
     /** @brief Addition with another vector */
-    // template <typename RHS>
-    // inline VectorN<ScalarAdd<Type, RHS>> operator+(VectorN<RHS> rhs) const
-    //     requires requires(Type a, RHS b) { {a + b} -> GeneralScalar; }
-    // {
-    //     // Zero-overhead solution: generate the expression (_v[0] * rhs, _v[1] * rhs ...) at compile time
-    //     return ([this, &rhs]<std::size_t... Is>(std::index_sequence<Is...>)
-    //             {
-    //                 return VectorN<ScalarAdd<Type, RHS>>{(_v[Is] + rhs[Is])...}; // Expands the expression for each index
-    //             })(std::make_index_sequence<N>{});
-    // }
+    template <typename RHS>
+    inline VectorN<AddType<Type, RHS>> operator+(const VectorN<RHS> &rhs) const
+        requires CanAdd<Type, RHS>
+    {
+        return ([this, &rhs]<std::size_t... Is>(std::index_sequence<Is...>)
+                {
+                    return VectorN<AddType<Type, RHS>>{(_v[Is] + rhs[Is])...}; // Expands the expression for each index
+                })(std::make_index_sequence<N>{});
+    }
 
     /** @brief Subtraction with another vector */
-    // template <typename RHS>
-    // inline VectorN<ScalarSubtract<Type, RHS>> operator-(VectorN<RHS> rhs) const
-    //     requires requires(Type a, RHS b) { {a - b} -> GeneralScalar; }
-    // {
-    //     // Zero-overhead solution: generate the expression (_v[0] * rhs, _v[1] * rhs ...) at compile time
-    //     return ([this, &rhs]<std::size_t... Is>(std::index_sequence<Is...>)
-    //             {
-    //                 return VectorN<ScalarSubtract<Type, RHS>>{(_v[Is] - rhs[Is])...}; // Expands the expression for each index
-    //             })(std::make_index_sequence<N>{});
-    // }
+    template <typename RHS>
+    inline VectorN<SubtractType<Type, RHS>> operator-(const VectorN<RHS> &rhs) const
+        requires CanSubtract<Type, RHS>
+    {
+        return ([this, &rhs]<std::size_t... Is>(std::index_sequence<Is...>)
+                {
+                    return VectorN<SubtractType<Type, RHS>>{(_v[Is] - rhs[Is])...}; // Expands the expression for each index
+                })(std::make_index_sequence<N>{});
+    }
+
+    /** @brief Multiplication with another vector */
+    template <typename RHS>
+    inline VectorN<MultiplyType<Type, RHS>> operator*(const VectorN<RHS> &rhs) const
+        requires CanMultiply<Type, RHS>
+    {
+        return ([this, &rhs]<std::size_t... Is>(std::index_sequence<Is...>)
+                {
+                    return VectorN<MultiplyType<Type, RHS>>{(_v[Is] * rhs[Is])...}; // Expands the expression for each index
+                })(std::make_index_sequence<N>{});
+    }
+
+    /** @brief Division with another vector */
+    template <typename RHS>
+    inline VectorN<DivideType<Type, RHS>> operator/(const VectorN<RHS> &rhs) const
+        requires CanDivide<Type, RHS>
+    {
+        return ([this, &rhs]<std::size_t... Is>(std::index_sequence<Is...>)
+                {
+                    return VectorN<DivideType<Type, RHS>>{(_v[Is] / rhs[Is])...}; // Expands the expression for each index
+                })(std::make_index_sequence<N>{});
+    }
 
     /** @brief Check for equality */
     template <typename RHS>

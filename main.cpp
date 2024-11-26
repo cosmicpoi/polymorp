@@ -33,10 +33,7 @@ using dUKilo = UnitMultRatio<dUEmpty, std::ratio<1000>>;
 int main()
 {
     std::cout << "hello world" << std::endl;
-    Vector2<dUEmpty> v1{1, 2};
-    Vector2<double> v2{1, 2};
-    std::cout << (dUEmpty{1.0} == 1.0) << std::endl;
-    std::cout << (v1 == v2) << std::endl;
+    std::cout << dUEmpty{1.0} + ((double) 1) << std::endl;
 
     // Vector2<Meter> myV{1000, 1000};
     // Vector2<Kilometer> myVi{1.0, 1.01};
