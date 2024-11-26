@@ -251,8 +251,7 @@ public:
     {
         using ResType = std::common_type_t<Type, RHS_Type>;
         return UnitAdd_<Unit<RHS_Type, RHS_UID, RHS_Ratio>>{
-            ratio_value_add<Type, Ratio, RHS_Type, RHS_Ratio>(value, rhs.GetValue()) //
-        };
+            ratio_value_add<Type, Ratio, RHS_Type, RHS_Ratio>(value, rhs.GetValue())};
     }
 
     /** @brief Subtract with another unit, only if UIDs match. Follow default language promotion rules */
@@ -262,8 +261,7 @@ public:
     {
         using ResType = std::common_type_t<Type, RHS_Type>;
         return UnitAdd_<Unit<RHS_Type, RHS_UID, RHS_Ratio>>{
-            ratio_value_add<Type, Ratio, RHS_Type, RHS_Ratio>(value, -rhs.GetValue()) //
-        };
+            ratio_value_add<Type, Ratio, RHS_Type, RHS_Ratio>(value, -rhs.GetValue())};
     }
 
     /** @brief Add with a unitless scalar, if we are empty */
@@ -272,7 +270,8 @@ public:
     inline UseWithScalar_<RHS> operator+(const RHS &rhs) const
     {
         // TODO fix with ratios
-        return UseWithScalar_<RHS>{value + rhs};
+        return UseWithScalar_<RHS>{
+            ratio_value_add<Type, Ratio, RHS, std::ratio<1>>(value, rhs)};
     }
 
     /** @brief Subtract with a unitless scalar, if we are empty */
@@ -280,8 +279,8 @@ public:
         requires CanSubtract<Type, RHS> && IsEmptyUid<UID>
     inline UseWithScalar_<RHS> operator-(const RHS &rhs) const
     {
-        // TODO fix with ratios
-        return UseWithScalar_<RHS>{value - rhs};
+        return UseWithScalar_<RHS>{
+            ratio_value_add<Type, Ratio, RHS, std::ratio<1>>(value, -rhs)};
     }
 
     /**
