@@ -12,7 +12,7 @@ Run `make clean` to clean build folder
 
 Some keywords:
 - **Unit** - referring specifically to any instance of the Unit class
-- **empty Unit** - referring to the unitless Unit class representing a dimensionless constant
+- **EmptyUnit** - referring to the unitless Unit class representing a dimensionless constant
 - **plain type** - a non-unit value
 - **scalar** - any non-vector value (units)
   - **plain scalar** - a non-vector that's a plain type

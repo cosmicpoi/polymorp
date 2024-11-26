@@ -43,7 +43,7 @@
             },
             "presentation": {
                 "reveal": "always",
-                "panel": "shared"
+                "panel": "shared",
             },
             "runOptions": {
                 "runOn": "default"
@@ -60,7 +60,8 @@
             },
             "presentation": {
                 "reveal": "always",
-                "panel": "shared"
+                "panel": "shared",
+                "clear": true
             },
             "runOptions": {
                 "runOn": "default"

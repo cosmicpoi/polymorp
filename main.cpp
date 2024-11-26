@@ -8,7 +8,7 @@ using fMeter = fAtomic<"meter">;
 using iMeter = iAtomic<"meter">;
 using Second = dAtomic<"second">;
 using Kilometer = UnitMultRatio<Meter, std::ratio<1000>>;
-using m__s2 = UnitMult<Meter, UnitExpI<Second, -2>>;
+// using m__s2 = UnitMult<Meter, UnitExpI<Second, -2>>;
 
 using Complex = MakeUnitIdentifier<UnitAtomic<"meter">, UnitAtomic<"second">>;
 

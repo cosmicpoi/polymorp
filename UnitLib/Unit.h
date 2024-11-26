@@ -58,9 +58,18 @@ constexpr bool typed_ratio_equality(Type value, RHS_Type rhs)
     return std::abs(val1 - val2) < epsilon;
 }
 
+template <UnitLike From, UnitLike To>
+    requires UnitIsConvertible_<From, To>
+typename To::type resolve_ratio_assignment(const From &fromVal)
+{
+    typename From::type product = MultByRatio<typename From::ratio, typename From::type>(fromVal.GetValue());
+    typename To::type value = DivideByRatio<typename To::ratio, typename To::type>(product);
+    return value;
+}
+
 /** @brief Unit definition */
 template <typename Type, UnitIdentifier UID = EmptyUid, IsRatio Ratio = std::ratio<1>>
-    requires std::is_arithmetic_v<Type>
+    requires std::is_arithmetic_v<Type> && (Ratio::num > 0)
 struct Unit
 {
 public:
@@ -101,8 +110,13 @@ public:
 
     /** @brief Constructor for converting from literal */
     template <std::convertible_to<Type> T>
-    inline Unit(T val)
+    explicit inline Unit(T val)
         : value(val){};
+
+    /** @brief Constructor for converting from like units */
+    template <UnitIsConvertible_<ThisType> UnitT>
+    explicit inline Unit(UnitT val)
+        : value(resolve_ratio_assignment<UnitT, ThisType>(val)){};
 
     // Check is zero
     inline bool IsZero() const
@@ -127,8 +141,7 @@ public:
         }
         else
         {
-            Type product = MultByRatio<typename RHS::ratio>(rhs.GetValue());
-            value = DivideByRatio<Ratio>(product);
+            value = resolve_ratio_assignment<RHS, ThisType>(rhs);
             return *this;
         }
     }
@@ -237,34 +250,34 @@ public:
      * Proxy compute-and-assign operators: +=, -=, *=, /=
      */
     template <typename T>
-        requires requires(ThisType a, T b) { a * b; a = b; a = a * b; }
+        requires requires(ThisType a, T b) { a * b; a = a * b; }
     inline ThisType &operator*=(const T &rhs)
     {
-        value = ThisType{operator*(rhs)}.value;
+        value = ThisType{(*this) * rhs}.value;
         return *this;
     }
 
     template <typename T>
-        requires requires(ThisType a, T b) { a / b; a = b; a = a / b; }
+        requires requires(ThisType a, T b) { a / b; a = a / b; }
     inline ThisType &operator/=(const T &rhs)
     {
-        value = ThisType{operator/(rhs)}.value;
+        value = ThisType{*this / rhs}.value;
         return *this;
     }
 
     template <typename T>
-        requires requires(ThisType a, T b) { a + b; a = b; a = a + b; }
+        requires requires(ThisType a, T b) { a + b; a = a + b; }
     inline ThisType &operator+=(const T &rhs)
     {
-        value = ThisType{operator+(rhs)}.value;
+        value = ThisType{*this + rhs}.value;
         return *this;
     }
 
     template <typename T>
-        requires requires(ThisType a, T b) { a - b; a = b; a = a - b; }
+        requires requires(ThisType a, T b) { a - b; a = a - b; }
     inline ThisType &operator-=(const T &rhs)
     {
-        value = ThisType{operator-(rhs)}.value;
+        value = ThisType{*this - rhs}.value;
         return *this;
     }
 
@@ -345,41 +358,6 @@ concept UnitSameRatio = IsUnit<A> && IsUnit<B> && UnitSameRatio_<A, B>;
 template <typename From, typename To>
 concept UnitIsConvertible = IsUnit<From> && IsUnit<To> && UnitIsConvertible_<From, To>;
 
-// Other operator overloads
-template <typename Type, UnitIdentifier UID, IsRatio Ratio>
-std::ostream &operator<<(std::ostream &os, Unit<Type, UID, Ratio> val)
-{
-    return val.operator<<(os);
-}
-
-/** @breif Left-compare with plain type for EmptyUnits */
-template <typename LHS, IsUnit Unit_RHS>
-    requires requires(typename Unit_RHS::type a, LHS b) {
-        requires IsEmptyUid<typename Unit_RHS::uid>;
-        requires std::is_arithmetic_v<LHS>;
-        { a == b } -> std::convertible_to<bool>;
-    }
-inline bool operator==(const LHS &lhs, const Unit_RHS &rhs)
-{
-    return rhs == lhs;
-}
-
-/** @brief Left-multiply by scalar */
-template <typename LHS, IsUnit Unit_RHS>
-    requires requires(LHS a, Unit_RHS b) { b.operator*(a); }
-inline auto operator*(const LHS &lhs, const Unit_RHS &rhs)
-{
-    return rhs * lhs;
-}
-
-/** @brief Left-divide with scalar */
-template <typename LHS, IsUnit Unit_RHS>
-    requires requires(LHS a, Unit_RHS b) { a.operator*(b); }
-inline auto operator/(const LHS &lhs, const Unit_RHS &rhs)
-{
-    return lhs * unit_pow<std::ratio<-1>>(rhs);
-}
-
 // Get the resulant unit from multiplying two units. Left-side type always dominates.
 template <IsUnit A, IsUnit B>
 using UnitMult = decltype(std::declval<A>() * std::declval<B>());
@@ -412,7 +390,6 @@ struct UnitExp_
 
 // Get type for exponentiated unit
 template <IsUnit U, IsRatio Exp>
-// requires UnitExpableRatio<U, Exp>
 struct UnitExp_<U, Exp>
 {
     using type = Unit<
@@ -426,7 +403,7 @@ template <IsUnit U, IsRatio Exp>
 using UnitExp = typename UnitExp_<U, Exp>::type;
 
 // Shorthand for int exponents
-template <IsUnit U, int Exp>
+template <IsUnit U, intmax_t Exp>
 using UnitExpI = UnitExp<U, std::ratio<Exp>>;
 
 // Multiply an existing unit by a ratio
@@ -436,12 +413,50 @@ using UnitMultRatio = Unit<
     typename U::uid,
     std::ratio_multiply<Ratio, typename U::ratio>>;
 
-/**
- * Template shorthands
- */
+// Empty unit shorthand
 template <typename T>
     requires std::is_arithmetic_v<T>
 using EmptyUnit = Unit<T, EmptyUid>;
+
+// Other operator overloads
+template <typename Type, UnitIdentifier UID, IsRatio Ratio>
+std::ostream &operator<<(std::ostream &os, Unit<Type, UID, Ratio> val)
+{
+    return val.operator<<(os);
+}
+
+/** @breif Left-compare with plain type for EmptyUnits */
+template <typename LHS, IsUnit Unit_RHS>
+    requires requires(typename Unit_RHS::type a, LHS b) {
+        requires IsEmptyUid<typename Unit_RHS::uid>;
+        requires std::is_arithmetic_v<LHS>;
+        { a == b } -> std::convertible_to<bool>;
+    }
+inline bool operator==(const LHS &lhs, const Unit_RHS &rhs)
+{
+    return rhs == lhs;
+}
+
+/** @brief Left-multiply by scalar */
+template <typename LHS, IsUnit Unit_RHS>
+    requires requires(LHS a, Unit_RHS b) { b.operator*(a); }
+inline auto operator*(const LHS &lhs, const Unit_RHS &rhs)
+{
+    return rhs.operator*(lhs);
+}
+
+/** @brief Left-divide with scalar */
+template <typename LHS, IsUnit Unit_RHS>
+    requires requires(LHS a, UnitExpI<Unit_RHS, -1> b) { b.operator*(a); }
+inline auto operator/(const LHS &lhs, const Unit_RHS &rhs)
+{
+    UnitExpI<Unit_RHS, -1> rhs_inv{1 / rhs.GetValue()};
+    return rhs_inv.operator*(lhs);
+}
+
+/**
+ * Template shorthands
+ */
 
 template <typename T, StringLiteral Symbol>
     requires std::is_arithmetic_v<T>

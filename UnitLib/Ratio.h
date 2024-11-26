@@ -74,6 +74,10 @@ constexpr double RatioAsDouble()
 template <IsRatio R1, IsRatio R2>
 using CombineRatio = std::ratio<R1::num * R2::num>;
 
+/** Invert a ratio */
+template <IsRatio R>
+using RatioInvert = std::ratio<R::den, R::num>;
+
 /** Helper for exponentiating ratios: compute Ratio ^ Exp (when possible) */
 // Reference: https://stackoverflow.com/questions/19823216/stdratio-power-of-a-stdratio-at-compile-time
 
@@ -153,10 +157,9 @@ constexpr intmax_t _HighestRoot()
 }
 
 template <intmax_t Val, intmax_t N>
+    requires(N > 0)
 constexpr intmax_t HighestRoot()
 {
-    // std::cout << "Highest root" << std::endl;
-    static_assert(N > 0);
     if (N == 1)
     {
         return Val;
@@ -168,7 +171,8 @@ template <intmax_t Val, intmax_t N>
 concept HasIntegralRoot = (IntPow<HighestRoot<Val, N>(), N>() == Val);
 
 template <IsRatio Ratio, IsRatio Exp>
-struct RatioExp
+    requires(Ratio::num > 0) && (Exp::num > 0)
+struct RatioExp_
 {
     using _temp = RatioPowI<Ratio, Exp::num>;
     static constexpr bool _numHasRoot = HasIntegralRoot<_temp::num, Exp::den>;
@@ -179,6 +183,38 @@ struct RatioExp
     // Public values
     static constexpr bool hasValue = _numHasRoot && _denHasRoot;
     using value = std::ratio<_tempNum, _tempDen>;
+};
+
+template <typename, typename>
+struct RatioExp
+{
+};
+
+template <IsRatio Ratio, IsRatio Exp>
+    requires(Exp::num == 0)
+struct RatioExp<Ratio, Exp>
+{
+    static constexpr bool hasValue = true;
+    using value = std::ratio<1>;
+};
+
+template <IsRatio Ratio, IsRatio Exp>
+    requires(Exp::num > 0)
+struct RatioExp<Ratio, Exp>
+{
+    static constexpr bool hasValue = RatioExp_<Ratio, Exp>::hasValue;
+    using value = typename RatioExp_<Ratio, Exp>::value;
+};
+
+template <IsRatio Ratio, IsRatio Exp>
+    requires(Exp::num < 0)
+struct RatioExp<Ratio, Exp>
+{
+    using _Inv = RatioInvert<Ratio>;
+    using _PosExp = std::ratio<-1* Exp::num, Exp::den>;
+    using _Res = RatioExp_<_Inv, _PosExp>;
+    static constexpr bool hasValue = _Res::hasValue;
+    using value = typename _Res::value;
 };
 
 template <IsRatio Ratio, IsRatio Exp>

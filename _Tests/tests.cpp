@@ -69,6 +69,7 @@ int main()
     // ------------------------------------------------------------
     // Run Math, lib, util tests
     // ------------------------------------------------------------
+    std::cout << "------ BEGIN TESTING LIBRARIES ------" << std::endl;
     std::cout << "Running ratio tests" << std::endl;
     /** -- Test helpers -- */
     {
@@ -121,12 +122,20 @@ int main()
     // Run Unit tests
     // ------------------------------------------------------------
 
-    /** -- Define and test definitions */
+    std::cout << "------ BEGIN TESTING UNIT ------" << std::endl;
+
+    // /** -- Define and test definitions */
+    std::cout << "Running unit definition tests" << std::endl;
+
     using Meter = dAtomic<"meter">;
     static_assert(UnitExpableRatio<Meter, std::ratio<2>>);
     using Meter_2 = UnitExpI<Meter, 2>;
     static_assert(UnitExpableRatio<Meter, std::ratio<1, 2>>);
     using Meter_1_2 = UnitExp<Meter, std::ratio<1, 2>>;
+    static_assert(UnitExpableRatio<Meter, std::ratio<-1>>);
+    using Meter__1 = UnitExpI<Meter, -1>;
+    static_assert(UnitExpableRatio<Meter, std::ratio<-2>>);
+    using Meter__2 = UnitExpI<Meter, -2>;
 
     static_assert((std::is_same_v<Meter_1_2::uid, MakeUnitIdentifier<UnitBase<"meter", std::ratio<1, 2>>>>));
     static_assert((std::is_same_v<Meter_1_2::ratio, std::ratio<1>>));
@@ -137,22 +146,36 @@ int main()
     using Kilometer = UnitMultRatio<Meter, std::ratio<1000>>;
     static_assert(UnitExpableRatio<Meter, std::ratio<2>>);
     using Kilometer_2 = UnitExpI<Kilometer, 2>;
+    static_assert(UnitExpableRatio<Meter, std::ratio<-1>>);
+    using Kilometer__1 = UnitExpI<Kilometer, -1>;
+    static_assert(UnitExpableRatio<Meter, std::ratio<-1>>);
+    using Kilometer__2 = UnitExpI<Kilometer, -2>;
 
-    static_assert((std::is_same_v<Kilometer_2::uid, MakeUnitIdentifier<UnitBase<"meter", std::ratio<2>>>>));
+    static_assert((std::is_same_v<Kilometer::uid, Meter::uid>));
+    static_assert((std::is_same_v<Kilometer::ratio, std::ratio<1000>>));
+
+    static_assert((std::is_same_v<Kilometer_2::uid, Meter_2::uid>));
     static_assert((std::is_same_v<Kilometer_2::ratio, std::ratio<1000000>>));
 
-    // Trying to construct this unit should fail because the ratio 1000 does not have a square root
-    // using Kilometer_1_2 = UnitExp<Kilometer, std::ratio<1,2>>;
+    static_assert((std::is_same_v<Kilometer__1::uid, Meter__1::uid>));
+    static_assert((std::is_same_v<Kilometer__1::ratio, std::ratio<1, 1000>>));
+
+    static_assert((std::is_same_v<Kilometer__2::uid, Meter__2::uid>));
+    static_assert((std::is_same_v<Kilometer__2::ratio, std::ratio<1, 1000000>>));
+
+    // // Trying to construct this unit should fail because the ratio 1000 does not have a square root
+    // // using Kilometer_1_2 = UnitExp<Kilometer, std::ratio<1,2>>;
     static_assert(!UnitExpableRatio<Kilometer, std::ratio<1, 2>>);
 
     using Second = dAtomic<"second">;
-    using m__s_2 = UnitMult<Meter, UnitExpI<Second, -2>>;
-    static_assert((std::is_same_v<m__s_2::uid, MakeUnitIdentifier<UnitBase<"meter", std::ratio<1>>, UnitBase<"second", std::ratio<-2>>>>));
+    using MeterPerSecond_2 = UnitMult<Meter, UnitExpI<Second, -2>>;
+    static_assert((std::is_same_v<MeterPerSecond_2::uid, MakeUnitIdentifier<UnitBase<"meter", std::ratio<1>>, UnitBase<"second", std::ratio<-2>>>>));
+    static_assert((std::is_same_v<MeterPerSecond_2::ratio, std::ratio<1>>));
 
     using dUEmpty = EmptyUnit<double>;
     using dUKilo = UnitMultRatio<dUEmpty, std::ratio<1000>>;
 
-    /** -- Run constructor tests --  */
+    // /** -- Run constructor tests --  */
     std::cout << "Running constructor tests" << std::endl;
     {
         Meter v0;
@@ -218,17 +241,11 @@ int main()
         assert((!CanOp<Meter, "=", Second>()));
         assert((!CanOp<Meter, "=", Meter_2>()));
 
-        assert((CanOp<Meter, "=", typename Meter::type>()));
-        assert((CanOp<Meter, "=", double>()));
-        assert((CanOp<Meter, "=", int>()));
-        assert((CanOp<Meter, "=", unsigned int>()));
-        assert((CanOp<Meter, "=", float>()));
-
-        assert((CanOp<iMeter, "=", typename Meter::type>()));
-        assert((CanOp<iMeter, "=", double>()));
-        assert((CanOp<iMeter, "=", int>()));
-        assert((CanOp<iMeter, "=", unsigned int>()));
-        assert((CanOp<iMeter, "=", float>()));
+        assert((!CanOp<Meter, "=", typename Meter::type>()));
+        assert((!CanOp<Meter, "=", double>()));
+        assert((!CanOp<Meter, "=", int>()));
+        assert((!CanOp<Meter, "=", unsigned int>()));
+        assert((!CanOp<Meter, "=", float>()));
 
         assert((!CanOp<typename Meter::type, "=", Meter>()));
     }
@@ -242,6 +259,9 @@ int main()
 
         val = dUKilo{1.2};
         assert(val == (int)1200);
+
+        assert((CanOp<EmptyUnit<double>, "==", float>()));
+        assert((CanOp<int, "==", EmptyUnit<float>>()));
     }
 
     /** -- Run arithmetic tests --  */
@@ -301,46 +321,132 @@ int main()
         static_assert((CanOp<double, "*", Meter>()));
     }
 
-    // Test division
+    // Test division with units
     {
         // Division resulting in scalar
-        // std::cout << (Meter{10} / Meter{2}) << std::endl;
-        // assert((Meter{10} / Meter{2}) == 5.0);
-        // assert((Kilometer{1} / Meter{1000}) == 1.0);
-        // assert((Meter{500} / Kilometer{1}) == 0.5);
+        assert((Meter{10} / Meter{2}) == dUEmpty{5.0});
+        assert((Meter{10} / Meter{2}) == 5.0);
+        assert((Kilometer{1} / Meter{1000}) == 1.0);
+        assert((Meter{500} / Kilometer{1}) == 0.5);
 
         // Division resulting in derived units
-        // assert((Meter_2{10} / Meter{2}) == Meter{5}); // Speed as derived unit
-        // assert((Kilometer{1} / Hour{2}) == Kilometer_Per_Hour{0.5});
+        assert((Meter_2{10} / Meter{2}) == Meter{5});
+        assert((Meter{1} / Second{2} / Second{2}) == MeterPerSecond_2{0.25});
+        assert((dUEmpty{1} / Meter{2}) == (Meter__1{0.5}));
 
-        // Static assertions for compile-time checks
-        // static_assert((CanOp<Meter, "/", Second>));
-        // static_assert((CanOp<Meter, "/", Kilometer>));
+        static_assert((CanOp<Meter, "/", Second>()));
+        static_assert((CanOp<Meter, "/", Kilometer>()));
+        static_assert((CanOp<Meter, "/", dUEmpty>()));
     }
 
-    // Test division with scalars (right and left)
-
-    // Test +=, -=, *=, /=
-
-    /** -- Run comparison tests --  */
-    std::cout << "Running comparison tests" << std::endl;
-
-    // Test Comparison
-
-    /** -- Run concept tests --  */
-
-    /** -- Run UnitMath tests --  */
-
-    // ------------------------------------------------------------
-    // Run Scalar tests
-    // ------------------------------------------------------------
+    // Test division with plain scalars (right and left)
     {
-        GeneralScalar auto myV = 10.0;
-        GeneralScalar auto myV2 = 10.0;
-        GeneralScalar auto myV3 = Meter{1};
-        // static_assert((CanOp<decltype(myV), "+", decltype(myV2)>));
-        // myV + myV3;
+        assert((Meter{10} / 2) == Meter{5});
+        assert((dUEmpty{10} / 2) == 5);
+        assert((Kilometer{1} / (int)2) == Meter{500});
+
+        assert((10.0 / Meter{2}) == Meter__1{5});
+        assert((2 / dUEmpty{10}) == 0.2);
+        assert((float)2 / Kilometer{1} == Meter__1{0.002});
+
+        static_assert((CanOp<double, "/", Meter>()));
+        static_assert((CanOp<int, "/", Kilometer>()));
+        static_assert((CanOp<float, "/", dUEmpty>()));
     }
+
+    // // Test +=, -=, *=, /=
+
+    // Test +=
+    std::cout << "Running arithmetic assignment tests" << std::endl;
+    {
+        Meter myVal{1.2};
+        myVal += Meter{1.0};
+        assert((myVal == Meter{2.2}));
+        assert((myVal += Meter{0.8}) == Meter{3});
+
+        myVal += Kilometer{1};
+        assert((myVal += Kilometer{1}) == Meter{2003});
+
+        assert((CanOp<Meter, "+=", Meter>()));
+        assert((CanOp<Meter, "+=", Kilometer>()));
+        assert((CanOp<Meter, "+=", iMeter>()));
+        assert((!CanOp<Meter, "+=", double>()));
+        assert((!CanOp<Meter, "+=", float>()));
+    }
+    // Test -=
+    {
+        Meter myVal{1.2};
+        myVal -= Meter{1.0};
+        assert((myVal == Meter{0.2}));
+        assert((myVal -= Meter{0.2}) == Meter{0});
+
+        myVal -= Kilometer{1};
+        assert((myVal -= Kilometer{1}) == Meter{-2000});
+
+        assert((CanOp<Meter, "-=", Meter>()));
+        assert((CanOp<Meter, "-=", Kilometer>()));
+        assert((CanOp<Meter, "-=", iMeter>()));
+        assert((!CanOp<Meter, "-=", double>()));
+        assert((!CanOp<Meter, "-=", float>()));
+    }
+    // Test *=
+    {
+        Meter myVal{1.0};
+        myVal *= 2;
+        assert((myVal == Meter{2.0}));
+        assert((myVal *= 2.0) == Meter{4.0});
+
+        myVal *= dUKilo{1};
+        assert(myVal == Meter{4000});
+        assert((myVal *= dUKilo{0.01}) == Meter{40000});
+
+        assert((CanOp<Meter, "*=", double>()));
+        assert((CanOp<Meter, "*=", int>()));
+        assert((CanOp<Meter, "*=", float>()));
+        assert((CanOp<Meter, "*=", dUEmpty>()));
+        assert((CanOp<Meter, "*=", dUKilo>()));
+        assert((!CanOp<Meter, "*=", Meter>()));
+        assert((!CanOp<Meter, "*=", Second>()));
+    }
+    // Test /=
+    {
+        Meter myVal{1.0};
+        myVal /= 2;
+        assert((myVal == Meter{0.5}));
+        assert((myVal /= 2.0) == Meter{0.25});
+
+        myVal /= dUKilo{1};
+        assert(myVal == Meter{0.00025});
+        assert((myVal /= dUKilo{0.0001}) == Meter{0.0025});
+
+        assert((CanOp<Meter, "/=", double>()));
+        assert((CanOp<Meter, "/=", int>()));
+        assert((CanOp<Meter, "/=", float>()));
+        assert((CanOp<Meter, "/=", dUEmpty>()));
+        assert((CanOp<Meter, "/=", dUKilo>()));
+        assert((!CanOp<Meter, "/=", Meter>()));
+        assert((!CanOp<Meter, "/=", Second>()));
+    }
+
+    // /** -- Run comparison tests --  */
+    // std::cout << "Running comparison tests" << std::endl;
+
+    // // Test Comparison
+
+    // /** -- Run concept tests --  */
+
+    // /** -- Run UnitMath tests --  */
+
+    // // ------------------------------------------------------------
+    // // Run Scalar tests
+    // // ------------------------------------------------------------
+    // {
+    //     GeneralScalar auto myV = 10.0;
+    //     GeneralScalar auto myV2 = 10.0;
+    //     GeneralScalar auto myV3 = Meter{1};
+    //     // static_assert((CanOp<decltype(myV), "+", decltype(myV2)>));
+    //     // myV + myV3;
+    // }
 
     return 0;
 }

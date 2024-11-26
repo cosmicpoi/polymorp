@@ -16,7 +16,7 @@ inline ScalarExp<U, std::ratio<1, 2>> unit_sqrt(const U val)
 
         Type actual_val = MultByRatio<Ratio>(val.GetValue());
 
-        return DivideByRatio<Type, Ratio>(std::sqrt(actual_val));
+        return DivideByRatio<Ratio, Type>(std::sqrt(actual_val));
     }
     else
     {
@@ -33,9 +33,9 @@ inline ScalarExp<U, Exp> unit_pow(const U val)
         using Type = typename U::type;
         using Ratio = typename U::ratio;
 
-        Type actual_val = MultByRatio<Type, Ratio>(val.GetValue());
+        Type actual_val = MultByRatio<Ratio, Type>(val.GetValue());
 
-        return DivideByRatio<Type, Ratio>(std::pow(actual_val, RatioAsDouble<Exp>()));
+        return DivideByRatio<Ratio, Type>(std::pow(actual_val, RatioAsDouble<Exp>()));
     }
     else
     {
