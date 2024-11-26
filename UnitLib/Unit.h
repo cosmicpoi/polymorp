@@ -39,6 +39,11 @@ concept UnitIsConvertible_ = requires {
     requires std::is_convertible_v<typename From::type, typename To::type>;
 };
 
+/**
+ * Helpers for difficult ratio math
+ */
+
+// Used for equality
 template <typename Type, IsRatio Ratio, typename RHS_Type, IsRatio RHS_Ratio>
 constexpr bool typed_ratio_equality(Type value, RHS_Type rhs)
 {
@@ -58,6 +63,7 @@ constexpr bool typed_ratio_equality(Type value, RHS_Type rhs)
     return std::abs(val1 - val2) < epsilon;
 }
 
+// Used for assignment
 template <UnitLike From, UnitLike To>
     requires UnitIsConvertible_<From, To>
 typename To::type resolve_ratio_assignment(const From &fromVal)
@@ -66,6 +72,9 @@ typename To::type resolve_ratio_assignment(const From &fromVal)
     typename To::type value = DivideByRatio<typename To::ratio, typename To::type>(product);
     return value;
 }
+
+// Used for addition and subtraction
+
 
 /** @brief Unit definition */
 template <typename Type, UnitIdentifier UID = EmptyUid, IsRatio Ratio = std::ratio<1>>
@@ -246,11 +255,29 @@ public:
         };
     }
 
+    /** @brief Add with a unitless scalar, if we are empty */
+    template <std::convertible_to<Type> RHS>
+        requires CanAdd<Type, RHS> && IsEmptyUid<UID>
+    inline UseWithScalar_<RHS> operator+(const RHS &rhs) const
+    {
+        // TODO fix with ratios
+        return UseWithScalar_<RHS>{value + rhs};
+    }
+
+    /** @brief Subtract with a unitless scalar, if we are empty */
+    template <std::convertible_to<Type> RHS>
+        requires CanSubtract<Type, RHS> && IsEmptyUid<UID>
+    inline UseWithScalar_<RHS> operator-(const RHS &rhs) const
+    {
+        // TODO fix with ratios
+        return UseWithScalar_<RHS>{value - rhs};
+    }
+
     /**
      * Proxy compute-and-assign operators: +=, -=, *=, /=
      */
     template <typename T>
-        requires requires(ThisType a, T b) { a * b; a = a * b; }
+        requires requires(ThisType a, T b) { a = a * b; }
     inline ThisType &operator*=(const T &rhs)
     {
         value = ThisType{(*this) * rhs}.value;
@@ -258,7 +285,7 @@ public:
     }
 
     template <typename T>
-        requires requires(ThisType a, T b) { a / b; a = a / b; }
+        requires requires(ThisType a, T b) { a = a / b; }
     inline ThisType &operator/=(const T &rhs)
     {
         value = ThisType{*this / rhs}.value;
@@ -266,7 +293,7 @@ public:
     }
 
     template <typename T>
-        requires requires(ThisType a, T b) { a + b; a = a + b; }
+        requires requires(ThisType a, T b) { a = a + b; }
     inline ThisType &operator+=(const T &rhs)
     {
         value = ThisType{*this + rhs}.value;
@@ -274,7 +301,7 @@ public:
     }
 
     template <typename T>
-        requires requires(ThisType a, T b) { a - b; a = a - b; }
+        requires requires(ThisType a, T b) { a = a - b; }
     inline ThisType &operator-=(const T &rhs)
     {
         value = ThisType{*this - rhs}.value;
@@ -454,6 +481,21 @@ inline auto operator/(const LHS &lhs, const Unit_RHS &rhs)
 {
     UnitExpI<Unit_RHS, -1> rhs_inv{1 / rhs.GetValue()};
     return rhs_inv.operator*(lhs);
+}
+
+/** @brief Left-add with scalar */
+template <typename LHS, IsUnit Unit_RHS>
+    requires CanOpAdd<Unit_RHS, LHS>
+OpAddType<Unit_RHS, LHS> operator+(LHS lhs, Unit_RHS rhs)
+{
+    return rhs.operator+(lhs);
+}
+
+template <typename LHS, IsUnit Unit_RHS>
+    requires CanOpAdd<Unit_RHS, LHS>
+OpAddType<Unit_RHS, LHS> operator-(LHS lhs, Unit_RHS rhs)
+{
+    return (-1 * rhs).operator+(lhs);
 }
 
 /**

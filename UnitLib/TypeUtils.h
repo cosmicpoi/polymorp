@@ -32,7 +32,7 @@ using MultiplyType = decltype(std::declval<A>() * std::declval<B>());
 
 template <typename A, typename B>
 concept CanMultiply = requires(A a, B b) {
-    { a *b } -> std::same_as<MultiplyType<A, B>>;
+    { a *b } -> std::convertible_to<MultiplyType<A, B>>;
 };
 
 // Operator* version
@@ -50,7 +50,7 @@ using DivideType = decltype(std::declval<A>() / std::declval<B>());
 
 template <typename A, typename B>
 concept CanDivide = requires(A a, B b) {
-    { a / b } -> std::same_as<DivideType<A, B>>;
+    { a / b } -> std::convertible_to<DivideType<A, B>>;
 };
 
 // Operator/ version
@@ -69,7 +69,7 @@ using AddType = decltype(std::declval<A>() + std::declval<B>());
 
 template <typename A, typename B>
 concept CanAdd = requires(A a, B b) {
-    { a + b } -> std::same_as<AddType<A, B>>;
+    { a + b } -> std::convertible_to<AddType<A, B>>;
 };
 
 // Operator+ version
@@ -87,7 +87,7 @@ using SubtractType = decltype(std::declval<A>() - std::declval<B>());
 
 template <typename A, typename B>
 concept CanSubtract = requires(A a, B b) {
-    { a - b } -> std::same_as<SubtractType<A, B>>;
+    { a - b } -> std::convertible_to<SubtractType<A, B>>;
 };
 
 // Operator- version

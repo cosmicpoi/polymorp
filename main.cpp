@@ -33,7 +33,15 @@ using dUKilo = UnitMultRatio<dUEmpty, std::ratio<1000>>;
 int main()
 {
     std::cout << "hello world" << std::endl;
-    std::cout << dUEmpty{1.0} + ((double) 1) << std::endl;
+    // std::cout << dUEmpty{1.0} + ((double) 1) << std::endl;
+
+    std::array<float, 5> a1 {1, 2, 3, 4, 5};
+    // std::cout << a2[0] << std::endl;
+    std::array<float, 5> a2;
+
+    std::cout << a2[0] << std::endl;
+    a2 = a1;
+    std::cout << a2[0] << std::endl;
 
     // Vector2<Meter> myV{1000, 1000};
     // Vector2<Kilometer> myVi{1.0, 1.01};

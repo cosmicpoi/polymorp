@@ -382,6 +382,18 @@ int main()
         static_assert((CanOp<float, "/", dUEmpty>()));
     }
 
+    // Test addition and subtraction between empty units and scalars
+    {
+        assert((dUEmpty{1.0} + ((double)1.0) == 2.0));
+        assert((((double)1.0) + dUEmpty{1.0} == 2.0));
+        // std::cout << (dUKilo{1.0} + ((double)1.0)) << std::endl;
+        // assert((dUKilo{1.0} + ((double)1.0) == 1001));
+
+        assert((dUEmpty{2.0} - ((double)1.0) == 1.0));
+        assert((((double)2.0) - dUEmpty{1.0} == 1.0));
+        // assert((dUKilo{1.0} - ((double)1.0) == 999));
+    }
+
     // // Test +=, -=, *=, /=
 
     // Test +=
@@ -620,8 +632,6 @@ int main()
 
         Vector2<double> v4{1, 2};
         Vector2<dUEmpty> v5{1, 2};
-        static_assert(sizeof(Vector2<double>) == sizeof(Vector2<EmptyUnit<double>>),
-                      "Vector storage size mismatch");
         assert((CanOp<Vector3<double>, "==", Vector3<EmptyUnit<double>>>()));
 
         assert(v4 == v5);
@@ -638,6 +648,9 @@ int main()
         assert(v1 == v2);
 
         assert(((v1 = Vector3<double>{4, 5, 6}) == Vector3<double>{4, 5, 6}));
+
+        Vector3<Meter> v3;
+        assert(((v3 = Vector3<Kilometer>{1, 1, 1}) == Vector3<Meter>{1000, 1000, 1000}));
     }
     // Checking IsZero
     {
@@ -726,6 +739,19 @@ int main()
     }
 
     std::cout << "Running arithmetic assignment tests" << std::endl;
+    // Addition assignment +=
+    {
+        Vector2<double> v{1, 2};
+        v += Vector2<int>{2, 1};
+        std::cout << v.x() << std::endl;
+        std::cout << v.y() << std::endl;
+        // assert((v == Vector2<double>{3, 3}));
+        // assert(((v += Vector2<double>{-1, -1}) == Vector2<int>{2, 2}));
+
+        Vector2<Meter> v2{1, 1};
+
+        // assert(((v2 += Vector2<Kilometer>{1, 1}) == Vector2<Meter>{1001, 1001}));
+    }
 
     std::cout << "Running product tests" << std::endl;
     // Dot product

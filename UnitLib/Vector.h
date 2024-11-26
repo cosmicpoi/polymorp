@@ -178,22 +178,24 @@ public:
     }
 
     /** @brief Copy assignment */
+    inline VectorN<Type> &operator=(const VectorN<Type> &rhs)
+    {
+        _v = rhs.GetData();
+        return *this;
+    }
+
+    /** @brief Assign between compatible types */
     template <typename OtherType>
+        requires(requires(Type a, OtherType b) {
+            { a = b } -> std::convertible_to<Type>;
+        } && !std::is_same_v<Type, OtherType>)
     inline VectorN<Type> &operator=(const VectorN<OtherType> &rhs)
     {
-        if constexpr (std::is_same_v<Type, OtherType>)
-        {
-            _v = rhs.GetData();
-            return *this;
-        }
-        else
-        {
-            ([this, &rhs]<std::size_t... Is>(std::index_sequence<Is...>)
-             {
-                 ((_v[Is] = rhs[Is]), ...); //
-             })(std::make_index_sequence<N>{});
-            return *this;
-        }
+        ([this, &rhs]<std::size_t... Is>(std::index_sequence<Is...>)
+         {
+             ((_v[Is] = rhs[Is]), ...); //
+         })(std::make_index_sequence<N>{});
+        return *this;
     }
 
     /** Check is zero */
@@ -290,6 +292,15 @@ public:
                 {
                     return ((_v[Is] == rhs[Is]) && ...); // Expands the expression for each index
                 })(std::make_index_sequence<N>{});
+    }
+
+    /* Compute-and-assign operators */
+    template <typename T>
+        requires requires(VectorN<Type> a, T b) { a + b; a = a + b; }
+    inline VectorN<Type> &operator+=(const T &rhs)
+    {
+        // _v= VectorN<Type>{(*this) + rhs}._v;
+        return *this;
     }
 
     /**
