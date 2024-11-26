@@ -63,18 +63,20 @@ constexpr bool typed_ratio_equality(Type value, RHS_Type rhs)
     return std::abs(val1 - val2) < epsilon;
 }
 
-// Used for assignment
-template <UnitLike From, UnitLike To>
-    requires UnitIsConvertible_<From, To>
-typename To::type resolve_ratio_assignment(const From &fromVal)
+/**
+ * @brief Ratio assignment helper.
+ * Supports assignment of `Unit<ToType, UID, ToRatio> x = Unit<FromType, UID, FromRatio>{fromVal}`.
+ * UIDs must match.
+ */
+template <typename FromType, IsRatio FromRatio, typename ToType, IsRatio ToRatio>
+ToType resolve_ratio_assignment(const FromType &fromVal)
 {
-    typename From::type product = MultByRatio<typename From::ratio, typename From::type>(fromVal.GetValue());
-    typename To::type value = DivideByRatio<typename To::ratio, typename To::type>(product);
+    FromType product = MultByRatio<FromRatio, FromType>(fromVal);
+    ToType value = DivideByRatio<ToRatio, ToType>(product);
     return value;
 }
 
 // Used for addition and subtraction
-
 
 /** @brief Unit definition */
 template <typename Type, UnitIdentifier UID = EmptyUid, IsRatio Ratio = std::ratio<1>>
@@ -125,7 +127,7 @@ public:
     /** @brief Constructor for converting from like units */
     template <UnitIsConvertible_<ThisType> UnitT>
     explicit inline Unit(UnitT val)
-        : value(resolve_ratio_assignment<UnitT, ThisType>(val)){};
+        : value(resolve_ratio_assignment<typename UnitT::type, typename UnitT::ratio, Type, Ratio>(val.GetValue())){};
 
     // Check is zero
     inline bool IsZero() const
@@ -150,7 +152,7 @@ public:
         }
         else
         {
-            value = resolve_ratio_assignment<RHS, ThisType>(rhs);
+            value = resolve_ratio_assignment<typename RHS::type, typename RHS::ratio, Type, Ratio>(rhs.GetValue());
             return *this;
         }
     }
