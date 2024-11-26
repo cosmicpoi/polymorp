@@ -48,19 +48,22 @@ constexpr std::array<T, N> create_array()
 /**
  * @brief Base class for Vector with units. Provides optimized versions for N=2, 3, 4, corresponding to `Vector2`, `Vector3`, and `Vector4`, but any length is actually supported.
  */
-template <size_t N, GeneralScalar Type>
+template <size_t N, typename Type>
 class Vector
 {
 public:
     static constexpr size_t n = N;
     using type = Type;
 
-    template <GeneralScalar T>
+    template <typename T>
     using VectorN = Vector<N, T>;
 
     static constexpr void PrintInfo(std::ostream &os = std::cout)
     {
-        ScalarPrintInfo<Type>();
+        if constexpr (GeneralScalar<Type>)
+        {
+            ScalarPrintInfo<Type>();
+        }
         os << "[N=" << N << "];";
     }
 
@@ -168,17 +171,17 @@ public:
 
     /** @brief Variadic constructor - can take any types convertible to U.  */
     template <typename... Args>
-        requires (sizeof...(Args) <= N && (std::constructible_from<Type, Args> && ...))
+        requires(sizeof...(Args) <= N && (std::constructible_from<Type, Args> && ...))
     explicit inline Vector(Args... initList)
         : _v{static_cast<Type>(initList)...}
     {
     }
 
     /** @brief Copy assignment */
-    template <VectorIsConvertible_<VectorN<Type>> RHS>
-    inline VectorN<Type> &operator=(RHS rhs)
+    template <typename OtherType>
+    inline VectorN<Type> &operator=(const VectorN<OtherType> &rhs)
     {
-        if constexpr (std::is_same_v<Type, typename RHS::type>)
+        if constexpr (std::is_same_v<Type, OtherType>)
         {
             _v = rhs.GetData();
             return *this;
@@ -195,70 +198,73 @@ public:
 
     /** Check is zero */
     inline bool IsZero() const
+        requires(requires(Type a) { {a == 0} -> std::convertible_to<bool>; }) //
+                || (requires(Type a) { {a.IsZero() } -> std::convertible_to<bool>; })
     {
         return ([this]<std::size_t... Is>(std::index_sequence<Is...>)
                 {
-                    if constexpr(IsUnit<Type>)
+                    if constexpr(requires(Type a) { a.IsZero(); })
                     {
                         return ((_v[Is].IsZero()) && ...); // Fold expression
                     }
                     else
                     {
+                        static_assert(requires(Type a){ a==0; });
                         return ((_v[Is] == 0) && ...); // Fold expression
                     } })(std::make_index_sequence<N>{});
     }
 
     /** @brief Multiplication by scalar (unit or plain type) */
     template <typename RHS>
-    inline VectorN<ScalarMult<Type, RHS>> operator*(RHS rhs) const
-        requires requires(Type a, RHS b) { {a * b} -> GeneralScalar; }
+    inline VectorN<MultiplyType<Type, RHS>> operator*(const RHS &rhs) const
+        requires CanMultiply<Type, RHS>
     {
         // Zero-overhead solution: generate the expression (_v[0] * rhs, _v[1] * rhs ...) at compile time
         return ([this, &rhs]<std::size_t... Is>(std::index_sequence<Is...>)
                 {
-                    return VectorN<ScalarMult<Type, RHS>>{(_v[Is] * rhs)...}; // Expands the expression for each index
+                    return VectorN<MultiplyType<Type, RHS>>{(_v[Is] * rhs)...}; // Expands the expression for each index
                 })(std::make_index_sequence<N>{});
     }
 
     /** @brief Division by scalar (unit or plain type) */
+    template <typename RHS>
+    inline VectorN<DivideType<Type, RHS>> operator/(const RHS &rhs) const
+        requires CanDivide<Type, RHS>
+    {
+        // Zero-overhead solution: generate the expression (_v[0] * rhs, _v[1] * rhs ...) at compile time
+        return ([this, &rhs]<std::size_t... Is>(std::index_sequence<Is...>)
+                {
+                    return VectorN<DivideType<Type, RHS>>{(_v[Is] / rhs)...}; // Expands the expression for each index
+                })(std::make_index_sequence<N>{});
+    }
+
+    /** @brief Addition with another vector */
     // template <typename RHS>
-    // inline VectorN<ScalarMult<Type, RHS>> operator*(RHS rhs) const
-    //     requires requires(Type a, RHS b) { {a * b} -> GeneralScalar; }
+    // inline VectorN<ScalarAdd<Type, RHS>> operator+(VectorN<RHS> rhs) const
+    //     requires requires(Type a, RHS b) { {a + b} -> GeneralScalar; }
     // {
     //     // Zero-overhead solution: generate the expression (_v[0] * rhs, _v[1] * rhs ...) at compile time
     //     return ([this, &rhs]<std::size_t... Is>(std::index_sequence<Is...>)
     //             {
-    //                 return VectorN<ScalarMult<Type, RHS>>{(_v[Is] * rhs)...}; // Expands the expression for each index
+    //                 return VectorN<ScalarAdd<Type, RHS>>{(_v[Is] + rhs[Is])...}; // Expands the expression for each index
     //             })(std::make_index_sequence<N>{});
     // }
 
-    /** @brief Addition with another vector */
-    template <typename RHS>
-    inline VectorN<ScalarAdd<Type, RHS>> operator+(VectorN<RHS> rhs) const
-        requires requires(Type a, RHS b) { {a + b} -> GeneralScalar; }
-    {
-        // Zero-overhead solution: generate the expression (_v[0] * rhs, _v[1] * rhs ...) at compile time
-        return ([this, &rhs]<std::size_t... Is>(std::index_sequence<Is...>)
-                {
-                    return VectorN<ScalarAdd<Type, RHS>>{(_v[Is] + rhs[Is])...}; // Expands the expression for each index
-                })(std::make_index_sequence<N>{});
-    }
-
     /** @brief Subtraction with another vector */
-    template <typename RHS>
-    inline VectorN<ScalarSubtract<Type, RHS>> operator-(VectorN<RHS> rhs) const
-        requires requires(Type a, RHS b) { {a - b} -> GeneralScalar; }
-    {
-        // Zero-overhead solution: generate the expression (_v[0] * rhs, _v[1] * rhs ...) at compile time
-        return ([this, &rhs]<std::size_t... Is>(std::index_sequence<Is...>)
-                {
-                    return VectorN<ScalarSubtract<Type, RHS>>{(_v[Is] - rhs[Is])...}; // Expands the expression for each index
-                })(std::make_index_sequence<N>{});
-    }
+    // template <typename RHS>
+    // inline VectorN<ScalarSubtract<Type, RHS>> operator-(VectorN<RHS> rhs) const
+    //     requires requires(Type a, RHS b) { {a - b} -> GeneralScalar; }
+    // {
+    //     // Zero-overhead solution: generate the expression (_v[0] * rhs, _v[1] * rhs ...) at compile time
+    //     return ([this, &rhs]<std::size_t... Is>(std::index_sequence<Is...>)
+    //             {
+    //                 return VectorN<ScalarSubtract<Type, RHS>>{(_v[Is] - rhs[Is])...}; // Expands the expression for each index
+    //             })(std::make_index_sequence<N>{});
+    // }
 
     /** @brief Check for equality */
     template <typename RHS>
-    inline bool operator==(VectorN<RHS> rhs) const
+    inline bool operator==(const VectorN<RHS> &rhs) const
         requires requires(Type a, RHS b) { {a == b} -> std::convertible_to<bool>; }
     {
         return ([this, &rhs]<std::size_t... Is>(std::index_sequence<Is...>)
@@ -270,69 +276,61 @@ public:
     /**
      * @brief Compute norm-squared of this vector
      */
-    inline ScalarExp<Type, std::ratio<2>> NormSq() const
-    {
-        // Zero-overhead solution: generate the expression (_v[0] * rhs + _v[1] * rhs ...) at compile time
-        return ([this]<std::size_t... Is>(std::index_sequence<Is...>)
-                {
-                    return ((_v[Is] * _v[Is]) + ...); // Fold expression
-                })(std::make_index_sequence<N>{});
-    }
+    // inline ScalarExp<Type, std::ratio<2>> NormSq() const
+    // {
+    //     // Zero-overhead solution: generate the expression (_v[0] * rhs + _v[1] * rhs ...) at compile time
+    //     return ([this]<std::size_t... Is>(std::index_sequence<Is...>)
+    //             {
+    //                 return ((_v[Is] * _v[Is]) + ...); // Fold expression
+    //             })(std::make_index_sequence<N>{});
+    // }
 
     /**
      * @brief Compute norm of this vector (in the underlying unit)
      */
-    inline Type Norm() const
-    {
-        return unit_sqrt(NormSq());
-    }
+    // inline Type Norm() const
+    // {
+    //     return unit_sqrt(NormSq());
+    // }
 
     /**
      * @brief Compute norm of this vector as a double
      */
-    inline double Norm_d() const
-    {
-        return std::sqrt((double)NormSq().value);
-    }
+    // inline double Norm_d() const
+    // {
+    //     return std::sqrt((double)NormSq().value);
+    // }
 
     /** @brief Dot product */
-    template <GeneralScalar RHS>
-    inline ScalarMult<Type, RHS> Dot(VectorN<RHS> rhs) const
-        requires requires(Type a, RHS b) { {a * b} -> GeneralScalar; }
-    {
-        // Zero-overhead solution: generate the expression (_v[0] * rhs, _v[1] * rhs ...) at compile time
-        return ([this, &rhs]<std::size_t... Is>(std::index_sequence<Is...>)
-                {
-                    return ((_v[Is] * rhs[Is]) + ...); // Fold expression
-                })(std::make_index_sequence<N>{});
-    }
+    // template <GeneralScalar RHS>
+    // inline ScalarMult<Type, RHS> Dot(VectorN<RHS> rhs) const
+    //     requires requires(Type a, RHS b) { {a * b} -> GeneralScalar; }
+    // {
+    //     // Zero-overhead solution: generate the expression (_v[0] * rhs, _v[1] * rhs ...) at compile time
+    //     return ([this, &rhs]<std::size_t... Is>(std::index_sequence<Is...>)
+    //             {
+    //                 return ((_v[Is] * rhs[Is]) + ...); // Fold expression
+    //             })(std::make_index_sequence<N>{});
+    // }
 
     /** @brief Shorthand for dot product */
-    template <GeneralScalar RHS>
-    inline ScalarMult<Type, RHS> operator^(VectorN<RHS> rhs) const
-        requires requires(Type a, RHS b) { {a * b} -> GeneralScalar; }
-    {
-        return Dot(rhs);
-    }
+    // template <GeneralScalar RHS>
+    // inline ScalarMult<Type, RHS> operator^(VectorN<RHS> rhs) const
+    //     requires requires(Type a, RHS b) { {a * b} -> GeneralScalar; }
+    // {
+    //     return Dot(rhs);
+    // }
 
     /** @brief Cross product */
-    template <GeneralScalar RHS>
-    inline VectorN<ScalarMult<Type, RHS>> Cross(VectorN<RHS> rhs) const
-        requires requires(Type a, RHS b) { { a * b } -> GeneralScalar; } && (N == 3)
-    {
-        return VectorN<ScalarMult<Type, RHS>>{
-            _v[1] * rhs[2] - _v[2] * rhs[1],
-            _v[2] * rhs[0] - _v[0] * rhs[2],
-            _v[0] * rhs[1] - _v[1] * rhs[0]};
-    }
-
-    /** @brief Shorthand for cross product */
-    template <GeneralScalar RHS>
-    inline VectorN<ScalarMult<Type, RHS>> operator%(VectorN<RHS> rhs) const
-        requires requires(Type a, RHS b) { { a * b } -> GeneralScalar; } && (N == 3)
-    {
-        return Cross(rhs);
-    }
+    // template <GeneralScalar RHS>
+    // inline VectorN<ScalarMult<Type, RHS>> Cross(VectorN<RHS> rhs) const
+    //     requires requires(Type a, RHS b) { { a * b } -> GeneralScalar; } && (N == 3)
+    // {
+    //     return VectorN<ScalarMult<Type, RHS>>{
+    //         _v[1] * rhs[2] - _v[2] * rhs[1],
+    //         _v[2] * rhs[0] - _v[0] * rhs[2],
+    //         _v[0] * rhs[1] - _v[1] * rhs[0]};
+    // }
 
 private:
     std::array<Type, N> _v;
@@ -340,13 +338,13 @@ private:
 
 // Some aliases
 
-template <GeneralScalar T>
+template <typename T>
 using Vector2 = Vector<2, T>;
 
-template <GeneralScalar T>
+template <typename T>
 using Vector3 = Vector<3, T>;
 
-template <GeneralScalar T>
+template <typename T>
 using Vector4 = Vector<4, T>;
 
 //--------------------------------------------------------------------------------
@@ -362,7 +360,7 @@ struct IsVectorHelper : std::false_type
 };
 
 // Specialization for the `Unit` template
-template <size_t N, GeneralScalar T>
+template <size_t N, typename T>
 struct IsVectorHelper<Vector<N, T>> : std::true_type
 {
 };
@@ -375,28 +373,28 @@ concept IsVector = IsVectorHelper<T>::value;
 
 // Operator overloads
 
-template <size_t N, GeneralScalar T>
-std::ostream &operator<<(std::ostream &os, Vector<N, T> val)
-{
-    return val.operator<<(os);
-}
+// template <size_t N, GeneralScalar T>
+// std::ostream &operator<<(std::ostream &os, Vector<N, T> val)
+// {
+//     return val.operator<<(os);
+// }
 
 /** @brief Left-multiply by scalar */
 template <typename LHS, IsVector Vector_RHS>
-    requires requires(LHS a, Vector_RHS b) { b.operator*(a); }
-auto operator*(LHS lhs, Vector_RHS rhs)
+    requires CanOpMultiply<Vector_RHS, LHS>
+OpMultiplyType<Vector_RHS, LHS> operator*(LHS lhs, Vector_RHS rhs)
 {
     return rhs * lhs;
 }
 
 /* ******* Is Vector of size N ********* */
-template <size_t N, typename T>
-concept IsOfSize = requires {
-    { T::n } -> std::same_as<const size_t &>;
-    requires(T::n == N);
-};
+// template <size_t N, typename T>
+// concept IsOfSize = requires {
+//     { T::n } -> std::same_as<const size_t &>;
+//     requires(T::n == N);
+// };
 
-template <size_t N, typename T>
-concept IsVectorN = IsVector<T> && IsOfSize<N, T>;
+// template <size_t N, typename T>
+// concept IsVectorN = IsVector<T> && IsOfSize<N, T>;
 
 /* ******* Is Vector with like units ********* */

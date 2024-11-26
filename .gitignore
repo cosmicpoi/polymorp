@@ -1,2 +1,4 @@
 *.o
 main
+_Tests/tests.cpp
+*.dSYM

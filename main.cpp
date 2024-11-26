@@ -1,33 +1,47 @@
 // Run tests
 #include "UnitLib/Unit.h"
-#include "UnitLib/UnitMath.h"
+// #include "UnitLib/UnitMath.h"
 #include "UnitLib/Vector.h"
 
+// using Meter = dAtomic<"meter">;
+// using fMeter = fAtomic<"meter">;
+// using iMeter = iAtomic<"meter">;
+// using Second = dAtomic<"second">;
+// using Kilometer = UnitMultRatio<Meter, std::ratio<1000>>;
+// // using m__s2 = UnitMult<Meter, UnitExpI<Second, -2>>;
+
+// using Complex = MakeUnitIdentifier<UnitAtomic<"meter">, UnitAtomic<"second">>;
+
+// using KM_2 = Unit<
+//     double,
+//     MakeUnitIdentifier<UnitBase<"meter", std::ratio<2>>>,
+//     std::ratio<1000000>>;
+
+// inline Meter operator"" _meter(long double value)
+// {
+//     return Meter{static_cast<double>(value)};
+// }
+
 using Meter = dAtomic<"meter">;
-using fMeter = fAtomic<"meter">;
-using iMeter = iAtomic<"meter">;
-using Second = dAtomic<"second">;
 using Kilometer = UnitMultRatio<Meter, std::ratio<1000>>;
-// using m__s2 = UnitMult<Meter, UnitExpI<Second, -2>>;
 
-using Complex = MakeUnitIdentifier<UnitAtomic<"meter">, UnitAtomic<"second">>;
+using dUEmpty = EmptyUnit<double>;
+using dUKilo = UnitMultRatio<dUEmpty, std::ratio<1000>>;
 
-using KM_2 = Unit<
-    double,
-    MakeUnitIdentifier<UnitBase<"meter", std::ratio<2>>>,
-    std::ratio<1000000>>;
-
-inline Meter operator"" _meter(long double value)
-{
-    return Meter{static_cast<double>(value)};
-}
+#include <iostream>
 
 int main()
 {
+    std::cout << "hello world" << std::endl;
+    Vector2<dUEmpty> v1{1, 2};
+    Vector2<double> v2{1, 2};
+    std::cout << (dUEmpty{1.0} == 1.0) << std::endl;
+    std::cout << (v1 == v2) << std::endl;
+
     // Vector2<Meter> myV{1000, 1000};
     // Vector2<Kilometer> myVi{1.0, 1.01};
 
-    // Vector3<Meter> i{1, 0, 0};
+    // Vector3<Meter> i{1, 0ma, 0};
     // Vector3<Meter> j{0, 1, 0};
 
     // Meter val{1000};

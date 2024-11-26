@@ -2,32 +2,32 @@
     "version": "2.0.0",
     "tasks": [
         {
-            "label": "Build",
+            "label": "Build main",
             "type": "shell",
             "command": "make",
             "problemMatcher": [],
-            "group": {
-                "kind": "build"
-            },
+            "group": "build",
             "presentation": {
-                "reveal": "always",
-                "panel": "shared"
+                "panel": "shared",
+                "clear": true
             },
             "runOptions": {
                 "runOn": "default"
             }
         },
         {
-            "label": "Build and Run",
+            "label": "Build and run main",
             "type": "shell",
-            "command": "make && ./main",
+            "command": "./main",
             "problemMatcher": [],
+            "dependsOn": "Build main",
             "group": {
-                "kind": "build",
+                "kind": "build"
             },
             "presentation": {
                 "reveal": "always",
-                "panel": "shared"
+                "panel": "shared",
+                "clear": true
             },
             "runOptions": {
                 "runOn": "default"
@@ -39,11 +39,13 @@
             "command": "./run-tests.sh",
             "problemMatcher": [],
             "group": {
-                "kind": "build"
+                "kind": "build",
+                "isDefault": true
             },
             "presentation": {
                 "reveal": "always",
                 "panel": "shared",
+                "clear": true
             },
             "runOptions": {
                 "runOn": "default"
@@ -54,12 +56,8 @@
             "type": "shell",
             "command": "./run-tests.sh && make && ./main",
             "problemMatcher": [],
-            "group": {
-                "kind": "build",
-                "isDefault": true
-            },
+            "group": "build",
             "presentation": {
-                "reveal": "always",
                 "panel": "shared",
                 "clear": true
             },

@@ -1,8 +1,9 @@
 # Compiler
 CXX = clang++
 
+# TODO: move disable -g if you need prod mode
 # Compiler flags
-CXXFLAGS = -Wall -Wextra -std=c++20
+CXXFLAGS = -Wall -Wextra -std=c++20 -g
 
 # Source files (all .cpp files in the directory)
 SOURCES = $(wildcard *.cpp)
@@ -17,11 +18,11 @@ OBJECTS = $(SOURCES:.cpp=.o)
 
 # Default rule
 # Rule to link object files into the executable
-main: $(OBJECTS) $(HEADERS)
+$(TARGET_MAIN): $(OBJECTS) $(HEADERS)
 	$(CXX) $(CXXFLAGS) $(OBJECTS) -o $(TARGET_MAIN)
 
-tests: _Tests/tests.o $(HEADERS)
-	$(CXX) $(CXXFLAGS) _Tests/tests.o -o $(TARGET_TESTS)
+tests: $(TARGET_TESTS).o $(HEADERS)
+	$(CXX) $(CXXFLAGS) $(TARGET_TESTS).o -o $(TARGET_TESTS)
 
 # TODO: Right now we recompile the whole thing whenever a header changes, there should be a smarter way to do this incrementally
 # Rule to compile .cpp files into .o files
@@ -29,12 +30,13 @@ tests: _Tests/tests.o $(HEADERS)
 %.o: %.cpp $(HEADERS)
 	$(CXX) $(CXXFLAGS) -c $< -o $@
 
-tests.o $(HEADERS):
-	$(CXX) $(CXXFLAGS) -c _Tests/tests.cpp -o -Tests/tests.o
+$(TARGET_TESTS).o: $(HEADERS) $(TARGET_TESTS).cpp
+	$(CXX) $(CXXFLAGS) -c $(TARGET_TESTS).cpp -o $(TARGET_TESTS).o
 
 # Clean rule to remove generated files
 clean:
-	rm -f $(OBJECTS) main
+	rm -f $(OBJECTS) $(TARGET_MAIN)
+	rm -f _Tests/*.o $(TARGET_TESTS)
 
 # Phony targets to prevent conflicts with files named 'clean' or 'all'
 .PHONY: clean

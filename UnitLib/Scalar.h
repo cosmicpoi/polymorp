@@ -28,15 +28,6 @@ struct ScalarExp_<T, Exp>
 template <GeneralScalar T, IsRatio Exp>
 using ScalarExp = typename ScalarExp_<T, Exp>::type;
 
-template <GeneralScalar A, GeneralScalar B>
-using ScalarMult = decltype(std::declval<A>() * std::declval<B>());
-
-template <GeneralScalar A, GeneralScalar B>
-using ScalarAdd = decltype(std::declval<A>() + std::declval<B>());
-
-template <GeneralScalar A, GeneralScalar B>
-using ScalarSubtract = decltype(std::declval<A>() + std::declval<B>());
-
 // Get type of underlying value
 template <GeneralScalar T>
 struct GetUnderlying_

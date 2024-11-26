@@ -80,6 +80,12 @@ constexpr bool CanOp()
     }
 }
 
+// Helper for Vector tests
+template <typename T>
+concept HasIsZero = requires(T t) {
+    { t.IsZero() };
+};
+
 int main()
 {
     // ------------------------------------------------------------
@@ -235,6 +241,9 @@ int main()
         assert(5.4 == dUEmpty{5.4});
         assert(5400 == dUKilo{5.4});
         assert((float)1001 == dUKilo{1} + dUEmpty{1});
+
+        assert((CanOp<float, "==", dUEmpty>()));
+        assert((CanOp<dUEmpty, "==", int>()));
     }
 
     // Test assignment
@@ -364,6 +373,9 @@ int main()
         assert((10.0 / Meter{2}) == Meter__1{5});
         assert((2 / dUEmpty{10}) == 0.2);
         assert((float)2 / Kilometer{1} == Meter__1{0.002});
+
+        assert(2.4 == EmptyUnit<double>{2.4});
+        assert(EmptyUnit<double>{2.4} == 2.4);
 
         static_assert((CanOp<double, "/", Meter>()));
         static_assert((CanOp<int, "/", Kilometer>()));
@@ -554,29 +566,138 @@ int main()
         {
             assert(v5[i] == Meter{0});
         }
-    }
-    std::cout << "Running equality tests" << std::endl;
-    {
 
+        Vector2<std::string> strV{"hi", "bye"};
+        assert(strV.x() == "hi");
     }
+    std::cout << "Running accessor tests" << std::endl;
+    // Accessors
+    {
+        Vector3<float> myVec{1, 2, 3};
+        const std::array<float, 3> &arr = myVec.GetData();
+        assert(arr[0] == 1 && arr[1] == 2 && arr[2] == 3);
+
+        assert(myVec[0] == 1 && myVec[1] == (double)2 && myVec[2] == 3);
+        assert(myVec.x() == 1 && myVec.y() == (double)2 && myVec.z() == 3);
+
+        myVec[0] = 10;
+        assert(myVec[0] == 10);
+
+        Vector<100, double> myVec2;
+        myVec2[63] = 13.7;
+        assert(myVec2[63] == 13.7);
+
+        myVec.y() = 12.4f;
+        assert(myVec[1] == 12.4f);
+
+        Vector<5, double> myVec3{1, 2, 3, 4, 5};
+        assert(myVec3.x() == 1 && myVec3.y() == 2 && myVec3.z() == 3 && myVec3.w() == 4);
+
+        const float val = myVec[1];
+        assert(val == 12.4f);
+        assert((!CanOp<decltype(val), "=", float>()));
+
+        double &val2 = myVec3.z();
+        val2 = 10.7;
+        assert(myVec3[2] == 10.7 && myVec3.z() == 10.7);
+    }
+
+    std::cout << "Running equality and assignment tests" << std::endl;
+    // Equality
+    {
+        Vector3<Meter> v1{1000, 2000, 3000};
+        Vector3<Meter> v2{1000, 2000, 3000};
+        Vector3<Kilometer> v3{1, 2, 3};
+
+        assert(v1 == v3);
+        assert(v1 == v2);
+        
+        v2[0] = Meter{10};
+        assert(v1 != v2);
+
+        assert((CanOp<Vector3<Meter>, "==", Vector3<Kilometer>>()));
+        assert((!CanOp<Vector3<Meter>, "==", Vector3<double>>()));
+
+        Vector2<double> v4{1, 2};
+        Vector2<dUEmpty> v5{1, 2};
+        static_assert(sizeof(Vector2<double>) == sizeof(Vector2<EmptyUnit<double>>),
+              "Vector storage size mismatch");
+        assert((CanOp<Vector3<double>, "==", Vector3<EmptyUnit<double>>>()));
+
+        assert(v4 == v5);
+
+        assert((Vector2<std::string>{"hi", "bye"} == Vector2<std::string>{"hi", "bye"}));
+    }
+    // Assignment
+    {
+        Vector3<double> v1;
+        Vector3<double> v2{1, 2, 3};
+        assert((v1 == Vector3<double>{0, 0, 0}));
+        v1 = v2;
+        assert((v1 == Vector3<double>{1, 2, 3}));
+        assert(v1 == v2);
+
+        assert(((v1 = Vector3<double>{4, 5, 6}) == Vector3<double>{4, 5, 6}));
+    }
+    // Checking IsZero
+    {
+        Vector2<std::string> strVec{"hi", "bye"};
+        Vector2<double> dVec{1, 2};
+
+        assert(!dVec.IsZero());
+        assert((Vector3<double>{}).IsZero());
+
+        static_assert((!HasIsZero<Vector2<std::string>>));
+        static_assert((HasIsZero<Vector2<double>>));
+    };
     std::cout << "Running arithmetic tests" << std::endl;
-    // Addition
+    // Componentwise Addition
     {
+    };
+    // Componentwise Subtraction
 
+    // Componentwise multiplication
+
+    // Componentwise division
+
+    // Scalar multiplication (right and left)
+    {
+        Vector2<double> v1{1, 2};
+        assert((v1 * 2 == Vector2<double>{2, 4}));
+
+        assert((Meter{2} * v1 == Vector2<Meter>{2, 4}));
+
+        assert((CanOp<Vector3<Meter>, "*", Kilometer>()));
+        assert((CanOp<Vector3<Meter>, "*", int>()));
+
+        assert((CanOp<float, "*", Vector3<int>>()));
+        assert((CanOp<Second, "*", Vector3<Kilometer>>()));
+
+        assert((!CanOp<Vector3<std::string>, "*", int>()));
+    };
+
+    // Scalar division (right only)
+    {
+        Vector2<double> v1{1, 2};
+        assert((v1 / 2 == Vector2<double>{0.5, 1}));
+        assert((v1 / Meter{2} == Vector2<Meter__1>{0.5, 1}));
+        assert((Vector2<Kilometer>{1, 1} / Meter{1} == Vector2<double>{1000, 1000}));
+
+        assert((CanOp<Vector3<Meter>, "/", Kilometer>()));
+        assert((CanOp<Vector3<Meter>, "/", int>()));
+        assert((CanOp<Vector3<Meter>, "/", dUEmpty>()));
     }
-    // Subtraction
 
-    // Scalar multiplication
+    
+    std::cout << "Running arithmetic assignment tests" << std::endl;
 
-    // Scalar division
-    std::cout << "Running product tests" << std::endl;    
+    std::cout << "Running product tests" << std::endl;
     // Dot product
     // Cross product
 
-    std::cout << "Running norm tests" << std::endl;    
+    std::cout << "Running norm tests" << std::endl;
     // Norm
     // NormSq
-
 
     return 0;
 }

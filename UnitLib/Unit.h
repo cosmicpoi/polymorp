@@ -299,6 +299,7 @@ public:
         return val1 <=> val2;
     }
 
+    // Compare with another unit of the same UID (different type and ratio OK)
     template <typename RHS_Type, UnitIdentifier RHS_UID, IsRatio RHS_Ratio>
         requires requires(RHS_Type A, Type B) {
             requires std::is_same_v<UID, RHS_UID>;
@@ -309,13 +310,14 @@ public:
         return typed_ratio_equality<Type, Ratio, RHS_Type, RHS_Ratio>(value, rhs.GetValue());
     }
 
+    // Compare with empty unit
     template <typename T>
         requires requires(Type a, T b) {
             requires IsEmptyUid<UID>;
             requires std::is_arithmetic_v<T>;
             { a == b } -> std::convertible_to<bool>;
         }
-    inline bool operator==(const T &rhs)
+    inline bool operator==(const T &rhs) const
     {
         return typed_ratio_equality<Type, Ratio, T, std::ratio<1>>(value, rhs);
     }
@@ -427,20 +429,20 @@ std::ostream &operator<<(std::ostream &os, Unit<Type, UID, Ratio> val)
 
 /** @breif Left-compare with plain type for EmptyUnits */
 template <typename LHS, IsUnit Unit_RHS>
-    requires requires(typename Unit_RHS::type a, LHS b) {
+    requires requires(Unit_RHS a, LHS b) {
         requires IsEmptyUid<typename Unit_RHS::uid>;
         requires std::is_arithmetic_v<LHS>;
-        { a == b } -> std::convertible_to<bool>;
+        { a.operator==(b) } -> std::convertible_to<bool>;
     }
 inline bool operator==(const LHS &lhs, const Unit_RHS &rhs)
 {
-    return rhs == lhs;
+    return rhs.operator==(lhs);
 }
 
 /** @brief Left-multiply by scalar */
 template <typename LHS, IsUnit Unit_RHS>
-    requires requires(LHS a, Unit_RHS b) { b.operator*(a); }
-inline auto operator*(const LHS &lhs, const Unit_RHS &rhs)
+    requires CanOpMultiply<Unit_RHS, LHS>
+inline OpMultiplyType<Unit_RHS, LHS> operator*(const LHS &lhs, const Unit_RHS &rhs)
 {
     return rhs.operator*(lhs);
 }
