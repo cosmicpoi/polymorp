@@ -35,6 +35,16 @@ concept VectorIsConvertible_ = requires {
 // Vector class
 //--------------------------------------------------------------------------------
 
+// Helper function to create a compile-time zero-initialized array of type T and size N
+template <typename T, size_t N>
+constexpr std::array<T, N> create_array()
+{
+    return ([]<std::size_t... Is>(std::index_sequence<Is...>) -> std::array<T, N>
+            {
+                return {((void)Is, T{0})...}; //
+            })(std::make_index_sequence<N>{});
+}
+
 /**
  * @brief Base class for Vector with units. Provides optimized versions for N=2, 3, 4, corresponding to `Vector2`, `Vector3`, and `Vector4`, but any length is actually supported.
  */
@@ -151,15 +161,15 @@ public:
 
     /** Default constructors */
 
-    inline Vector()
+    explicit inline Vector()
         : _v(create_array<Type, N>())
     {
     }
 
     /** @brief Variadic constructor - can take any types convertible to U.  */
-    template <std::convertible_to<Type>... Args>
-        requires(sizeof...(Args) <= N)
-    inline Vector(Args... initList)
+    template <typename... Args>
+        requires (sizeof...(Args) <= N && (std::constructible_from<Type, Args> && ...))
+    explicit inline Vector(Args... initList)
         : _v{static_cast<Type>(initList)...}
     {
     }

@@ -505,12 +505,78 @@ int main()
     // ------------------------------------------------------------
     // Run Scalar tests
     // ------------------------------------------------------------
+
+    std::cout << "------ BEGIN TESTING SCALAR ------" << std::endl;
+    std::cout << "Running scalar tests" << std::endl;
     {
         GeneralScalar auto myV = 10.0;
         GeneralScalar auto myV2 = 10.0;
         GeneralScalar auto myV3 = Meter{1};
         static_assert((CanOp<decltype(myV), "+", decltype(myV2)>()));
     }
+
+    // ------------------------------------------------------------
+    // Run Vector tests
+    // ------------------------------------------------------------
+    std::cout << "------ BEGIN TESTING VECTOR ------" << std::endl;
+    std::cout << "Running constructor tests" << std::endl;
+    {
+        Vector2<double> v0;
+        assert(v0[0] == 0 && v0[1] == 0);
+
+        Vector2<Meter> v1;
+        assert(v1[0] == Meter{0} && v1[1] == Meter{0});
+
+        Vector3<double> v2{1, 2};
+        assert(v2[0] == 1 && v2[1] == 2 && v2[2] == 0);
+
+        Vector3<Meter> v3{Meter{1}, Meter{2}};
+        assert(v3[0] == Meter{1} && v3[1] == Meter{2} && v3[2] == Meter{0});
+
+        Vector3<Meter> v4{1, 2};
+        assert(v4[0] == Meter{1} && v4[1] == Meter{2} && v4[2] == Meter{0});
+
+        static_assert(std::is_constructible_v<Vector2<double>>);
+        static_assert(std::is_constructible_v<Vector2<double>, int>);
+        static_assert(std::is_constructible_v<Vector2<double>, int, float>);
+        static_assert(!std::is_constructible_v<Vector2<double>, double, double, double>);
+
+        static_assert(std::is_constructible_v<Vector2<Meter>>);
+        static_assert(std::is_constructible_v<Vector2<Meter>, Meter>);
+        static_assert(std::is_constructible_v<Vector2<Meter>, double>);
+        static_assert(std::is_constructible_v<Vector2<Meter>, double, double>);
+        static_assert(std::is_constructible_v<Vector2<Meter>, double, Meter>);
+        static_assert(!std::is_constructible_v<Vector2<Meter>, double, double, double>);
+
+        Vector<100, Kilometer> v5{1, 2, 3};
+        assert(v5[0] == Meter{1000} && v5[1] == Meter{2000} && v5[2] == Meter{3000});
+        for (size_t i = 3; i < 100; i++)
+        {
+            assert(v5[i] == Meter{0});
+        }
+    }
+    std::cout << "Running equality tests" << std::endl;
+    {
+
+    }
+    std::cout << "Running arithmetic tests" << std::endl;
+    // Addition
+    {
+
+    }
+    // Subtraction
+
+    // Scalar multiplication
+
+    // Scalar division
+    std::cout << "Running product tests" << std::endl;    
+    // Dot product
+    // Cross product
+
+    std::cout << "Running norm tests" << std::endl;    
+    // Norm
+    // NormSq
+
 
     return 0;
 }

@@ -9,14 +9,6 @@ concept HasPrint = requires(std::ostream &os) {
     { T::Print(os) } -> std::same_as<void>;
 };
 
-// Helper function to create a compile-time zero-initialized array of type T and size N
-template <typename T, size_t N>
-constexpr std::array<T, N> create_array()
-{
-    return ([]<std::size_t... Is>(std::index_sequence<Is...>) -> std::array<T, N>
-            { return {((void)Is, 0)...}; })(std::make_index_sequence<N>{});
-}
-
 template <typename A, typename B>
 concept CanMultiply = requires(A a, B b) {
     { a *b } -> std::same_as<std::common_type_t<A, B>>;
