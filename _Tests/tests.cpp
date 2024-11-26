@@ -57,9 +57,25 @@ constexpr bool CanOp()
     {
         return requires(A a, B b) { a /= b; };
     }
+    // Assignment
+    else if constexpr (StrEq<str, "<">::value)
+    {
+        return requires(A a, B b) { a < b; };
+    }
+    else if constexpr (StrEq<str, "<=">::value)
+    {
+        return requires(A a, B b) { a <= b; };
+    }
+    else if constexpr (StrEq<str, ">">::value)
+    {
+        return requires(A a, B b) { a > b; };
+    }
+    else if constexpr (StrEq<str, ">=">::value)
+    {
+        return requires(A a, B b) { a >= b; };
+    }
     else
     {
-
         return false;
     }
 }
@@ -429,24 +445,72 @@ int main()
     }
 
     // /** -- Run comparison tests --  */
-    // std::cout << "Running comparison tests" << std::endl;
+    std::cout << "Running comparison tests" << std::endl;
 
-    // // Test Comparison
+    // Test <
+    {
+        assert(Meter{1} < Meter{2});
+        assert(Meter{999} < Kilometer{1});
+        assert(Kilometer{0.999} < Meter{1000});
+        assert(Meter{999} < iMeter{1000});
+
+        assert((CanOp<Meter, "<", Meter>()));
+        assert((CanOp<Meter, "<", Kilometer>()));
+        assert((CanOp<iMeter, "<", Kilometer>()));
+        assert((CanOp<Kilometer, "<", iMeter>()));
+    }
+    // Test <=
+    {
+        assert(Meter{1} <= Meter{2});
+        assert(Meter{1000} <= Kilometer{1});
+        assert(Kilometer{0.999} <= Meter{1000});
+        assert(Meter{1000} <= iMeter{1000});
+
+        assert((CanOp<Meter, "<=", Meter>()));
+        assert((CanOp<Meter, "<=", Kilometer>()));
+        assert((CanOp<iMeter, "<=", Kilometer>()));
+        assert((CanOp<Kilometer, "<=", iMeter>()));
+    }
+
+    // Test >
+    {
+        assert(Meter{2} > Meter{1});
+        assert(Kilometer{1} > Meter{999});
+        assert(Meter{1000} > Kilometer{0.999});
+        assert(iMeter{1000} > Meter{999});
+
+        assert((CanOp<Meter, ">", Meter>()));
+        assert((CanOp<Meter, ">", Kilometer>()));
+        assert((CanOp<iMeter, ">", Kilometer>()));
+        assert((CanOp<Kilometer, ">", iMeter>()));
+    }
+
+    // Test >=
+    {
+        assert(Meter{2} >= Meter{1});
+        assert(Kilometer{1} >= Meter{1000});
+        assert(Meter{1000} >= Kilometer{0.999});
+        assert(iMeter{1000} >= Meter{1000});
+
+        assert((CanOp<Meter, ">=", Meter>()));
+        assert((CanOp<Meter, ">=", Kilometer>()));
+        assert((CanOp<iMeter, ">=", Kilometer>()));
+        assert((CanOp<Kilometer, ">=", iMeter>()));
+    }
 
     // /** -- Run concept tests --  */
 
     // /** -- Run UnitMath tests --  */
 
-    // // ------------------------------------------------------------
-    // // Run Scalar tests
-    // // ------------------------------------------------------------
-    // {
-    //     GeneralScalar auto myV = 10.0;
-    //     GeneralScalar auto myV2 = 10.0;
-    //     GeneralScalar auto myV3 = Meter{1};
-    //     // static_assert((CanOp<decltype(myV), "+", decltype(myV2)>));
-    //     // myV + myV3;
-    // }
+    // ------------------------------------------------------------
+    // Run Scalar tests
+    // ------------------------------------------------------------
+    {
+        GeneralScalar auto myV = 10.0;
+        GeneralScalar auto myV2 = 10.0;
+        GeneralScalar auto myV3 = Meter{1};
+        static_assert((CanOp<decltype(myV), "+", decltype(myV2)>()));
+    }
 
     return 0;
 }
