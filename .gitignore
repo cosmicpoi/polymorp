@@ -1,5 +1,4 @@
 *.o
 main
-_Tests/tests.o
 _Tests/tests
 *.dSYM
