@@ -13,7 +13,7 @@ template <typename A, StringLiteral str, typename B>
 constexpr bool CanOp()
 {
     // Assignment
-    
+
     if constexpr (StrEq<str, "=">::value)
     {
         return requires(A a, B b) { a = b; };
@@ -111,10 +111,10 @@ int main()
         constexpr StringLiteral str1 = MakeStrLit<"=">::str;
         constexpr StringLiteral str2 = MakeStrLit<"==">::str;
 
-        static_assert( CompareStrings<str1, str2>::value );
-        static_assert( !CompareStrings<str2, str1>::value );
-        static_assert( StrEq<str1, str1>::value );
-        static_assert( !StrEq<str1, str2>::value );
+        static_assert(CompareStrings<str1, str2>::value);
+        static_assert(!CompareStrings<str2, str1>::value);
+        static_assert(StrEq<str1, str1>::value);
+        static_assert(!StrEq<str1, str2>::value);
     }
 
     // ------------------------------------------------------------
@@ -149,6 +149,9 @@ int main()
     using m__s_2 = UnitMult<Meter, UnitExpI<Second, -2>>;
     static_assert((std::is_same_v<m__s_2::uid, MakeUnitIdentifier<UnitBase<"meter", std::ratio<1>>, UnitBase<"second", std::ratio<-2>>>>));
 
+    using dUEmpty = EmptyUnit<double>;
+    using dUKilo = UnitMultRatio<dUEmpty, std::ratio<1000>>;
+
     /** -- Run constructor tests --  */
     std::cout << "Running constructor tests" << std::endl;
     {
@@ -182,6 +185,17 @@ int main()
         assert((!CanOp<Meter, "==", float>()));
         assert((!CanOp<Meter, "==", double>()));
         assert((!CanOp<Meter, "==", float>()));
+    }
+
+    // Comparison between empty units and plain scalars (left and right)
+    {
+        assert(dUEmpty{5.4} == 5.4);
+        assert(dUKilo{5.4} == 5400);
+        assert(dUKilo{1} + dUEmpty{1} == (float)1001);
+
+        assert(5.4 == dUEmpty{5.4});
+        assert(5400 == dUKilo{5.4});
+        assert((float)1001 == dUKilo{1} + dUEmpty{1});
     }
 
     // Test assignment
@@ -219,9 +233,15 @@ int main()
         assert((!CanOp<typename Meter::type, "=", Meter>()));
     }
 
-    // Conversion between empty types and plain scalars
+    // Conversion between empty units and plain scalars (right side only)
     {
-        
+        dUEmpty val{1.2};
+        assert((val = 100.7) == dUEmpty{100.7});
+        assert((val = 100.7) == 100.7);
+        assert((val = dUKilo{1.001}) == 1001);
+
+        val = dUKilo{1.2};
+        assert(val == (int)1200);
     }
 
     /** -- Run arithmetic tests --  */

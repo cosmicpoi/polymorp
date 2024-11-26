@@ -39,6 +39,25 @@ concept UnitIsConvertible_ = requires {
     requires std::is_convertible_v<typename From::type, typename To::type>;
 };
 
+template <typename Type, IsRatio Ratio, typename RHS_Type, IsRatio RHS_Ratio>
+constexpr bool typed_ratio_equality(Type value, RHS_Type rhs)
+{
+    using CommonType = std::common_type_t<Type, RHS_Type>;
+
+    constexpr auto fac1 = Ratio::num * RHS_Ratio::den;
+    constexpr auto fac2 = RHS_Ratio::num * Ratio::den;
+    constexpr auto facMax = fac1 > fac2 ? fac1 : fac2;
+    constexpr CommonType eps1 = std::numeric_limits<Type>::epsilon();
+    constexpr CommonType eps2 = std::numeric_limits<RHS_Type>::epsilon();
+    constexpr CommonType eps = eps1 > eps2 ? eps1 : eps2;
+
+    constexpr CommonType epsilon = eps * facMax * EPS_TOLERANCE;
+
+    CommonType val1 = (value * fac1);
+    CommonType val2 = (rhs * fac2);
+    return std::abs(val1 - val2) < epsilon;
+}
+
 /** @brief Unit definition */
 template <typename Type, UnitIdentifier UID = EmptyUid, IsRatio Ratio = std::ratio<1>>
     requires std::is_arithmetic_v<Type>
@@ -115,7 +134,7 @@ public:
     }
 
     template <typename T>
-        requires std::is_same_v<UID, EmptyUid> && std::is_convertible_v<T, Type>
+        requires IsEmptyUid<UID> && std::is_arithmetic_v<T> && std::is_convertible_v<T, Type>
     inline ThisType &operator=(const T &rhs)
     {
         value = DivideByRatio<Ratio>(rhs);
@@ -274,20 +293,18 @@ public:
         }
     inline bool operator==(const Unit<RHS_Type, RHS_UID, RHS_Ratio> &rhs) const
     {
-        using CommonType = std::common_type_t<Type, RHS_Type>;
+        return typed_ratio_equality<Type, Ratio, RHS_Type, RHS_Ratio>(value, rhs.GetValue());
+    }
 
-        constexpr auto fac1 = Ratio::num * RHS_Ratio::den;
-        constexpr auto fac2 = RHS_Ratio::num * Ratio::den;
-        constexpr auto facMax = fac1 > fac2 ? fac1 : fac2;
-        constexpr CommonType eps1 = std::numeric_limits<Type>::epsilon();
-        constexpr CommonType eps2 = std::numeric_limits<RHS_Type>::epsilon();
-        constexpr CommonType eps = eps1 > eps2 ? eps1 : eps2;
-
-        constexpr CommonType epsilon = eps * facMax * EPS_TOLERANCE;
-
-        CommonType val1 = (value * fac1);
-        CommonType val2 = (rhs.GetValue() * fac2);
-        return std::abs(val1 - val2) < epsilon;
+    template <typename T>
+        requires requires(Type a, T b) {
+            requires IsEmptyUid<UID>;
+            requires std::is_arithmetic_v<T>;
+            { a == b } -> std::convertible_to<bool>;
+        }
+    inline bool operator==(const T &rhs)
+    {
+        return typed_ratio_equality<Type, Ratio, T, std::ratio<1>>(value, rhs);
     }
 
     // template <typename RHS>
@@ -335,10 +352,22 @@ std::ostream &operator<<(std::ostream &os, Unit<Type, UID, Ratio> val)
     return val.operator<<(os);
 }
 
+/** @breif Left-compare with plain type for EmptyUnits */
+template <typename LHS, IsUnit Unit_RHS>
+    requires requires(typename Unit_RHS::type a, LHS b) {
+        requires IsEmptyUid<typename Unit_RHS::uid>;
+        requires std::is_arithmetic_v<LHS>;
+        { a == b } -> std::convertible_to<bool>;
+    }
+inline bool operator==(const LHS &lhs, const Unit_RHS &rhs)
+{
+    return rhs == lhs;
+}
+
 /** @brief Left-multiply by scalar */
 template <typename LHS, IsUnit Unit_RHS>
     requires requires(LHS a, Unit_RHS b) { b.operator*(a); }
-auto operator*(LHS lhs, Unit_RHS rhs)
+inline auto operator*(const LHS &lhs, const Unit_RHS &rhs)
 {
     return rhs * lhs;
 }
@@ -346,7 +375,7 @@ auto operator*(LHS lhs, Unit_RHS rhs)
 /** @brief Left-divide with scalar */
 template <typename LHS, IsUnit Unit_RHS>
     requires requires(LHS a, Unit_RHS b) { a.operator*(b); }
-auto operator/(LHS lhs, Unit_RHS rhs)
+inline auto operator/(const LHS &lhs, const Unit_RHS &rhs)
 {
     return lhs * unit_pow<std::ratio<-1>>(rhs);
 }
@@ -408,10 +437,14 @@ using UnitMultRatio = Unit<
     std::ratio_multiply<Ratio, typename U::ratio>>;
 
 /**
- * Some template shorthands for easier deduction
+ * Template shorthands
  */
+template <typename T>
+    requires std::is_arithmetic_v<T>
+using EmptyUnit = Unit<T, EmptyUid>;
 
 template <typename T, StringLiteral Symbol>
+    requires std::is_arithmetic_v<T>
 using TypeAtomic = Unit<T, MakeUnitIdentifier<UnitAtomic<Symbol>>>;
 
 template <StringLiteral Symbol>

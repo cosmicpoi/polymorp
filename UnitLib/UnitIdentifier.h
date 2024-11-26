@@ -17,6 +17,9 @@ using UnitAtomic = UnitBase<Symbol, std::ratio<1>>;
 /** Empty UID (unitless scalars) */
 using EmptyUid = UnitLeafVector<>;
 
+template <typename T>
+concept IsEmptyUid = std::is_same_v<T, EmptyUid>;
+
 
 /** Other aliases */
 template <UnitIdentifier V>
