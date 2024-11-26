@@ -66,7 +66,7 @@ constexpr bool typed_ratio_equality(Type value, RHS_Type rhs)
 /**
  * @brief Ratio assignment helper.
  * Supports assignment of `Unit<ToType, UID, ToRatio> x = Unit<FromType, UID, FromRatio>{fromVal}`.
- * UIDs must match.
+ * UIDs must match, and types must be convertible. Verify with UnitIsConvertible_
  */
 template <typename FromType, IsRatio FromRatio, typename ToType, IsRatio ToRatio>
 ToType resolve_ratio_assignment(const FromType &fromVal)
@@ -76,7 +76,16 @@ ToType resolve_ratio_assignment(const FromType &fromVal)
     return value;
 }
 
-// Used for addition and subtraction
+/**
+ * @brief Ratio addition/subtraction helper.
+ * Supports expressions of the form `V1 * (N1/D1) + V2 * (N2/D2)`.
+ */
+template <typename LHS_Type, IsRatio LHS_Ratio, typename RHS_Type, IsRatio RHS_Ratio>
+std::common_type_t<LHS_Type, RHS_Type> ratio_value_add(const LHS_Type &lhs, const RHS_Type &rhs)
+{
+    using ResType = std::common_type_t<LHS_Type, RHS_Type>;
+    return (((ResType)lhs) / (LHS_Ratio::den * RHS_Ratio::num)) + (((ResType)rhs) / (RHS_Ratio::den * LHS_Ratio::num));
+}
 
 /** @brief Unit definition */
 template <typename Type, UnitIdentifier UID = EmptyUid, IsRatio Ratio = std::ratio<1>>
@@ -242,7 +251,7 @@ public:
     {
         using ResType = std::common_type_t<Type, RHS_Type>;
         return UnitAdd_<Unit<RHS_Type, RHS_UID, RHS_Ratio>>{
-            (((ResType)value) / (Ratio::den * RHS_Ratio::num)) + (((ResType)rhs.GetValue()) / (RHS_Ratio::den * Ratio::num)) //
+            ratio_value_add<Type, Ratio, RHS_Type, RHS_Ratio>(value, rhs.GetValue()) //
         };
     }
 
@@ -253,7 +262,7 @@ public:
     {
         using ResType = std::common_type_t<Type, RHS_Type>;
         return UnitAdd_<Unit<RHS_Type, RHS_UID, RHS_Ratio>>{
-            (((ResType)value) / (Ratio::den * RHS_Ratio::num)) - (((ResType)rhs.GetValue()) / (RHS_Ratio::den * Ratio::num)) //
+            ratio_value_add<Type, Ratio, RHS_Type, RHS_Ratio>(value, -rhs.GetValue()) //
         };
     }
 
