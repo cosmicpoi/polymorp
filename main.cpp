@@ -2,6 +2,7 @@
 #include "UnitLib/Unit.h"
 // #include "UnitLib/UnitMath.h"
 #include "UnitLib/Vector.h"
+#include "UnitLib/Matrix.h"
 #include "UnitLib/Print.h"
 
 // using Meter = dAtomic<"meter">;
@@ -49,8 +50,11 @@ struct MyWrapper : MyInheritor<T>
 
 int main()
 {
+    Matrix2<double> m{};
+    std::cout << m[0][0] << std::endl;
+    std::cout << m.Get(0, 0) << std::endl;
 
-    std::cout << Vector2<Meter>{10, 10} << std::endl;
+    std::cout << m << std::endl;
 
     // PrintInfo<M_S>();
     // int x = 10;

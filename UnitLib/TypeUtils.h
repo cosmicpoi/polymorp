@@ -18,6 +18,35 @@ template <typename T>
 using ExtractParameterPack = typename ExtractParameterPack_<T>::type;
 
 /**
+ * Array helpers
+ */
+
+template <typename T, size_t N>
+using Array = std::array<T, N>;
+
+template <typename T, size_t M, size_t N>
+using Array2D = std::array<std::array<T, N>, M>;
+
+// Helper function to create a compile-time zero-initialized array of type T and size N
+template <typename T, size_t N>
+constexpr Array<T, N> create_zero_array()
+{
+    return ([]<std::size_t... Is>(std::index_sequence<Is...>) -> Array<T, N>
+            {
+                return {((void)Is, T{0})...}; //
+            })(std::make_index_sequence<N>{});
+}
+
+template <typename T, size_t M, size_t N>
+constexpr Array2D<T, M, N> create_zero_matrix()
+{
+    return ([]<std::size_t... Js>(std::index_sequence<Js...>) -> Array2D<T, M, N>
+            {
+                return {((void)Js, create_zero_array<T, N>())...}; //
+            })(std::make_index_sequence<M>{});
+}
+
+/**
  * UniversalFalse - a fallback for templates whose values may not always exist,
  * e.g. the type of MultType<A, A> if A cannot be multiplied
  *

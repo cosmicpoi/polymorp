@@ -1,7 +1,7 @@
 //--------------------------------------------------------------------------------
 // Vector class
 //
-//   Support for building Vectors out of Units
+//   Support for building Vectors out of arbitrary values
 //--------------------------------------------------------------------------------
 
 #pragma once
@@ -15,16 +15,6 @@
 //--------------------------------------------------------------------------------
 // Vector class
 //--------------------------------------------------------------------------------
-
-// Helper function to create a compile-time zero-initialized array of type T and size N
-template <typename T, size_t N>
-constexpr std::array<T, N> create_array()
-{
-    return ([]<std::size_t... Is>(std::index_sequence<Is...>) -> std::array<T, N>
-            {
-                return {((void)Is, T{0})...}; //
-            })(std::make_index_sequence<N>{});
-}
 
 /**
  * @brief Base class for Vector with units. Provides optimized versions for N=2, 3, 4, corresponding to `Vector2`, `Vector3`, and `Vector4`, but any length is actually supported.
@@ -40,7 +30,7 @@ public:
     using VectorN = Vector<N, T>;
 
     /** Accessors */
-    inline const std::array<Type, N> GetData() const
+    inline const Array<Type, N> GetData() const
     {
         return _v;
     }
@@ -95,6 +85,20 @@ public:
 
     inline Type &operator[](std::size_t index)
     {
+        return _v[index];
+    }
+
+    inline const Type &operator[](std::size_t index) const
+    {
+        return _v[index];
+    }
+
+    /**
+     * Safe versions with range checks (slightly slower than access)
+     */
+
+    inline Type &Get(std::size_t index)
+    {
         if (index >= N)
         {
             throw std::out_of_range("Index out of range");
@@ -102,9 +106,9 @@ public:
         return _v[index];
     }
 
-    inline const Type &operator[](std::size_t index) const
+    inline const Type &Get(std::size_t index) const
     {
-        if (index >= N)
+        if(index >= N)
         {
             throw std::out_of_range("Index out of range");
         }
@@ -114,7 +118,7 @@ public:
     /** Default constructors */
 
     explicit inline Vector()
-        : _v(create_array<Type, N>())
+        : _v(create_zero_array<Type, N>())
     {
     }
 
@@ -369,7 +373,7 @@ public:
     }
 
 private:
-    std::array<Type, N>
+    Array<Type, N>
         _v;
 };
 

@@ -1,21 +1,10 @@
 #include <cassert>
 
-#include "../UnitLib/StringLiteral.h"
 #include "../UnitLib/Unit.h"
 #include "../UnitLib/Vector.h"
-#include <iomanip>
+#include "../UnitLib/Matrix.h"
 
-template <typename T>
-constexpr const char *type_name()
-{
-#if defined(__clang__) || defined(__GNUC__)
-    return __PRETTY_FUNCTION__;
-#elif defined(_MSC_VER)
-    return __FUNCSIG__;
-#else
-    return "Unsupported compiler";
-#endif
-}
+#include <iomanip>
 
 // ------------------------------------------------------------
 // Testing library utils
@@ -623,7 +612,7 @@ int main()
     // Accessors
     {
         Vector3<float> myVec{1, 2, 3};
-        const std::array<float, 3> &arr = myVec.GetData();
+        const Array<float, 3> &arr = myVec.GetData();
         assert(arr[0] == 1 && arr[1] == 2 && arr[2] == 3);
 
         assert(myVec[0] == 1 && myVec[1] == (double)2 && myVec[2] == 3);
@@ -896,6 +885,28 @@ int main()
         assert((Vector3<double>{1.0, 1.0, 2.0}.Cross(Vector3<double>{2.0, 3.0, 1.0}) == Vector3<double>{-5.0, 3.0, 1.0}));
         assert((Vector3<double>{3.0, 2.0, 1.0}.Cross(Vector3<double>{1.0, 2.0, 3.0}) == Vector3<double>{4.0, -8.0, 4.0}));
     }
+
+    // ------------------------------------------------------------
+    // Run Matrix tests
+    // ------------------------------------------------------------
+    std::cout << "------ BEGIN TESTING MATRIX ------" << std::endl;
+
+    std::cout << "Running constructor and accessor tests" << std::endl;
+    // Const
+    {
+        Matrix2<double> m;
+        assert((m.At(0, 0) == 0));
+    }
+
+    std::cout << "Running equality and assignment tests" << std::endl;
+
+    std::cout << "Running arithmetic tests" << std::endl;
+
+    std::cout << "Running arithmetic assignment tests" << std::endl;
+
+    std::cout << "Running product tests" << std::endl;
+
+    std::cout << "Running determinant tests" << std::endl;
 
     return 0;
 }

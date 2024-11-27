@@ -1,6 +1,7 @@
+#include "TypeUtils.h"
 #include "Unit.h"
 #include "Vector.h"
-#include "TypeUtils.h"
+#include "Matrix.h"
 
 #include <iostream>
 #include <cxxabi.h>
@@ -80,6 +81,11 @@ static constexpr inline void PrintInfo(std::ostream &os = std::cout)
         PrintInfo<typename T::type>();
         os << "[N=" << (T::n) << "];";
     }
+    else if constexpr (IsMatrix<T>)
+    {
+        PrintInfo<typename T::type>();
+        os << "[M=" << (T::n) << ", N=" << (T::n) << "];";
+    }
     else
     {
         os << GetDemangledType<T>() << "; ";
@@ -107,9 +113,13 @@ inline void Print(T val, std::ostream &os = std::cout)
             {
                 os << val[i].GetValue();
             }
-            else if constexpr (requires(typename T::type a, std::ostream &o) { a.operator<<(o); })
+            else if constexpr (requires(typename T::type a, std::ostream &o) { o << a; })
             {
                 os << val[i];
+            }
+            else
+            {
+                os << GetDemangledType<T>();
             }
 
             if (i != T::n - 1)
@@ -118,6 +128,41 @@ inline void Print(T val, std::ostream &os = std::cout)
             }
         }
         os << ") }";
+    }
+    else if constexpr (IsMatrix<T>)
+    {
+        os << "m{{ ";
+        PrintInfo<T>(os);
+        os << std::endl;
+        for (uint i = 0; i < T::m; i++)
+        {
+            os << "  ";
+            for (uint j = 0; j < T::n; j++)
+            {
+                if constexpr (IsUnit<typename T::type>)
+                {
+                    os << val[i][j].GetValue();
+                }
+                else if constexpr (requires(typename T::type a, std::ostream &o) { o << a; })
+                {
+                    os << val[i][j];
+                }
+                else
+                {
+                    os << GetDemangledType<T>();
+                }
+
+                if (j != T::n - 1)
+                {
+                    os << " ";
+                }
+            }
+            if (i == T::m - 1)
+            {
+                os << " }}";
+            }
+            os << std::endl;
+        }
     }
     else
     {
