@@ -71,7 +71,10 @@ template <typename LHS_Type, IsRatio LHS_Ratio, typename RHS_Type, IsRatio RHS_R
 std::common_type_t<LHS_Type, RHS_Type> ratio_value_add(const LHS_Type &lhs, const RHS_Type &rhs)
 {
     using ResType = std::common_type_t<LHS_Type, RHS_Type>;
-    return (((ResType)lhs) / (LHS_Ratio::den * RHS_Ratio::num)) + (((ResType)rhs) / (RHS_Ratio::den * LHS_Ratio::num));
+    using LhsFac = typename CombineRatio<LHS_Ratio, RHS_Ratio>::lhsFac;
+    using RhsFac = typename CombineRatio<LHS_Ratio, RHS_Ratio>::rhsFac;
+
+    return MultiplyByRatio<LhsFac, ResType>(lhs) + MultiplyByRatio<RhsFac, ResType>(rhs);
 }
 
 /** @brief Unit definition */
@@ -142,7 +145,7 @@ public:
     /** @brief Compute the real value from the ratio */
     inline const Type GetRealValue() const
     {
-        return MultByRatio<Ratio, Type>(value);
+        return MultiplyByRatio<Ratio, Type>(value);
     }
     /** @brief Compute the value in terms of base units */
     inline const Unit<Type, UID, std::ratio<1>> GetBaseUnitValue() const
@@ -245,7 +248,7 @@ public:
     using UnitAdd_ = Unit<
         std::common_type_t<Type, typename RHS::type>,
         UID,
-        CombineRatio<Ratio, typename RHS::ratio>>;
+        typename CombineRatio<Ratio, typename RHS::ratio>::combinedRatio>;
 
     /** @brief Add with another unit, only if UIDs match. Follow default language promotion rules */
     template <typename RHS_Type, UnitIdentifier RHS_UID, IsRatio RHS_Ratio>

@@ -43,7 +43,7 @@ constexpr void PrintRatio(std::ostream &os = std::cout)
 
 /** Function to multiply out a ratio: Compute val * R */
 template <IsRatio R, typename T>
-T MultByRatio(T val)
+T MultiplyByRatio(T val)
 {
     if (R::num == 1 && R::den == 1)
     {
@@ -70,15 +70,21 @@ constexpr double RatioAsDouble()
     return ((double)R::num) / ((double)R::den);
 }
 
-/** Helper function for adding/subtracting ratios */
+/** 
+ * @brief Helper to find the common ratio between two ratios when adding/subtracting, namely, their LCM.
+ *      1/1000 + 1/1 -> 1/1
+ *      1 + 16 -> 16
+ *      1/2 + 1/3 -> 1
+ *      2/3 + 1/4 -> 2
+ * Namely, lcm(N1/D1, N2/D2) = lcm(N1, N2)/gcd(D1, D2)
+ */
 template <IsRatio R1, IsRatio R2>
-struct CombineRatio_
+struct CombineRatio
 {
-    using ratio = std::ratio<R1::num * R2::num>;
+    using combinedRatio = std::ratio<R1::num * R2::num>;
+    using lhsFac = std::ratio<1, R1::den * R2::num>;
+    using rhsFac = std::ratio<1, R2::den * R1::num>;
 };
-
-template <IsRatio R1, IsRatio R2>
-using CombineRatio = typename CombineRatio_<R1, R2>::ratio;
 
 /** Invert a ratio */
 template <IsRatio R>

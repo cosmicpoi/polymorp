@@ -55,7 +55,7 @@ inline ScalarExp<U, Exp> unit_pow(const U val)
         using Type = typename U::type;
         using Ratio = typename U::ratio;
 
-        Type actual_val = MultByRatio<Ratio, Type>(val.GetValue());
+        Type actual_val = MultiplyByRatio<Ratio, Type>(val.GetValue());
 
         return DivideByRatio<Ratio, Type>(std::pow(actual_val, RatioAsDouble<Exp>()));
     }
