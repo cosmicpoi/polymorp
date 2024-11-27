@@ -37,6 +37,7 @@ void func(const int& x) {
 
 int main()
 {
-    std::cout << (sizeof(Vector2<double>) == 2 * sizeof(double)) << std::endl;
-
+    auto ns = NormSquared(Vector2<Kilometer>{0.003, 0.004});
+    std::cout << ns << std::endl;
+    std::cout << unit_sqrt(ns) << std::endl;
 }

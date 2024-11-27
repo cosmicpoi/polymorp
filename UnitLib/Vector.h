@@ -12,24 +12,24 @@
 #include "UnitMath.h"
 #include "Scalar.h"
 
-template <typename A>
-concept VectorLike = requires(A a, A b) {
-    typename A::type;
-    { A::n } -> std::same_as<const size_t &>;
-    requires GeneralScalar<typename A::type>;
-    a.Dot(b);
-};
+// template <typename A>
+// concept VectorLike = requires(A a, A b) {
+//     typename A::type;
+//     { A::n } -> std::same_as<const size_t &>;
+//     requires GeneralScalar<typename A::type>;
+//     a.Dot(b);
+// };
 
-template <typename From, typename To>
-concept VectorIsConvertible_ = requires {
-    requires VectorLike<From>;
-    requires VectorLike<To>;
-    typename From::type;
-    typename To::type;
-    requires GeneralScalar<typename From::type>;
-    requires GeneralScalar<typename To::type>;
-    requires ScalarIsConvertible<typename From::type, typename To::type>;
-};
+// template <typename From, typename To>
+// concept VectorIsConvertible_ = requires {
+//     requires VectorLike<From>;
+//     requires VectorLike<To>;
+//     typename From::type;
+//     typename To::type;
+//     requires GeneralScalar<typename From::type>;
+//     requires GeneralScalar<typename To::type>;
+//     requires ScalarIsConvertible<typename From::type, typename To::type>;
+// };
 
 //--------------------------------------------------------------------------------
 // Vector class
@@ -378,14 +378,18 @@ public:
 
     /** @brief Dot product */
     // template <GeneralScalar RHS>
-    // inline ScalarMult<Type, RHS> Dot(VectorN<RHS> rhs) const
-    //     requires requires(Type a, RHS b) { {a * b} -> GeneralScalar; }
-    // {
-    //     return ([this, &rhs]<std::size_t... Is>(std::index_sequence<Is...>)
-    //             {
-    //                 return ((_v[Is] * rhs[Is]) + ...); // Fold expression
-    //             })(std::make_index_sequence<N>{});
-    // }
+    template <typename RHS_Type>
+        requires requires(Type l, RHS_Type r) {
+            { l *r };
+            { (l * r) + (l * r) } -> std::convertible_to<MultiplyType<Type, RHS_Type>>;
+        }
+    inline MultiplyType<Type, RHS_Type> Dot(VectorN<RHS_Type> rhs) const
+    {
+        return ([this, &rhs]<std::size_t... Is>(std::index_sequence<Is...>)
+                {
+                    return ((_v[Is] * rhs[Is]) + ...); // Fold expression
+                })(std::make_index_sequence<N>{});
+    }
 
     /** @brief Shorthand for dot product */
     // template <GeneralScalar RHS>
@@ -467,7 +471,7 @@ OpMultiplyType<Vector_RHS, LHS> operator*(LHS lhs, Vector_RHS rhs)
 template <typename Type>
 concept VectorHasNormSquared = requires(Type a) {
     { a *a };
-    { (a * a) + (a * a) } -> std::same_as<MultiplyType<Type, Type>>;
+    { (a * a) + (a * a) };
 };
 
 /** @brief Compute norm-squared of a vector */
@@ -476,6 +480,7 @@ inline MultiplyType<Type, Type> NormSquared(const Vector<N, Type> &v)
     requires VectorHasNormSquared<Type>
 
 {
+    // Theoretically we could implement this as v.dot(v) but this is less overhead
     return ([&v]<std::size_t... Is>(std::index_sequence<Is...>)
             {
                 return MultiplyType<Type, Type>{((v[Is] * v[Is]) + ...)}; // Fold expression
@@ -504,12 +509,12 @@ inline double Norm_d(const Vector<N, Type> &v)
 {
     if constexpr (IsUnit<Type>)
     {
-        return std::sqrt(static_cast<double>(NormSq(v).GetRealValue()));
+        return std::sqrt(static_cast<double>(NormSquared(v).GetRealValue()));
     }
     else
     {
         static_assert(std::is_convertible_v<Type, double>);
-        return std::sqrt(static_cast<double>(NormSq(v)));
+        return std::sqrt(static_cast<double>(NormSquared(v)));
     }
 }
 

@@ -5,9 +5,9 @@
 #include "Ratio.h"
 #include "Scalar.h"
 
-// Maintain ratio while computing sqrt
-// We can only do this while maintaining ratio because we can't possibly compute square roots of ratios
+// Compute sqrt, including on ratio (1000^2 -> 1000)
 template <GeneralScalar U>
+    requires(IsUnit<U> && UnitExpableRatio<U, std::ratio<1, 2>>) || (!IsUnit<U>)
 inline ScalarExp<U, std::ratio<1, 2>> unit_sqrt(const U val)
 {
     if constexpr (IsUnit<U>)
@@ -15,9 +15,10 @@ inline ScalarExp<U, std::ratio<1, 2>> unit_sqrt(const U val)
         using Type = typename U::type;
         using Ratio = typename U::ratio;
 
-        Type actual_val = MultByRatio<Ratio>(val.GetValue());
+        Type actual_val = val.GetRealValue();
+        using ResType = ScalarExp<U, std::ratio<1, 2>>;
 
-        return ScalarExp<U, std::ratio<1, 2>>{DivideByRatio<Ratio, Type>(std::sqrt(actual_val))};
+        return ResType{DivideByRatio<typename ResType::ratio, Type>(std::sqrt(actual_val))};
     }
     else
     {
@@ -28,7 +29,7 @@ inline ScalarExp<U, std::ratio<1, 2>> unit_sqrt(const U val)
 template <typename T>
 concept HasSquareRoot = requires(T a) {
     { unit_sqrt(a) };
-    { unit_sqrt(a) * unit_sqrt(a) } -> std::same_as<T>;
+    // { unit_sqrt(a) * unit_sqrt(a) } -> std::same_as<T>;
 };
 
 template <typename>

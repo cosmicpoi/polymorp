@@ -64,6 +64,9 @@ struct UniversalFalse
 // General utils for type arithmetic
 // ------------------------------------------------------
 
+// template <typename T, typename U>
+// concept assignable_to = std::is_assignable_v<T, U>;
+
 /** Multiply */
 template <typename, typename>
 struct MultiplyType_

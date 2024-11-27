@@ -804,27 +804,34 @@ int main()
     std::cout << "Running norm tests" << std::endl;
     // NormSquared
     {
-        assert(( VectorHasNormSquared<Vector2<double>> ));
-        assert(( VectorHasNormSquared<Vector2<Meter>> ));
-        assert(( !VectorHasNormSquared<Vector2<std::string>> ));
+        assert(( VectorHasNormSquared<double> ));
+        assert(( VectorHasNormSquared<Meter> ));
+        assert(( VectorHasNormSquared<Kilometer> ));
+        assert(( !VectorHasNormSquared<std::string> ));
 
         Vector2<double>v{2, 0};
         assert(( NormSquared(v) == 4 ));
         assert(( NormSquared(Vector2<Meter>{3, 4}) == Meter_2{25} )); 
+        assert(( NormSquared(Vector2<Kilometer>{0.003, 0.004}) == Meter_2{25} )); 
     }
     // Norm
     {
         assert(( VectorHasNorm<double> ));
         assert(( VectorHasNorm<Meter> ));
+        assert(( VectorHasNorm<Kilometer> ));
         assert(( !VectorHasNorm<std::string> ));
 
         Vector2<double> v{2, 0};
         assert(( Norm(v) == 2 ));
         assert(( Norm(Vector2<Meter>{3, 4}) == Meter{5} )); 
+        assert(( Norm(Vector2<Kilometer>{0.003, 0.004}) == Meter{5} )); 
     }
     // Norm_d
     {
-
+        assert(( Norm_d(Vector2<double>{3, 4}) == 5 ));
+        assert(( Norm_d(Vector2<float>{3, 4}) == 5 ));
+        assert(( Norm_d(Vector2<Meter>{3, 4}) == 5 ));
+        assert(( Norm_d(Vector2<Kilometer>{3, 4}) == 5000 ));
     }
     
 
