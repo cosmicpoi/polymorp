@@ -45,6 +45,7 @@ concept UnitIsConvertible_ = requires {
 
 // Used for equality
 template <typename Type, IsRatio Ratio, typename RHS_Type, IsRatio RHS_Ratio>
+    requires(RHS_Ratio::num > 0)
 constexpr bool typed_ratio_equality(Type value, RHS_Type rhs)
 {
     using CommonType = std::common_type_t<Type, RHS_Type>;
@@ -285,6 +286,12 @@ public:
     {
         return UseWithScalar_<RHS>{
             ratio_value_add<Type, Ratio, RHS, std::ratio<1>>(value, -rhs)};
+    }
+
+    /** @brief Unary negation */
+    inline ThisType operator-() const
+    {
+        return -1 * (*this);
     }
 
     /**

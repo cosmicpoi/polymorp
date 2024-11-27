@@ -371,6 +371,11 @@ int main()
         static_assert((CanOp<Meter, "*", double>()));
         static_assert((CanOp<double, "*", Meter>()));
     }
+    // Test unary negation
+    {
+        assert(( -Meter{1} == Meter{-1} ));
+        assert(( -Kilometer{1} == Meter{-1000} ));
+    }
 
     // Test division with units
     {
