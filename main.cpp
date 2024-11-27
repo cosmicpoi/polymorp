@@ -37,48 +37,6 @@ void func(const int& x) {
 
 int main()
 {
-    std::cout << "hello world" << std::endl;
-    // std::cout << dUEmpty{1.0} + ((double) 1) << std::endl;
-
-    constexpr bool x = requires(Vector2<Meter> a, Vector2<Kilometer> b) {
-        a + b;     // Check if `a + b` is valid
-        a = a + b; // Check if `a = a + b` is valid
-    };
-    std::cout << x << std::endl;
-
-    Kilometer u0{1};
-    Meter u1{u0};
-    Meter u10{u1 + u0};
-    Vector2<Kilometer> v0{1, 1};
-    // Vector2<Kilometer> v1{v0};
-    Vector2<Meter>v1 {v0};
-    std::cout << v1[0] << std::endl;
-
-    int a = 10;
-    func(10);
-    func(a);
-
-    // v1 += Vector2<
-
-    // Vector2<Meter> myV{1000, 1000};
-    // Vector2<Kilometer> myVi{1.0, 1.01};
-
-    // Vector3<Meter> i{1, 0ma, 0};
-    // Vector3<Meter> j{0, 1, 0};
-
-    // Meter val{1000};
-    // Kilometer val2{1.2};
-
-    // Vector2<Meter> vx;
-    // Vector2<Meter> vy{1, 1};
-
-    // vx = vy;
-
-    // // std::cout << (true * 10) << std::endl;
-    // std::cout << Meter{1} - Kilometer{1} << std::endl;
-    // std::cout << vx << std::endl;
-    // // std::cout << myV << std::endl;
-    // // std::cout << myVi << std::endl;
-    // // std::cout << unit_pow<std::ratio<1, 3>>(Meter{100.0}) << std::endl;
-    // // std::cout << myV * 10.0 << std::endl;
+    std::cout << (sizeof(Vector2<double>) == 2 * sizeof(double)) << std::endl;
+    
 }

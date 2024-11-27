@@ -793,13 +793,14 @@ int main()
         assert(((v2 /= Vector2<dUKilo>{1, 2}) == Vector2<Meter>{0.001, 0.001}));
     }
 
+    std::cout << "Running norm tests" << std::endl;
+    // Norm
+    // NormSq
+
     std::cout << "Running product tests" << std::endl;
     // Dot product
     // Cross product
 
-    std::cout << "Running norm tests" << std::endl;
-    // Norm
-    // NormSq
 
     return 0;
 }

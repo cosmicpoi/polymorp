@@ -304,13 +304,13 @@ public:
     }
 
     /* Compute-and-assign operators */
-    
+
     /** Addition assignment operator */
     template <typename T>
         requires requires(VectorN<Type> a, T b) { a + b; a = a + b; }
     inline VectorN<Type> &operator+=(const T &rhs) // const T&
     {
-        if constexpr(std::is_same_v<T, Type>)
+        if constexpr (std::is_same_v<T, Type>)
         {
             _v = ((*this) + rhs)._v;
             return *this;
@@ -328,7 +328,7 @@ public:
         requires requires(VectorN<Type> a, T b) { a + b; a = a - b; }
     inline VectorN<Type> &operator-=(const T &rhs) // const T&
     {
-        if constexpr(std::is_same_v<T, Type>)
+        if constexpr (std::is_same_v<T, Type>)
         {
             _v = ((*this) - rhs)._v;
             return *this;
@@ -346,7 +346,7 @@ public:
         requires requires(VectorN<Type> a, T b) { a * b; a = a * b; }
     inline VectorN<Type> &operator*=(const T &rhs)
     {
-        if constexpr(std::is_same_v<T, Type>)
+        if constexpr (std::is_same_v<T, Type>)
         {
             _v = ((*this) * rhs)._v;
             return *this;
@@ -364,7 +364,7 @@ public:
         requires requires(VectorN<Type> a, T b) { a / b; a = a / b; }
     inline VectorN<Type> &operator/=(const T &rhs)
     {
-        if constexpr(std::is_same_v<T, Type>)
+        if constexpr (std::is_same_v<T, Type>)
         {
             _v = ((*this) / rhs)._v;
             return *this;
@@ -377,17 +377,19 @@ public:
         }
     }
 
-    /**
-     * @brief Compute norm-squared of this vector
-     */
-    // inline ScalarExp<Type, std::ratio<2>> NormSq() const
-    // {
-    //     // Zero-overhead solution: generate the expression (_v[0] * rhs + _v[1] * rhs ...) at compile time
-    //     return ([this]<std::size_t... Is>(std::index_sequence<Is...>)
-    //             {
-    //                 return ((_v[Is] * _v[Is]) + ...); // Fold expression
-    //             })(std::make_index_sequence<N>{});
-    // }
+    /** @brief Compute norm-squared of this vector */
+    inline MultiplyType<Type, Type> NormSq() const
+        requires(requires(Type a) {
+            { a *a };
+            { (a * a) + (a * a) } -> std::same_as<MultiplyType<Type, Type>>;
+        })
+    {
+        // Zero-overhead solution: generate the expression (_v[0] * rhs + _v[1] * rhs ...) at compile time
+        return ([this]<std::size_t... Is>(std::index_sequence<Is...>)
+                {
+                    return MultiplyType<Type, Type>{((_v[Is] * _v[Is]) + ...)}; // Fold expression
+                })(std::make_index_sequence<N>{});
+    }
 
     /**
      * @brief Compute norm of this vector (in the underlying unit)

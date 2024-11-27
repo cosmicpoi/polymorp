@@ -33,9 +33,20 @@ constexpr void PrintTypeInfo()
 // ------------------------------------------------------
 
 /** Multiply */
+template <typename, typename>
+struct MultiplyType_ {
+    using type = bool;
+};
+
 template <typename A, typename B>
     requires(requires(A a, B b) { {a * b}; })
-using MultiplyType = decltype(std::declval<A>() * std::declval<B>());
+struct MultiplyType_<A, B>
+{
+    using type = decltype(std::declval<A>() * std::declval<B>());
+};
+
+template <typename A, typename B>
+using MultiplyType = typename MultiplyType_<A, B>::type;
 
 template <typename A, typename B>
 concept CanMultiply = requires(A a, B b) {
@@ -51,9 +62,21 @@ template <typename A, typename B>
 concept CanOpMultiply = requires(A a, B b) { { a.operator*(b) } -> std::same_as<OpMultiplyType<A, B>>; };
 
 /** Divide */
+template <typename, typename>
+struct DivideType_ {
+    using type = bool; // Default to bool if the operation is invalid
+};
+
 template <typename A, typename B>
     requires(requires(A a, B b) { { a / b }; })
-using DivideType = decltype(std::declval<A>() / std::declval<B>());
+struct DivideType_<A, B>
+{
+    using type = decltype(std::declval<A>() / std::declval<B>());
+};
+
+template <typename A, typename B>
+using DivideType = typename DivideType_<A, B>::type;
+
 
 template <typename A, typename B>
 concept CanDivide = requires(A a, B b) {
@@ -70,9 +93,21 @@ concept CanOpDivide = requires(A a, B b) { { a.operator/(b) } -> std::same_as<Op
 
 // Add
 /** Add */
+template <typename, typename>
+struct AddType_ {
+    using type = bool; // Default to bool if the operation is invalid
+};
+
 template <typename A, typename B>
     requires(requires(A a, B b) { { a + b }; })
-using AddType = decltype(std::declval<A>() + std::declval<B>());
+struct AddType_<A, B>
+{
+    using type = decltype(std::declval<A>() + std::declval<B>());
+};
+
+template <typename A, typename B>
+using AddType = typename AddType_<A, B>::type;
+
 
 template <typename A, typename B>
 concept CanAdd = requires(A a, B b) {
@@ -88,9 +123,20 @@ template <typename A, typename B>
 concept CanOpAdd = requires(A a, B b) { { a.operator+(b) } -> std::same_as<OpAddType<A, B>>; };
 
 /** Subtract */
+template <typename, typename>
+struct SubtractType_ {
+    using type = bool; // Default to bool if the operation is invalid
+};
+
 template <typename A, typename B>
     requires(requires(A a, B b) { { a - b }; })
-using SubtractType = decltype(std::declval<A>() - std::declval<B>());
+struct SubtractType_<A, B>
+{
+    using type = decltype(std::declval<A>() - std::declval<B>());
+};
+
+template <typename A, typename B>
+using SubtractType = typename SubtractType_<A, B>::type;
 
 template <typename A, typename B>
 concept CanSubtract = requires(A a, B b) {

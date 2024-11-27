@@ -48,6 +48,7 @@ Kilo - empty unit with ratio 1000
 ```
 
 ## Units
+- Zero-overhead. This can be checked easily with `sizeof(double) == sizeof(Unit<double, ...>)`.
 
 ## Plain scalars
 - In general, plain scalars and `EmptyUnit` should be one-to-one. That is, in any situation we can use a plain scalar like `float`, we can use `EmptyUnit`, and vice versa.
@@ -56,8 +57,20 @@ Kilo - empty unit with ratio 1000
 - The only exception is that assignment from plain scalar to EmptyUnit is OK, but assignment from EmptyUnit to plain scalar is not.
   - The reason is that EmptyUnit holds more information than a plain scalar, as it includes a ratio.
 
-## Vectors
+## Containers - Vector and Matrix
+- Both `Vector` and `Matrix` are implemented as thin containers with zero overhead.
+  - Verify: `sizeof(Vector2<double>) == 2 * sizeof(double)`
+- Their operations should be unaware of the types they hold, only how they behave. We accomplish this by extensive use of `requires(A a, B b) {a + b;}` and similar constructions.
+  - For instance, addition between `Vector2<std::string>` is not well-defined but is for `Vector2<float>`.
+- Supports any dimensions of `size_t` (`N` for vectors and `M` x `N` for matrices)
+- ...And does so with zero overhead. This is accomplished through compile-time loops using `std::make_integer_sequence`
+- For `N = 2, 3, 4`, i.e. corresponding to traditional `Vector2/3/4`, and `Mat2/3/4`, prioritize performance over generality.
+  - What this means is, if the `std::make_integer_sequence` is even slightly slower for e.g. size `N=3` (due to indirection or something), it would be better to use `if constexpr(N==3)` and special-case the logic.
+  - This is because we do not want to sacrifice any performance at all relative to older or more common libraries such as [glm::vec3](https://github.com/g-truc/glm)
 
+In terms of the last point: In practice, we have not had to do this yet, but it is an important guiding principle should a decision need to be made about generality vs performance.
+
+One instance of a situation where these principles help to guide our design is in the inclusion of `.x()`, `.y()`, `.z()`, and `.w()` accessors for Vectors. Technically this runs against our usual design philosophy of having the vectors be size-generic as possible. However, because these patterns are common in industry-standard libraries such as `glm`, we consider them important enough to special-case.
 
 
 
