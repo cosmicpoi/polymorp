@@ -3,17 +3,19 @@
 #include <concepts>
 #include <iostream>
 
-template<typename T>
-struct ExtractParameterPack_ {};
+template <typename T>
+struct ExtractParameterPack_
+{
+};
 
 template <template <typename...> class Wrapper, typename... Ts>
-struct ExtractParameterPack_<Wrapper<Ts...>> {
+struct ExtractParameterPack_<Wrapper<Ts...>>
+{
     using type = std::tuple<Ts...>; // Store types in a tuple for further use
 };
 
 template <typename T>
 using ExtractParameterPack = typename ExtractParameterPack_<T>::type;
-
 
 /**
  * UniversalFalse - a fallback for templates whose values may not always exist,

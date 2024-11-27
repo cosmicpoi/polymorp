@@ -125,11 +125,14 @@ inline void Print(T val, std::ostream &os = std::cout)
     }
 }
 
-// struct HasPrint
-// {
-//     inline std::ostream &operator<<(std::ostream &os) const
-//     {
-//         Print(os);
-//         return os;
-//     }
-// }
+template <typename T>
+concept HasPrint = requires(T a, std::ostream &o) {
+    Print<T>(a, o);
+};
+
+template <HasPrint T>
+std::ostream &operator<<(std::ostream &os, const T &val)
+{
+    Print<T>(val, os);
+    return os;
+}

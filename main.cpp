@@ -33,10 +33,24 @@ using dUKilo = UnitMultRatio<dUEmpty, std::ratio<1000>>;
 
 using M_S = UnitDivide<Meter, Second>;
 
+template<typename T>
+struct MyInheritor {
+    void Print() requires std::is_same_v<T, double>
+    {
+        std::cout << "is double" << std::endl;
+    }
+};
+
+template<typename T>
+struct MyWrapper : MyInheritor<T>
+{
+
+};
+
 int main()
 {
-    Meter x{100};
-    Print(Vector2<Meter>{10, 10});
+
+    std::cout << Vector2<Meter>{10, 10} << std::endl;
 
     // PrintInfo<M_S>();
     // int x = 10;
