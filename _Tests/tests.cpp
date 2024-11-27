@@ -319,6 +319,14 @@ int main()
         assert((CanOp<Meter, "+", Kilometer>()));
         assert((!CanOp<Meter, "+", double>()));
         assert((!CanOp<double, "+", Meter>()));
+
+        assert(( std::is_same_v<decltype(Kilometer{1} + Meter{1})::ratio, std::ratio<1000>> ));
+        assert(( std::is_same_v<decltype(Kilometer{1} + Kilometer{1})::ratio, std::ratio<1000>> ));
+
+        using HalfMeter = UnitMultRatio<Meter, std::ratio<1, 2>>;
+        using ThirdMeter = UnitMultRatio<Meter, std::ratio<1, 3>>;
+
+        assert(( std::is_same_v<decltype(HalfMeter{1} + ThirdMeter{1})::ratio, std::ratio<1>> ));
     }
     // Test subtraction
     {

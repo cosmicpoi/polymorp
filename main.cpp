@@ -41,9 +41,11 @@ int main()
     std::cout << ns << std::endl;
     std::cout << unit_sqrt(ns) << std::endl;
 
-    auto v = (Kilometer{1} + Kilometer{1});
+    auto v = (Kilometer{1} + Kilometer{1} + Kilometer{1});
     std::cout << v << std::endl;
 
+
+    std::cout << lcm(6, 8) <<std::endl;
     // int x = 10;
     // PrintTypeInfo<decltype(v)>();
 

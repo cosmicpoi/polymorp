@@ -70,7 +70,7 @@ constexpr double RatioAsDouble()
     return ((double)R::num) / ((double)R::den);
 }
 
-/** 
+/**
  * @brief Helper to find the common ratio between two ratios when adding/subtracting, namely, their LCM.
  *      1/1000 + 1/1 -> 1/1
  *      1 + 16 -> 16
@@ -78,12 +78,30 @@ constexpr double RatioAsDouble()
  *      2/3 + 1/4 -> 2
  * Namely, lcm(N1/D1, N2/D2) = lcm(N1, N2)/gcd(D1, D2)
  */
+constexpr intmax_t gcd(intmax_t a, intmax_t b)
+{
+    if (b == 0)
+    {
+        return a;
+    }
+    return gcd(b, a % b);
+}
+
+constexpr intmax_t lcm(intmax_t a, intmax_t b)
+{
+    return (a * b) / gcd(a, b);
+}
+
+
 template <IsRatio R1, IsRatio R2>
 struct CombineRatio
 {
-    using combinedRatio = std::ratio<R1::num * R2::num>;
-    using lhsFac = std::ratio<1, R1::den * R2::num>;
-    using rhsFac = std::ratio<1, R2::den * R1::num>;
+    static constexpr intmax_t _combinedNum = lcm(R1::num, R2::num);
+    static constexpr intmax_t _combinedDen = gcd(R1::den, R2::den);
+    using combinedRatio = std::ratio<_combinedNum, _combinedDen>;
+    // using lhsFac = std::ratio<1, R1::den * R2::num>;
+    using lhsFac = std::ratio_divide<R1, combinedRatio>;
+    using rhsFac = std::ratio_divide<R2, combinedRatio>;
 };
 
 /** Invert a ratio */
@@ -223,7 +241,7 @@ template <IsRatio Ratio, IsRatio Exp>
 struct RatioExp<Ratio, Exp>
 {
     using _Inv = RatioInvert<Ratio>;
-    using _PosExp = std::ratio<-1* Exp::num, Exp::den>;
+    using _PosExp = std::ratio<-1 * Exp::num, Exp::den>;
     using _Res = RatioExp_<_Inv, _PosExp>;
     static constexpr bool hasValue = _Res::hasValue;
     using value = typename _Res::value;
