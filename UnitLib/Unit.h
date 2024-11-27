@@ -378,6 +378,9 @@ concept UnitIsConvertible = IsUnit<From> && IsUnit<To> && UnitIsConvertible_<Fro
 template <IsUnit A, IsUnit B>
 using UnitMult = decltype(std::declval<A>() * std::declval<B>());
 
+template <IsUnit A, IsUnit B>
+using UnitDivide = decltype(std::declval<A>() / std::declval<B>());
+
 // Get the resulting unit from adding two units of type A and B.
 // Note this doesn't actually "add units" (because what does that even mean),
 // it just computes the type of Unit A + Unit B.

@@ -2,6 +2,7 @@
 #include "UnitLib/Unit.h"
 // #include "UnitLib/UnitMath.h"
 #include "UnitLib/Vector.h"
+#include "UnitLib/Print.h"
 
 // using Meter = dAtomic<"meter">;
 // using fMeter = fAtomic<"meter">;
@@ -25,27 +26,19 @@
 using Meter = dAtomic<"meter">;
 using Kilometer = UnitMultRatio<Meter, std::ratio<1000>>;
 
+using Second = dAtomic<"second">;
+
 using dUEmpty = EmptyUnit<double>;
 using dUKilo = UnitMultRatio<dUEmpty, std::ratio<1000>>;
 
-#include <iostream>
-
-void func(const int& x) {
-    std::cout << "const int& called\n";
-}
-
+using M_S = UnitDivide<Meter, Second>;
 
 int main()
 {
-    auto ns = NormSquared(Vector2<Kilometer>{0.003, 0.004});
-    std::cout << ns << std::endl;
-    std::cout << unit_sqrt(ns) << std::endl;
+    Meter x{100};
+    Print(Vector2<Meter>{10, 10});
 
-    auto v = (Kilometer{1} + Kilometer{1} + Kilometer{1});
-    std::cout << v << std::endl;
-
-
-    std::cout << lcm(6, 8) <<std::endl;
+    // PrintInfo<M_S>();
     // int x = 10;
 
 }

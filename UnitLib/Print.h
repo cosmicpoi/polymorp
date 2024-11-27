@@ -19,10 +19,16 @@ constexpr std::string demangle(const char *name)
 }
 
 template <typename T>
+constexpr std::string GetDemangledType()
+{
+    return demangle(typeid(T).name());
+}
+
+template <typename T>
 constexpr void PrintTypeInfo(std::ostream &os = std::cout)
 {
     os << "is const: " << std::is_const_v<T> << std::endl;
-    os << demangle(typeid(T).name()) << std::endl;
+    os << GetDemangledType<T>() << std::endl;
 }
 // ----------------------------------------------------
 
@@ -45,11 +51,11 @@ void PrintStrLit(std::ostream &os = std::cout)
 }
 
 template <typename T>
-static constexpr inline void PrintInfo<T>(std::ostream &os = std::cout)
+static constexpr inline void PrintInfo(std::ostream &os = std::cout)
 {
     if constexpr (IsUnitLeaf<T>)
     {
-        PrintStrLit<typename T::symbol>(os);
+        PrintStrLit<T::symbol>(os);
         os << " ";
         PrintRatio<typename T::exponent>(os);
     }
@@ -58,13 +64,13 @@ static constexpr inline void PrintInfo<T>(std::ostream &os = std::cout)
         [&]<typename... Ts>(std::tuple<Ts...>)
         {
             ([&]
-             { Print<Ts>(os); os << "; "; }(), ...);
+             { PrintInfo<Ts>(os); os << "; "; }(), ...);
         }(ExtractParameterPack<T>{});
     }
     else if constexpr (IsUnit<T>)
     {
-        os << typeid(Type).name() << " ( ";
-        Print<typename T::uid>(os);
+        os << GetDemangledType<typename T::type>() << " ( ";
+        PrintInfo<typename T::uid>(os);
         os << ") X";
         PrintRatio<typename T::ratio>(os);
         os << "; ";
@@ -76,7 +82,7 @@ static constexpr inline void PrintInfo<T>(std::ostream &os = std::cout)
     }
     else
     {
-        os << demangle(typeid(T).name()) << "; ";
+        os << GetDemangledType<T>() << "; ";
     }
 }
 
@@ -99,11 +105,11 @@ inline void Print(T val, std::ostream &os = std::cout)
             // check for operator<< and use it
             if constexpr (IsUnit<typename T::type>)
             {
-                os << _v[i].GetValue();
+                os << val[i].GetValue();
             }
             else if constexpr (requires(typename T::type a, std::ostream &o) { a.operator<<(o); })
             {
-                os << _v[i];
+                os << val[i];
             }
 
             if (i != T::n - 1)
@@ -116,27 +122,6 @@ inline void Print(T val, std::ostream &os = std::cout)
     else
     {
         PrintInfo<T>(os);
-    }
-}
-
-template <typename T>
-inline void Log(T val, std::ostream &os = std::cout) if constexpr (IsUnit<T>)
-{
-    if constexpr (IsUnit<T>)
-    {
-        os << "Unit print" << std::endl;
-        Print<T>(val, os);
-        os << std::endl;
-    }
-    else if constexpr (IsVector<T>)
-    {
-        // TODO
-    }
-    else
-    {
-        Print<T>(val, os);
-        // check if has operator << and use it?
-        os << std::endl;
     }
 }
 
