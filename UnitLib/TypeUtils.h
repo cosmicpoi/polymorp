@@ -12,13 +12,20 @@ concept HasPrint = requires(std::ostream &os) {
 #include <cxxabi.h>
 
 // Helper to demangle type names
-std::string demangle(const char *name)
+constexpr std::string demangle(const char *name)
 {
     int status = 0;
     char *demangled = abi::__cxa_demangle(name, nullptr, nullptr, &status);
     std::string result = (status == 0) ? demangled : name;
     free(demangled);
     return result;
+}
+
+template <typename T>
+constexpr void PrintTypeInfo()
+{
+    std::cout << "is const: " << std::is_const_v<T> << std::endl;
+    std::cout << demangle(typeid(T).name()) << std::endl;
 }
 
 // ------------------------------------------------------

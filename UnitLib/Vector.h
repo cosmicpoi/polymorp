@@ -172,23 +172,32 @@ public:
     /** @brief Variadic constructor - can take any types convertible to U.  */
     template <typename... Args>
         requires(sizeof...(Args) <= N && (std::constructible_from<Type, Args> && ...))
-    explicit inline Vector(Args... initList)
+    explicit inline Vector(const Args &...initList)
         : _v{static_cast<Type>(initList)...}
     {
     }
 
-    /** @brief Copy assignment */
-    inline VectorN<Type> &operator=(const VectorN<Type> &rhs)
+    /** @brief Construct from vector of convertible type */
+    template <typename OtherType>
+        requires requires(Type a, OtherType b) { a = b; } && (!std::is_same_v<Type, OtherType>)
+    explicit inline Vector(const VectorN<OtherType> &other)
     {
-        _v = rhs.GetData();
-        return *this;
+        ([this, &other]<std::size_t... Is>(std::index_sequence<Is...>)
+         {
+             ((_v[Is] = other[Is]), ...); //
+         })(std::make_index_sequence<N>{});
+    }
+
+    /** @brief Construct from rvalue of convertible type */
+    template <typename OtherType>
+        requires requires(Type a, OtherType b) { a = b; } && (!std::is_same_v<Type, OtherType>)
+    explicit inline Vector(const VectorN<OtherType> &&other) : Vector(other)
+    {
     }
 
     /** @brief Assign between compatible types */
     template <typename OtherType>
-        requires(requires(Type a, OtherType b) {
-            { a = b } -> std::convertible_to<Type>;
-        } && !std::is_same_v<Type, OtherType>)
+        requires(requires(Type a, OtherType b) { a = b; })
     inline VectorN<Type> &operator=(const VectorN<OtherType> &rhs)
     {
         ([this, &rhs]<std::size_t... Is>(std::index_sequence<Is...>)
@@ -295,12 +304,41 @@ public:
     }
 
     /* Compute-and-assign operators */
+    
+    /** Addition assignment operator */
     template <typename T>
         requires requires(VectorN<Type> a, T b) { a + b; a = a + b; }
-    inline VectorN<Type> &operator+=(const T &rhs)
+    inline VectorN<Type> &operator+=(const T &rhs) // const T&
     {
-        // _v= VectorN<Type>{(*this) + rhs}._v;
-        return *this;
+        if constexpr(std::is_same_v<T, Type>)
+        {
+            _v = ((*this) + rhs)._v;
+            return *this;
+        }
+        else
+        {
+            VectorN<Type> temp{(*this) + rhs};
+            _v = temp._v;
+            return *this;
+        }
+    }
+
+    /** Subtraction assignment operator */
+    template <typename T>
+        requires requires(VectorN<Type> a, T b) { a + b; a = a + b; }
+    inline VectorN<Type> &operator-=(const T &rhs) // const T&
+    {
+        if constexpr(std::is_same_v<T, Type>)
+        {
+            _v = ((*this) - rhs)._v;
+            return *this;
+        }
+        else
+        {
+            VectorN<Type> temp{(*this) - rhs};
+            _v = temp._v;
+            return *this;
+        }
     }
 
     /**

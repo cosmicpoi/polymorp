@@ -30,18 +30,35 @@ using dUKilo = UnitMultRatio<dUEmpty, std::ratio<1000>>;
 
 #include <iostream>
 
+void func(const int& x) {
+    std::cout << "const int& called\n";
+}
+
+
 int main()
 {
     std::cout << "hello world" << std::endl;
     // std::cout << dUEmpty{1.0} + ((double) 1) << std::endl;
 
-    std::array<float, 5> a1 {1, 2, 3, 4, 5};
-    // std::cout << a2[0] << std::endl;
-    std::array<float, 5> a2;
+    constexpr bool x = requires(Vector2<Meter> a, Vector2<Kilometer> b) {
+        a + b;     // Check if `a + b` is valid
+        a = a + b; // Check if `a = a + b` is valid
+    };
+    std::cout << x << std::endl;
 
-    std::cout << a2[0] << std::endl;
-    a2 = a1;
-    std::cout << a2[0] << std::endl;
+    Kilometer u0{1};
+    Meter u1{u0};
+    Meter u10{u1 + u0};
+    Vector2<Kilometer> v0{1, 1};
+    // Vector2<Kilometer> v1{v0};
+    Vector2<Meter>v1 {v0};
+    std::cout << v1[0] << std::endl;
+
+    int a = 10;
+    func(10);
+    func(a);
+
+    // v1 += Vector2<
 
     // Vector2<Meter> myV{1000, 1000};
     // Vector2<Kilometer> myVi{1.0, 1.01};
@@ -56,7 +73,6 @@ int main()
     // Vector2<Meter> vy{1, 1};
 
     // vx = vy;
-
 
     // // std::cout << (true * 10) << std::endl;
     // std::cout << Meter{1} - Kilometer{1} << std::endl;

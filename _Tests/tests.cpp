@@ -5,6 +5,18 @@
 #include "../UnitLib/Vector.h"
 #include <iomanip>
 
+template <typename T>
+constexpr const char* type_name()
+{
+#if defined(__clang__) || defined(__GNUC__)
+    return __PRETTY_FUNCTION__;
+#elif defined(_MSC_VER)
+    return __FUNCSIG__;
+#else
+    return "Unsupported compiler";
+#endif
+}
+
 // ------------------------------------------------------------
 // Testing library utils
 // ------------------------------------------------------------
@@ -386,12 +398,11 @@ int main()
     {
         assert((dUEmpty{1.0} + ((double)1.0) == 2.0));
         assert((((double)1.0) + dUEmpty{1.0} == 2.0));
-        // std::cout << (dUKilo{1.0} + ((double)1.0)) << std::endl;
-        // assert((dUKilo{1.0} + ((double)1.0) == 1001));
+        assert((dUKilo{1.0} + ((double)1.0) == 1001));
 
         assert((dUEmpty{2.0} - ((double)1.0) == 1.0));
         assert((((double)2.0) - dUEmpty{1.0} == 1.0));
-        // assert((dUKilo{1.0} - ((double)1.0) == 999));
+        assert((dUKilo{1.0} - ((double)1.0) == 999));
     }
 
     // // Test +=, -=, *=, /=
@@ -743,14 +754,21 @@ int main()
     {
         Vector2<double> v{1, 2};
         v += Vector2<int>{2, 1};
-        std::cout << v.x() << std::endl;
-        std::cout << v.y() << std::endl;
-        // assert((v == Vector2<double>{3, 3}));
-        // assert(((v += Vector2<double>{-1, -1}) == Vector2<int>{2, 2}));
+        assert((v == Vector2<double>{3, 3}));
+        assert(((v += Vector2<double>{-1, -1}) == Vector2<int>{2, 2}));
 
         Vector2<Meter> v2{1, 1};
+        assert(((v2 += Vector2<Kilometer>{1, 1}) == Vector2<Meter>{1001, 1001}));
+    }
+    // Subtraction assignment -=
+    {
+        Vector2<double> v{1, 1};
+        v -= Vector2<int>{2, 2};
+        assert((v == Vector2<double>{-1, -1}));
+        assert(((v -= Vector2<double>{-1, -1}) == Vector2<int>{0, 0}));
 
-        // assert(((v2 += Vector2<Kilometer>{1, 1}) == Vector2<Meter>{1001, 1001}));
+        Vector2<Meter> v2{1, 1};
+        assert(((v2 -= Vector2<Kilometer>{1, 1}) == Vector2<Meter>{-999, -999}));
     }
 
     std::cout << "Running product tests" << std::endl;

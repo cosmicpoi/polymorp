@@ -135,8 +135,12 @@ public:
 
     /** @brief Constructor for converting from like units */
     template <UnitIsConvertible_<ThisType> UnitT>
-    explicit inline Unit(UnitT val)
+    explicit inline Unit(const UnitT& val)
         : value(resolve_ratio_assignment<typename UnitT::type, typename UnitT::ratio, Type, Ratio>(val.GetValue())){};
+
+    /** @brief Construct from rvalue of like unit */
+    template <UnitIsConvertible_<ThisType> UnitT>
+    explicit inline Unit(const UnitT&& val) : Unit(val) {}
 
     // Check is zero
     inline bool IsZero() const
@@ -149,9 +153,10 @@ public:
     inline const Type &GetValue() const { return value; }
 
     /**
-     * Copy assignments
+     * Assignment operators
      */
     template <UnitIsConvertible_<ThisType> RHS>
+        requires(!std::is_same_v<ThisType, RHS>)
     inline ThisType &operator=(const RHS &rhs)
     {
         if constexpr (UnitSameRatio_<ThisType, RHS>)
@@ -249,7 +254,6 @@ public:
         requires CanRatioAdd<Type, RHS_Type> && std::is_same_v<UID, RHS_UID>
     inline UnitAdd_<Unit<RHS_Type, RHS_UID, RHS_Ratio>> operator+(const Unit<RHS_Type, RHS_UID, RHS_Ratio> &rhs) const
     {
-        using ResType = std::common_type_t<Type, RHS_Type>;
         return UnitAdd_<Unit<RHS_Type, RHS_UID, RHS_Ratio>>{
             ratio_value_add<Type, Ratio, RHS_Type, RHS_Ratio>(value, rhs.GetValue())};
     }
@@ -259,7 +263,6 @@ public:
         requires CanRatioSubtract<Type, RHS_Type> && std::is_same_v<UID, RHS_UID>
     inline UnitAdd_<Unit<RHS_Type, RHS_UID, RHS_Ratio>> operator-(const Unit<RHS_Type, RHS_UID, RHS_Ratio> &rhs) const
     {
-        using ResType = std::common_type_t<Type, RHS_Type>;
         return UnitAdd_<Unit<RHS_Type, RHS_UID, RHS_Ratio>>{
             ratio_value_add<Type, Ratio, RHS_Type, RHS_Ratio>(value, -rhs.GetValue())};
     }
