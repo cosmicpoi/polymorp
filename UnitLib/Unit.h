@@ -64,19 +64,6 @@ constexpr bool typed_ratio_equality(Type value, RHS_Type rhs)
 }
 
 /**
- * @brief Ratio assignment helper.
- * Supports assignment of `Unit<ToType, UID, ToRatio> x = Unit<FromType, UID, FromRatio>{fromVal}`.
- * UIDs must match, and types must be convertible. Verify with UnitIsConvertible_
- */
-template <typename FromType, IsRatio FromRatio, typename ToType, IsRatio ToRatio>
-ToType resolve_ratio_assignment(const FromType &fromVal)
-{
-    FromType product = MultByRatio<FromRatio, FromType>(fromVal);
-    ToType value = DivideByRatio<ToRatio, ToType>(product);
-    return value;
-}
-
-/**
  * @brief Ratio addition/subtraction helper.
  * Supports expressions of the form `V1 * (N1/D1) + V2 * (N2/D2)`.
  */
@@ -135,12 +122,12 @@ public:
 
     /** @brief Constructor for converting from like units */
     template <UnitIsConvertible_<ThisType> UnitT>
-    explicit inline Unit(const UnitT& val)
-        : value(resolve_ratio_assignment<typename UnitT::type, typename UnitT::ratio, Type, Ratio>(val.GetValue())){};
+    explicit inline Unit(const UnitT &val)
+        : value(DivideByRatio<Ratio, Type>(val.GetRealValue())){};
 
     /** @brief Construct from rvalue of like unit */
     template <UnitIsConvertible_<ThisType> UnitT>
-    explicit inline Unit(const UnitT&& val) : Unit(val) {}
+    explicit inline Unit(const UnitT &&val) : Unit(val) {}
 
     // Check is zero
     inline bool IsZero() const
@@ -152,6 +139,11 @@ public:
     inline Type &GetValue() { return value; }
     inline const Type &GetValue() const { return value; }
 
+    /** @brief Compute the real value from the ratio */
+    inline const Type GetRealValue() const
+    {
+        return MultByRatio<Ratio, Type>(value);
+    }
     /**
      * Assignment operators
      */
@@ -166,7 +158,7 @@ public:
         }
         else
         {
-            value = resolve_ratio_assignment<typename RHS::type, typename RHS::ratio, Type, Ratio>(rhs.GetValue());
+            value = DivideByRatio<Ratio, Type>(rhs.GetRealValue());
             return *this;
         }
     }

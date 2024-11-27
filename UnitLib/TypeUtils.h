@@ -9,6 +9,7 @@ concept HasPrint = requires(std::ostream &os) {
     { T::Print(os) } -> std::same_as<void>;
 };
 
+/// @TODO: delete this stuff in prod code
 #include <cxxabi.h>
 
 // Helper to demangle type names
@@ -28,14 +29,46 @@ constexpr void PrintTypeInfo()
     std::cout << demangle(typeid(T).name()) << std::endl;
 }
 
+/**
+ * UniversalFalse - a fallback for templates whose values may not always exist,
+ * e.g. the type of MultType<A, A> if A cannot be multiplied
+ * 
+ * In particular, consider something like this:
+ *      template <typename Type, size_t N>
+ *      inline SquareRootType<T> NormSquared(const Vector<N, Type> &v)
+ *          requires HasNormSquared<Vector<N, Type>> && HasSquareRoot<decltype(NormSquared(std::declval<Vector<N, Type>>()))>
+ *      {
+ *          return  {some complex expression}
+ *      }
+ * 
+ * The use of UniversalFalse as a fallback from `SquareRootType` ensures this function never fails.
+ */
+
+/** @brief UniversalFalse - a falsy value that's constructible from anything */
+struct UniversalFalse
+{
+    template <typename... Args>
+    UniversalFalse(Args&...) {
+    }
+
+    template <typename... Args>
+    UniversalFalse(Args&&...) {
+    }
+    explicit operator bool() const noexcept
+    {
+        return false;
+    }
+};
+
 // ------------------------------------------------------
 // General utils for type arithmetic
 // ------------------------------------------------------
 
 /** Multiply */
 template <typename, typename>
-struct MultiplyType_ {
-    using type = bool;
+struct MultiplyType_
+{
+    using type = UniversalFalse;
 };
 
 template <typename A, typename B>
@@ -63,8 +96,9 @@ concept CanOpMultiply = requires(A a, B b) { { a.operator*(b) } -> std::same_as<
 
 /** Divide */
 template <typename, typename>
-struct DivideType_ {
-    using type = bool; // Default to bool if the operation is invalid
+struct DivideType_
+{
+    using type = UniversalFalse;
 };
 
 template <typename A, typename B>
@@ -76,7 +110,6 @@ struct DivideType_<A, B>
 
 template <typename A, typename B>
 using DivideType = typename DivideType_<A, B>::type;
-
 
 template <typename A, typename B>
 concept CanDivide = requires(A a, B b) {
@@ -94,8 +127,9 @@ concept CanOpDivide = requires(A a, B b) { { a.operator/(b) } -> std::same_as<Op
 // Add
 /** Add */
 template <typename, typename>
-struct AddType_ {
-    using type = bool; // Default to bool if the operation is invalid
+struct AddType_
+{
+    using type = UniversalFalse;
 };
 
 template <typename A, typename B>
@@ -107,7 +141,6 @@ struct AddType_<A, B>
 
 template <typename A, typename B>
 using AddType = typename AddType_<A, B>::type;
-
 
 template <typename A, typename B>
 concept CanAdd = requires(A a, B b) {
@@ -124,8 +157,9 @@ concept CanOpAdd = requires(A a, B b) { { a.operator+(b) } -> std::same_as<OpAdd
 
 /** Subtract */
 template <typename, typename>
-struct SubtractType_ {
-    using type = bool; // Default to bool if the operation is invalid
+struct SubtractType_
+{
+    using type = UniversalFalse;
 };
 
 template <typename A, typename B>
@@ -150,7 +184,6 @@ using OpSubtractType = decltype(std::declval<A>().operator-(std::declval<B>()));
 
 template <typename A, typename B>
 concept CanOpSubtract = requires(A a, B b) { { a.operator-(b) } -> std::same_as<OpSubtractType<A, B>>; };
-
 
 // ------------------------------------------------------
 

@@ -92,7 +92,8 @@ constexpr bool CanOp()
     }
 }
 
-// Helper for Vector tests
+
+/** @brief Helper concept to check if a type supports IsZero */
 template <typename T>
 concept HasIsZero = requires(T t) {
     { t.IsZero() };
@@ -794,8 +795,18 @@ int main()
     }
 
     std::cout << "Running norm tests" << std::endl;
+    // NormSquared
+    {
+        assert(( VectorHasNormSquared<Vector2<double>> ));
+        assert(( VectorHasNormSquared<Vector2<Meter>> ));
+        assert(( !VectorHasNormSquared<Vector2<std::string>> ));
+
+        Vector2<double>v{2, 0};
+        assert(( NormSquared(v) == 4 ));
+        assert(( NormSquared(Vector2<Meter>{3, 4}) == Meter_2{25} )); 
+    }
     // Norm
-    // NormSq
+    
 
     std::cout << "Running product tests" << std::endl;
     // Dot product

@@ -24,6 +24,28 @@ inline ScalarExp<U, std::ratio<1, 2>> unit_sqrt(const U val)
     }
 }
 
+template <typename T>
+concept HasSquareRoot = requires(T a) {
+    { unit_sqrt(a) };
+    { unit_sqrt(a) * unit_sqrt(a) } -> std::same_as<T>;
+};
+
+template <typename>
+struct SquareRootType_
+{
+    using type = UniversalFalse;
+};
+
+template <HasSquareRoot T>
+    requires GeneralScalar<T>
+struct SquareRootType_<T>
+{
+    using type = ScalarExp<T, std::ratio<1, 2>>;
+};
+
+template <typename T>
+using SquareRootType = typename SquareRootType_<T>::type;
+
 // Maintain ratio while computing pow
 template <IsRatio Exp, GeneralScalar U>
 inline ScalarExp<U, Exp> unit_pow(const U val)

@@ -230,7 +230,6 @@ public:
     inline VectorN<MultiplyType<Type, RHS>> operator*(const RHS &rhs) const
         requires CanMultiply<Type, RHS>
     {
-        // Zero-overhead solution: generate the expression (_v[0] * rhs, _v[1] * rhs ...) at compile time
         return ([this, &rhs]<std::size_t... Is>(std::index_sequence<Is...>)
                 {
                     return VectorN<MultiplyType<Type, RHS>>{(_v[Is] * rhs)...}; // Expands the expression for each index
@@ -377,42 +376,11 @@ public:
         }
     }
 
-    /** @brief Compute norm-squared of this vector */
-    inline MultiplyType<Type, Type> NormSq() const
-        requires(requires(Type a) {
-            { a *a };
-            { (a * a) + (a * a) } -> std::same_as<MultiplyType<Type, Type>>;
-        })
-    {
-        // Zero-overhead solution: generate the expression (_v[0] * rhs + _v[1] * rhs ...) at compile time
-        return ([this]<std::size_t... Is>(std::index_sequence<Is...>)
-                {
-                    return MultiplyType<Type, Type>{((_v[Is] * _v[Is]) + ...)}; // Fold expression
-                })(std::make_index_sequence<N>{});
-    }
-
-    /**
-     * @brief Compute norm of this vector (in the underlying unit)
-     */
-    // inline Type Norm() const
-    // {
-    //     return unit_sqrt(NormSq());
-    // }
-
-    /**
-     * @brief Compute norm of this vector as a double
-     */
-    // inline double Norm_d() const
-    // {
-    //     return std::sqrt((double)NormSq().value);
-    // }
-
     /** @brief Dot product */
     // template <GeneralScalar RHS>
     // inline ScalarMult<Type, RHS> Dot(VectorN<RHS> rhs) const
     //     requires requires(Type a, RHS b) { {a * b} -> GeneralScalar; }
     // {
-    //     // Zero-overhead solution: generate the expression (_v[0] * rhs, _v[1] * rhs ...) at compile time
     //     return ([this, &rhs]<std::size_t... Is>(std::index_sequence<Is...>)
     //             {
     //                 return ((_v[Is] * rhs[Is]) + ...); // Fold expression
@@ -491,6 +459,58 @@ template <typename LHS, IsVector Vector_RHS>
 OpMultiplyType<Vector_RHS, LHS> operator*(LHS lhs, Vector_RHS rhs)
 {
     return rhs * lhs;
+}
+
+// Vector math functions
+
+/** @brief Helper concept to check if a type supports norm squared */
+template <typename Type>
+concept VectorHasNormSquared = requires(Type a) {
+    { a *a };
+    { (a * a) + (a * a) } -> std::same_as<MultiplyType<Type, Type>>;
+};
+
+/** @brief Compute norm-squared of a vector */
+template <typename Type, size_t N>
+inline MultiplyType<Type, Type> NormSquared(const Vector<N, Type> &v)
+    requires VectorHasNormSquared<Type>
+
+{
+    return ([&v]<std::size_t... Is>(std::index_sequence<Is...>)
+            {
+                return MultiplyType<Type, Type>{((v[Is] * v[Is]) + ...)}; // Fold expression
+            })(std::make_index_sequence<N>{});
+}
+
+/** @brief Helper concept to check if a type supports norm */
+template <typename Type>
+concept VectorHasNorm = requires(Type a) {
+    requires VectorHasNormSquared<Type>;
+    requires HasSquareRoot<MultiplyType<Type, Type>>;
+};
+
+/** @brief Compute norm of a vector */
+template <typename Type, size_t N>
+inline Type Norm(const Vector<N, Type> &v)
+    requires VectorHasNorm<Type>
+{
+    return unit_sqrt(NormSquared(v));
+}
+
+/** @brief Compute norm of this vector as a double */
+template <typename Type, size_t N>
+inline double Norm_d(const Vector<N, Type> &v)
+    requires IsUnit<Type> || std::is_convertible_v<Type, double>
+{
+    if constexpr (IsUnit<Type>)
+    {
+        return std::sqrt(static_cast<double>(NormSq(v).GetRealValue()));
+    }
+    else
+    {
+        static_assert(std::is_convertible_v<Type, double>);
+        return std::sqrt(static_cast<double>(NormSq(v)));
+    }
 }
 
 /* ******* Is Vector of size N ********* */

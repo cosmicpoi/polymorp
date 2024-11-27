@@ -38,5 +38,5 @@ void func(const int& x) {
 int main()
 {
     std::cout << (sizeof(Vector2<double>) == 2 * sizeof(double)) << std::endl;
-    
+
 }
