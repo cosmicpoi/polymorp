@@ -325,7 +325,7 @@ public:
 
     /** Subtraction assignment operator */
     template <typename T>
-        requires requires(VectorN<Type> a, T b) { a + b; a = a + b; }
+        requires requires(VectorN<Type> a, T b) { a + b; a = a - b; }
     inline VectorN<Type> &operator-=(const T &rhs) // const T&
     {
         if constexpr(std::is_same_v<T, Type>)
@@ -336,6 +336,42 @@ public:
         else
         {
             VectorN<Type> temp{(*this) - rhs};
+            _v = temp._v;
+            return *this;
+        }
+    }
+
+    /** Multiplication assignment operator */
+    template <typename T>
+        requires requires(VectorN<Type> a, T b) { a * b; a = a * b; }
+    inline VectorN<Type> &operator*=(const T &rhs)
+    {
+        if constexpr(std::is_same_v<T, Type>)
+        {
+            _v = ((*this) * rhs)._v;
+            return *this;
+        }
+        else
+        {
+            VectorN<Type> temp{(*this) * rhs};
+            _v = temp._v;
+            return *this;
+        }
+    }
+
+    /** Division assignment operator */
+    template <typename T>
+        requires requires(VectorN<Type> a, T b) { a / b; a = a / b; }
+    inline VectorN<Type> &operator/=(const T &rhs)
+    {
+        if constexpr(std::is_same_v<T, Type>)
+        {
+            _v = ((*this) / rhs)._v;
+            return *this;
+        }
+        else
+        {
+            VectorN<Type> temp{(*this) / rhs};
             _v = temp._v;
             return *this;
         }

@@ -6,7 +6,7 @@
 #include <iomanip>
 
 template <typename T>
-constexpr const char* type_name()
+constexpr const char *type_name()
 {
 #if defined(__clang__) || defined(__GNUC__)
     return __PRETTY_FUNCTION__;
@@ -769,6 +769,28 @@ int main()
 
         Vector2<Meter> v2{1, 1};
         assert(((v2 -= Vector2<Kilometer>{1, 1}) == Vector2<Meter>{-999, -999}));
+    }
+    // Multiplication assignment *=
+    {
+        Vector2<double> v{1, 1};
+        v *= 2;
+        assert((v == Vector2<double>{2, 2}));
+        assert(((v *= Vector2<double>{1, 2}) == Vector2<double>{2, 4}));
+        assert(((v *= 2) == Vector2<double>{4, 8}));
+
+        Vector2<Meter> v2{1, 1};
+        assert(((v2 *= Vector2<dUKilo>{1, 2}) == Vector2<Meter>{1000, 2000}));
+    }
+    // Division assignment /=
+    {
+        Vector2<double> v{1, 1};
+        v /= 2;
+        assert((v == Vector2<double>{0.5, 0.5}));
+        assert(((v /= Vector2<double>{1, 2}) == Vector2<double>{0.5, 0.25}));
+        assert(((v /= 2) == Vector2<double>{0.25, 0.125}));
+
+        Vector2<Meter> v2{1, 2};
+        assert(((v2 /= Vector2<dUKilo>{1, 2}) == Vector2<Meter>{0.001, 0.001}));
     }
 
     std::cout << "Running product tests" << std::endl;
