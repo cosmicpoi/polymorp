@@ -228,6 +228,12 @@ public:
                 })(std::make_index_sequence<N>{});
     }
 
+    /** @brief Unary negation */
+    inline VectorN<Type> operator-() const
+    {
+        return -1 * (*this);
+    }
+
     /** @brief Addition with another vector */
     template <typename RHS>
     inline VectorN<AddType<Type, RHS>> operator+(const VectorN<RHS> &rhs) const

@@ -320,13 +320,13 @@ int main()
         assert((!CanOp<Meter, "+", double>()));
         assert((!CanOp<double, "+", Meter>()));
 
-        assert(( std::is_same_v<decltype(Kilometer{1} + Meter{1})::ratio, std::ratio<1000>> ));
-        assert(( std::is_same_v<decltype(Kilometer{1} + Kilometer{1})::ratio, std::ratio<1000>> ));
+        assert((std::is_same_v<decltype(Kilometer{1} + Meter{1})::ratio, std::ratio<1000>>));
+        assert((std::is_same_v<decltype(Kilometer{1} + Kilometer{1})::ratio, std::ratio<1000>>));
 
         using HalfMeter = UnitMultRatio<Meter, std::ratio<1, 2>>;
         using ThirdMeter = UnitMultRatio<Meter, std::ratio<1, 3>>;
 
-        assert(( std::is_same_v<decltype(HalfMeter{1} + ThirdMeter{1})::ratio, std::ratio<1>> ));
+        assert((std::is_same_v<decltype(HalfMeter{1} + ThirdMeter{1})::ratio, std::ratio<1>>));
     }
     // Test subtraction
     {
@@ -373,8 +373,8 @@ int main()
     }
     // Test unary negation
     {
-        assert(( -Meter{1} == Meter{-1} ));
-        assert(( -Kilometer{1} == Meter{-1000} ));
+        assert((-Meter{1} == Meter{-1}));
+        assert((-Kilometer{1} == Meter{-1000}));
     }
 
     // Test division with units
@@ -762,6 +762,11 @@ int main()
 
         assert((!CanOp<Vector3<std::string>, "*", int>()));
     };
+    // Unary negation
+    {
+        assert(( -Vector3<double>{1, 0, 0} == Vector3<double>{-1, 0, 0} ));
+        assert(( -Vector3<Kilometer>{1, 0, 0} == Vector3<Meter>{-1000, 0, 0} ));
+    }
 
     // Scalar division (right only)
     {
