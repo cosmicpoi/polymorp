@@ -596,6 +596,7 @@ int main()
         static_assert(std::is_constructible_v<Vector2<Meter>, double>);
         static_assert(std::is_constructible_v<Vector2<Meter>, double, double>);
         static_assert(std::is_constructible_v<Vector2<Meter>, double, Meter>);
+        static_assert(std::is_constructible_v<Vector2<Meter>, Meter, Meter>);
         static_assert(!std::is_constructible_v<Vector2<Meter>, double, double, double>);
 
         Vector<100, Kilometer> v5{1, 2, 3};
@@ -895,7 +896,10 @@ int main()
     // Const
     {
         Matrix2<double> m;
-        assert((m.At(0, 0) == 0));
+        assert((m.At(0, 0) == 0 && m.At(0, 1) == 0));
+        assert((m.At(1, 0) == 0 && m.At(1, 1) == 0));
+
+
     }
 
     std::cout << "Running equality and assignment tests" << std::endl;

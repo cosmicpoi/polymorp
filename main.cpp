@@ -34,17 +34,11 @@ using dUKilo = UnitMultRatio<dUEmpty, std::ratio<1000>>;
 
 using M_S = UnitDivide<Meter, Second>;
 
-template<typename T>
-struct MyInheritor {
-    void Print() requires std::is_same_v<T, double>
-    {
-        std::cout << "is double" << std::endl;
-    }
-};
 
 template<typename T>
-struct MyWrapper : MyInheritor<T>
+struct MyClass
 {
+public:
 
 };
 
@@ -55,6 +49,8 @@ int main()
     std::cout << m.Get(0, 0) << std::endl;
 
     std::cout << m << std::endl;
+
+    iterate_over<5, 5>();
 
     // PrintInfo<M_S>();
     // int x = 10;

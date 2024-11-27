@@ -20,11 +20,17 @@ public:
 
     static constexpr bool IsSquare = (M == N);
 
+    template <typename T>
+    using MatrixMN = Matrix<M, N, T>;
+
     /**
      * Constructors
      */
 
     explicit inline Matrix() : _v(create_zero_matrix<Type, M, N>()) {}
+    // explicit inline Matrix(Array<Type, N>... Rows) {
+
+    // }
 
     /**
      * Accessors
@@ -75,8 +81,26 @@ public:
         return _v[i][j];
     }
 
+    /**
+     * @brief Assign between compatible types
+     */
+    template <typename OtherType>
+        requires(requires(Type a, OtherType b) { a = b; })
+    inline MatrixMN<Type> &operator=(const MatrixMN<OtherType> &rhs)
+    {
+        ([this, &rhs]<std::size_t... Idxs>(std::index_sequence<Idxs...>)
+         { (
+               (_v[get_row<M, N>(Idxs)][get_col<M, N>(Idxs)] = rhs[get_row<M, N>(Idxs)][get_col<M, N>(Idxs)]), //
+               ...); })(std::make_index_sequence<M * N>{});
+        return *this;
+    }
+
+    /**
+     * Equality
+     */
+
 private:
-    std::array<std::array<Type, N>, N> _v;
+    Array2D<Type, M, N> _v;
 };
 
 // Some aliases

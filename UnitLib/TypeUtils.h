@@ -18,7 +18,26 @@ template <typename T>
 using ExtractParameterPack = typename ExtractParameterPack_<T>::type;
 
 /**
- * Array helpers
+ * Check if a type is primitive
+ */
+template <typename T>
+concept IsPrimitive =
+    std::is_floating_point_v<T> ||
+    std::is_integral_v<T> ||
+    std::is_same_v<T, void> ||
+    std::is_convertible_v<T, float> ||
+    std::is_convertible_v<T, double> ||
+    std::is_convertible_v<T, int>;
+
+/**
+ * Maybe construct
+ */
+// We have a lot of convertible types; this function allows us to conditionally run a constructor
+// template <typename To, typename From>
+// inline constexpr To
+
+/**
+ * Array, folding, pack expansion
  */
 
 template <typename T, size_t N>
@@ -44,6 +63,27 @@ constexpr Array2D<T, M, N> create_zero_matrix()
             {
                 return {((void)Js, create_zero_array<T, N>())...}; //
             })(std::make_index_sequence<M>{});
+}
+
+template <size_t M, size_t N>
+constexpr size_t get_row(size_t idx)
+{
+    return idx / M;
+}
+
+template <size_t M, size_t N>
+constexpr size_t get_col(size_t idx)
+{
+    return idx % M;
+}
+
+template <size_t M, size_t N>
+constexpr void iterate_over()
+{
+    ([]<std::size_t... Idxs>(std::index_sequence<Idxs...>)
+     {
+         ((std::cout << get_row<M, N>(Idxs) << "," << get_col<M, N>(Idxs) << " "), ...); //
+     })(std::make_index_sequence<M * N>{});
 }
 
 /**

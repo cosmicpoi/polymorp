@@ -108,7 +108,7 @@ public:
 
     inline const Type &Get(std::size_t index) const
     {
-        if(index >= N)
+        if (index >= N)
         {
             throw std::out_of_range("Index out of range");
         }
@@ -122,13 +122,59 @@ public:
     {
     }
 
-    /** @brief Variadic constructor - can take any types convertible to U.  */
+    /**
+     *  @brief Variadic casting constructor 
+     *  If the current type is primitive,
+     *    And all the constructor args are primitive,
+     *    And we can convert from constructor args to our type,
+     *    Then initializer directly susing a cast
+     */
+
     template <typename... Args>
-        requires(sizeof...(Args) <= N && (std::constructible_from<Type, Args> && ...))
+        requires(
+            (sizeof...(Args) <= N) &&                    //
+            (IsPrimitive<Type>) &&                       //
+            (IsPrimitive<Args> && ...) &&                //
+            ((std::is_convertible_v<Args, Type>) && ...) //
+            )
     explicit inline Vector(const Args &...initList)
         : _v{static_cast<Type>(initList)...}
     {
     }
+
+    /**
+     *  @brief Variadic constructiin-place constructor 
+     *  Otherwise, i.e. the current type is not primitive
+     *    And all the constructor args are primitive,
+     *    But we can construct the type from the constructor args,
+     *    Then construct in place
+     */
+    template <typename... Args>
+        requires(
+            (sizeof...(Args) <= N) &&                      //
+            (!IsPrimitive<Type>) &&                        //
+            ((std::constructible_from<Type, Args>) && ...) //
+            )
+    explicit inline Vector(const Args &...initList)
+        : _v{Type{initList}...}
+    {
+    }
+
+    /** @brief Variadic constructing constructor (constructs components in-place) */
+    // template <typename... Args>
+    //     requires(sizeof...(Args) <= N && (std::constructible_from<Type, Args> && ...))
+    // explicit inline Vector(const Args &...initList)
+    //     : _v{Type{initList}...}
+    // {
+    // }
+
+    // /** @brief Initializer list constructor */
+    // template <typename OtherType>
+    //     requires std::constructible_from<Type, OtherType>
+    // explicit inline Vector(std::initializer_list<OtherType> initList)
+    //     : _v{static_cast<Type>(initList)...}
+    // {
+    // }
 
     /** @brief Construct from vector of convertible type */
     template <typename OtherType>
