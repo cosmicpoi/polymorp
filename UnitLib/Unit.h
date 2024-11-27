@@ -93,32 +93,6 @@ public:
     using uid = UID;
     using ratio = Ratio;
 
-    /** @brief Print type info */
-    static constexpr void PrintInfo(std::ostream &os = std::cout)
-    {
-        os << typeid(Type).name() << " ( ";
-        UID::Print(os);
-        os << ") X";
-        PrintRatio<Ratio>(os);
-        os << "; ";
-    }
-
-    /** @brief Print type info and value (no newline) */
-    inline void Print(std::ostream &os = std::cout) const
-    {
-        os << "u{ ";
-        PrintInfo(os);
-        os << " " << value << " }";
-    }
-
-    /** @brief Logging shorthand to print a header, contents, and newline */
-    inline void Log(std::ostream &os) const
-    {
-        os << "Unit print" << std::endl;
-        Print(os);
-        os << std::endl;
-    }
-
     /** @brief Constructor for converting from literal */
     template <std::convertible_to<Type> T>
     explicit inline Unit(T val)
@@ -370,14 +344,6 @@ public:
         return typed_ratio_equality<Type, Ratio, T, std::ratio<1>>(value, rhs);
     }
 
-    // template <typename RHS>
-
-    std::ostream &operator<<(std::ostream &os) const
-    {
-        Print(os);
-        return os;
-    }
-
 private:
     /** @brief Underlying value */
     Type value = 0;
@@ -467,13 +433,6 @@ using UnitMultRatio = Unit<
 template <typename T>
     requires std::is_arithmetic_v<T>
 using EmptyUnit = Unit<T, EmptyUid>;
-
-// Other operator overloads
-template <typename Type, UnitIdentifier UID, IsRatio Ratio>
-std::ostream &operator<<(std::ostream &os, Unit<Type, UID, Ratio> val)
-{
-    return val.operator<<(os);
-}
 
 /** @breif Left-compare with plain type for EmptyUnits */
 template <typename LHS, IsUnit Unit_RHS>

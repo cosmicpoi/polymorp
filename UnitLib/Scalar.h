@@ -49,19 +49,6 @@ struct GetUnderlying_<T>
 template <GeneralScalar T>
 using GetUnderlying = typename GetUnderlying_<T>::type;
 
-// General print info
-template <GeneralScalar T>
-void ScalarPrintInfo(std::ostream &os = std::cout)
-{
-    if constexpr (IsUnit<T>)
-    {
-        T::PrintInfo(os);
-    }
-    else
-    {
-        os << typeid(T).name() << "; ";
-    }
-}
 
 // Get the value
 template <GeneralScalar T>

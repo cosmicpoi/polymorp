@@ -20,13 +20,6 @@ struct UnitLeaf
 {
     static constexpr StringLiteral symbol = Symbol;
     using exponent = Exponent;
-
-    static void Print(std::ostream& os = std::cout)
-    {
-        PrintStrLit<Symbol>(os);
-        os << " ";
-        PrintRatio<Exponent>(os);
-    }
 };
 
 /** Concept to match UnitLeaf */
@@ -45,7 +38,7 @@ struct IsUnitLeafHelper<UnitLeaf<Symbol, Exponent>> : std::true_type
 
 // Shorthand
 template <typename T>
-concept IsUnitLeaf = IsUnitLeafHelper<T>::value && HasPrint<T>;
+concept IsUnitLeaf = IsUnitLeafHelper<T>::value;
 
 /** Basic definition of UnitLeafVector */
 
@@ -53,13 +46,6 @@ template <typename... Ts>
     requires(IsUnitLeaf<Ts> && ...)
 struct UnitLeafVector
 {
-    static void Print(std::ostream& os = std::cout)
-    {
-        ([&]
-         {
-            Ts::Print(os);
-            os << "; "; }(), ...);
-    }
 };
 
 /** Concept to match UnitLeafVector */
@@ -80,7 +66,7 @@ struct IsUnitLeafVectorHelper<UnitLeafVector<Ts...>> : std::true_type
 
 // Shorthand
 template <typename T>
-concept IsUnitLeafVector = IsUnitLeafVectorHelper<T>::value && HasPrint<T>;
+concept IsUnitLeafVector = IsUnitLeafVectorHelper<T>::value;
 
 /** Concept to match UnitLeaves of same symbol */
 template <typename A, typename B>

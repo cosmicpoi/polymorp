@@ -3,31 +3,17 @@
 #include <concepts>
 #include <iostream>
 
-/** Concept to ensure ::Print() exists */
-template <typename T>
-concept HasPrint = requires(std::ostream &os) {
-    { T::Print(os) } -> std::same_as<void>;
+template<typename T>
+struct ExtractParameterPack_ {};
+
+template <template <typename...> class Wrapper, typename... Ts>
+struct ExtractParameterPack_<Wrapper<Ts...>> {
+    using type = std::tuple<Ts...>; // Store types in a tuple for further use
 };
 
-/// @TODO: delete this stuff in prod code
-#include <cxxabi.h>
-
-// Helper to demangle type names
-constexpr std::string demangle(const char *name)
-{
-    int status = 0;
-    char *demangled = abi::__cxa_demangle(name, nullptr, nullptr, &status);
-    std::string result = (status == 0) ? demangled : name;
-    free(demangled);
-    return result;
-}
-
 template <typename T>
-constexpr void PrintTypeInfo()
-{
-    std::cout << "is const: " << std::is_const_v<T> << std::endl;
-    std::cout << demangle(typeid(T).name()) << std::endl;
-}
+using ExtractParameterPack = typename ExtractParameterPack_<T>::type;
+
 
 /**
  * UniversalFalse - a fallback for templates whose values may not always exist,

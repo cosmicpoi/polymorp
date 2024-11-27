@@ -30,16 +30,6 @@ concept RatioIsZero_ = requires {
 template <typename T>
 concept RatioIsZero = IsRatio<T> && RatioIsZero_<T>;
 
-/** Function to print std::ratio */
-template <IsRatio T>
-constexpr void PrintRatio(std::ostream &os = std::cout)
-{
-    os << T::num;
-    if (T::den != 1)
-    {
-        os << "/" << T::den;
-    }
-}
 
 /** Function to multiply out a ratio: Compute val * R */
 template <IsRatio R, typename T>

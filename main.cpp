@@ -47,6 +47,5 @@ int main()
 
     std::cout << lcm(6, 8) <<std::endl;
     // int x = 10;
-    // PrintTypeInfo<decltype(v)>();
 
 }

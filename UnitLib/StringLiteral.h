@@ -44,15 +44,6 @@ struct StrEq
     static constexpr bool value = (const_strcmp(T1.data, T2.data) == 0) && (decltype(T1)::n == decltype(T2)::n);
 };
 
-/** Print helper function */
-// https://ctrpeach.io/posts/cpp20-string-literal-template-parameters/
-
-template <StringLiteral Str>
-void PrintStrLit(std::ostream &os = std::cout)
-{
-    os << Str.data;
-}
-
 /** Type trait */
 // This is just a wrapper since StringLiteral<"MyStr"> will give an error saying "MyStr" isn't type size_t
 
