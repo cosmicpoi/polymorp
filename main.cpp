@@ -40,4 +40,11 @@ int main()
     auto ns = NormSquared(Vector2<Kilometer>{0.003, 0.004});
     std::cout << ns << std::endl;
     std::cout << unit_sqrt(ns) << std::endl;
+
+    auto v = (Kilometer{1} + Kilometer{1});
+    std::cout << v << std::endl;
+
+    // int x = 10;
+    // PrintTypeInfo<decltype(v)>();
+
 }

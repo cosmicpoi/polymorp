@@ -366,20 +366,17 @@ public:
         }
     inline MultiplyType<Type, RHS_Type> Dot(const VectorN<RHS_Type> &rhs) const
     {
-        using ResType = decltype((std::declval<Type>() * std::declval<RHS_Type>()) + (std::declval<Type>() * std::declval<RHS_Type>()));
-        if constexpr (std::is_same_v<MultiplyType<Type, RHS_Type>, ResType>)
-        {
-            return ([this, &rhs]<std::size_t... Is>(std::index_sequence<Is...>)
+        auto res = ([this, &rhs]<std::size_t... Is>(std::index_sequence<Is...>)
                     {
-                        return ((_v[Is] * rhs[Is]) + ...); // Fold expression
+                        return ((_v[Is] * rhs[Is]) + ...); //
                     })(std::make_index_sequence<N>{});
+        if constexpr (std::is_same_v<MultiplyType<Type, RHS_Type>, decltype(res)>)
+        {
+            return res;
         }
         else
         {
-            return MultiplyType<Type, RHS_Type>{([this, &rhs]<std::size_t... Is>(std::index_sequence<Is...>)
-                                                 {
-                                                     return ((_v[Is] * rhs[Is]) + ...); // Fold expression
-                                                 })(std::make_index_sequence<N>{})};
+            return MultiplyType<Type, RHS_Type>{res};
         }
     }
 

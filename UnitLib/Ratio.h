@@ -72,7 +72,13 @@ constexpr double RatioAsDouble()
 
 /** Helper function for adding/subtracting ratios */
 template <IsRatio R1, IsRatio R2>
-using CombineRatio = std::ratio<R1::num * R2::num>;
+struct CombineRatio_
+{
+    using ratio = std::ratio<R1::num * R2::num>;
+};
+
+template <IsRatio R1, IsRatio R2>
+using CombineRatio = typename CombineRatio_<R1, R2>::ratio;
 
 /** Invert a ratio */
 template <IsRatio R>

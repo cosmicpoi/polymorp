@@ -32,7 +32,7 @@ constexpr void PrintTypeInfo()
 /**
  * UniversalFalse - a fallback for templates whose values may not always exist,
  * e.g. the type of MultType<A, A> if A cannot be multiplied
- * 
+ *
  * In particular, consider something like this:
  *      template <typename Type, size_t N>
  *      inline SquareRootType<T> NormSquared(const Vector<N, Type> &v)
@@ -40,7 +40,7 @@ constexpr void PrintTypeInfo()
  *      {
  *          return  {some complex expression}
  *      }
- * 
+ *
  * The use of UniversalFalse as a fallback from `SquareRootType` ensures this function never fails.
  */
 
@@ -48,11 +48,13 @@ constexpr void PrintTypeInfo()
 struct UniversalFalse
 {
     template <typename... Args>
-    UniversalFalse(Args&...) {
+    UniversalFalse(Args &...)
+    {
     }
 
     template <typename... Args>
-    UniversalFalse(Args&&...) {
+    UniversalFalse(Args &&...)
+    {
     }
     explicit operator bool() const noexcept
     {
@@ -63,9 +65,6 @@ struct UniversalFalse
 // ------------------------------------------------------
 // General utils for type arithmetic
 // ------------------------------------------------------
-
-// template <typename T, typename U>
-// concept assignable_to = std::is_assignable_v<T, U>;
 
 /** Multiply */
 template <typename, typename>
