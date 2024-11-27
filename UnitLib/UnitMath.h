@@ -6,6 +6,7 @@
 #include "Scalar.h"
 
 // Maintain ratio while computing sqrt
+// We can only do this while maintaining ratio because we can't possibly compute square roots of ratios
 template <GeneralScalar U>
 inline ScalarExp<U, std::ratio<1, 2>> unit_sqrt(const U val)
 {
@@ -16,7 +17,7 @@ inline ScalarExp<U, std::ratio<1, 2>> unit_sqrt(const U val)
 
         Type actual_val = MultByRatio<Ratio>(val.GetValue());
 
-        return DivideByRatio<Ratio, Type>(std::sqrt(actual_val));
+        return ScalarExp<U, std::ratio<1, 2>>{DivideByRatio<Ratio, Type>(std::sqrt(actual_val))};
     }
     else
     {

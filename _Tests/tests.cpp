@@ -537,6 +537,13 @@ int main()
     // /** -- Run concept tests --  */
 
     // /** -- Run UnitMath tests --  */
+    // unit_sqrt
+    {
+        Meter_2 v{100};
+        assert(( unit_sqrt(v) == Meter{10} ));
+    }
+
+    // unit_pow
 
     // ------------------------------------------------------------
     // Run Scalar tests
@@ -806,6 +813,19 @@ int main()
         assert(( NormSquared(Vector2<Meter>{3, 4}) == Meter_2{25} )); 
     }
     // Norm
+    {
+        assert(( VectorHasNorm<double> ));
+        assert(( VectorHasNorm<Meter> ));
+        assert(( !VectorHasNorm<std::string> ));
+
+        Vector2<double> v{2, 0};
+        assert(( Norm(v) == 2 ));
+        assert(( Norm(Vector2<Meter>{3, 4}) == Meter{5} )); 
+    }
+    // Norm_d
+    {
+
+    }
     
 
     std::cout << "Running product tests" << std::endl;
