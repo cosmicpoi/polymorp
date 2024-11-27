@@ -764,8 +764,8 @@ int main()
     };
     // Unary negation
     {
-        assert(( -Vector3<double>{1, 0, 0} == Vector3<double>{-1, 0, 0} ));
-        assert(( -Vector3<Kilometer>{1, 0, 0} == Vector3<Meter>{-1000, 0, 0} ));
+        assert((-Vector3<double>{1, 0, 0} == Vector3<double>{-1, 0, 0}));
+        assert((-Vector3<Kilometer>{1, 0, 0} == Vector3<Meter>{-1000, 0, 0}));
     }
 
     // Scalar division (right only)
@@ -865,6 +865,37 @@ int main()
         assert((Vector3<Kilometer>{1, 1, 1}.Dot(Vector3<Meter>{1, 2, 3}) == Meter_2{6000}));
     }
     // Cross product
+    {
+        // Unit vectors
+        assert((Vector3<double>{1, 0, 0}.Cross(Vector3<double>{0, 1, 0}) == Vector3<double>{0, 0, 1}));
+        assert((Vector3<double>{0, 1, 0}.Cross(Vector3<double>{0, 0, 1}) == Vector3<double>{1, 0, 0}));
+        assert((Vector3<double>{0, 0, 1}.Cross(Vector3<double>{1, 0, 0}) == Vector3<double>{0, 1, 0}));
+        assert((Vector3<double>{0, 1, 0}.Cross(Vector3<double>{1, 0, 0}) == Vector3<double>{0, 0, -1}));
+        assert((Vector3<double>{1, 0, 0}.Cross(Vector3<double>{0, 0, 1}) == Vector3<double>{0, -1, 0}));
+        assert((Vector3<double>{0, 0, 1}.Cross(Vector3<double>{0, 1, 0}) == Vector3<double>{-1, 0, 0}));
+
+        // Edge cases: parallel and zero vectors
+        assert((Vector3<double>{1, 0, 0}.Cross(Vector3<double>{1, 0, 0}) == Vector3<double>{0, 0, 0}));
+        assert((Vector3<double>{0, 0, 0}.Cross(Vector3<double>{1, 0, 0}) == Vector3<double>{0, 0, 0}));
+        assert((Vector3<double>{1, 1, 1}.Cross(Vector3<double>{1, 1, 1}) == Vector3<double>{0, 0, 0}));
+
+        // Diagonal vectors
+        assert((Vector3<double>{1, 1, 0}.Cross(Vector3<double>{0, 1, 1}) == Vector3<double>{1, -1, 1}));
+        assert((Vector3<double>{0, 1, 1}.Cross(Vector3<double>{1, 1, 0}) == Vector3<double>{-1, 1, -1}));
+        assert((Vector3<double>{1, 0, 1}.Cross(Vector3<double>{1, 1, 0}) == Vector3<double>{-1, 1, 1}));
+        assert((Vector3<double>{1, 1, 0}.Cross(Vector3<double>{1, 0, 1}) == Vector3<double>{1, -1, -1}));
+
+        // Mixed types
+        assert((Vector3<Meter>{1, 0, 0}.Cross(Vector3<double>{0, 1, 0}) == Vector3<Meter>{0, 0, 1}));
+        assert((Vector3<Meter>{1, 0, 0}.Cross(Vector3<Kilometer>{0, 1, 0}) == Vector3<Meter_2>{0, 0, 1000}));
+
+        // Arbitrary floats
+        assert((Vector3<double>{1.0, 2.0, 3.0}.Cross(Vector3<double>{3.0, 2.0, 1.0}) == Vector3<double>{-4.0, 8.0, -4.0}));
+        assert((Vector3<double>{2.0, 3.0, 1.0}.Cross(Vector3<double>{1.0, 3.0, 2.0}) == Vector3<double>{3.0, -3.0, 3.0}));
+        assert((Vector3<double>{3.0, 1.0, 2.0}.Cross(Vector3<double>{2.0, 1.0, 3.0}) == Vector3<double>{1.0, -5.0, 1.0}));
+        assert((Vector3<double>{1.0, 1.0, 2.0}.Cross(Vector3<double>{2.0, 3.0, 1.0}) == Vector3<double>{-5.0, 3.0, 1.0}));
+        assert((Vector3<double>{3.0, 2.0, 1.0}.Cross(Vector3<double>{1.0, 2.0, 3.0}) == Vector3<double>{4.0, -8.0, 4.0}));
+    }
 
     return 0;
 }

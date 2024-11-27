@@ -332,7 +332,6 @@ public:
     }
 
     /** @brief Dot product */
-    // template <GeneralScalar RHS>
     template <typename RHS_Type>
         requires requires(Type l, RHS_Type r) {
             { l *r };
@@ -355,18 +354,23 @@ public:
     }
 
     /** @brief Cross product */
-    // template <GeneralScalar RHS>
-    // inline VectorN<ScalarMult<Type, RHS>> Cross(VectorN<RHS> rhs) const
-    //     requires requires(Type a, RHS b) { { a * b } -> GeneralScalar; } && (N == 3)
-    // {
-    //     return VectorN<ScalarMult<Type, RHS>>{
-    //         _v[1] * rhs[2] - _v[2] * rhs[1],
-    //         _v[2] * rhs[0] - _v[0] * rhs[2],
-    //         _v[0] * rhs[1] - _v[1] * rhs[0]};
-    // }
+    template <typename RHS_Type>
+        requires(requires(Type l, RHS_Type r) {
+            { l *r };
+            { (l * r) + (l * r) } -> std::constructible_from<MultiplyType<Type, RHS_Type>>;
+        } && (N == 3))
+    inline VectorN<MultiplyType<Type, RHS_Type>> Cross(const VectorN<RHS_Type> &rhs) const
+    {
+        using ResType = decltype((std::declval<Type>() * std::declval<RHS_Type>()) + (std::declval<Type>() * std::declval<RHS_Type>()));
+
+        return VectorN<ResType>{_v[1] * rhs[2] - _v[2] * rhs[1],  //
+                                _v[2] * rhs[0] - _v[0] * rhs[2],  //
+                                _v[0] * rhs[1] - _v[1] * rhs[0]}; //
+    }
 
 private:
-    std::array<Type, N> _v;
+    std::array<Type, N>
+        _v;
 };
 
 // Some aliases
