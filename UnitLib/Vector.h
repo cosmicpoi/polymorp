@@ -12,25 +12,6 @@
 #include "UnitMath.h"
 #include "Scalar.h"
 
-// template <typename A>
-// concept VectorLike = requires(A a, A b) {
-//     typename A::type;
-//     { A::n } -> std::same_as<const size_t &>;
-//     requires GeneralScalar<typename A::type>;
-//     a.Dot(b);
-// };
-
-// template <typename From, typename To>
-// concept VectorIsConvertible_ = requires {
-//     requires VectorLike<From>;
-//     requires VectorLike<To>;
-//     typename From::type;
-//     typename To::type;
-//     requires GeneralScalar<typename From::type>;
-//     requires GeneralScalar<typename To::type>;
-//     requires ScalarIsConvertible<typename From::type, typename To::type>;
-// };
-
 //--------------------------------------------------------------------------------
 // Vector class
 //--------------------------------------------------------------------------------
@@ -381,23 +362,26 @@ public:
     template <typename RHS_Type>
         requires requires(Type l, RHS_Type r) {
             { l *r };
-            { (l * r) + (l * r) } -> std::convertible_to<MultiplyType<Type, RHS_Type>>;
+            { (l * r) + (l * r) } -> std::constructible_from<MultiplyType<Type, RHS_Type>>;
         }
-    inline MultiplyType<Type, RHS_Type> Dot(VectorN<RHS_Type> rhs) const
+    inline MultiplyType<Type, RHS_Type> Dot(const VectorN<RHS_Type> &rhs) const
     {
-        return ([this, &rhs]<std::size_t... Is>(std::index_sequence<Is...>)
-                {
-                    return ((_v[Is] * rhs[Is]) + ...); // Fold expression
-                })(std::make_index_sequence<N>{});
+        using ResType = decltype((std::declval<Type>() * std::declval<RHS_Type>()) + (std::declval<Type>() * std::declval<RHS_Type>()));
+        if constexpr (std::is_same_v<MultiplyType<Type, RHS_Type>, ResType>)
+        {
+            return ([this, &rhs]<std::size_t... Is>(std::index_sequence<Is...>)
+                    {
+                        return ((_v[Is] * rhs[Is]) + ...); // Fold expression
+                    })(std::make_index_sequence<N>{});
+        }
+        else
+        {
+            return MultiplyType<Type, RHS_Type>{([this, &rhs]<std::size_t... Is>(std::index_sequence<Is...>)
+                                                 {
+                                                     return ((_v[Is] * rhs[Is]) + ...); // Fold expression
+                                                 })(std::make_index_sequence<N>{})};
+        }
     }
-
-    /** @brief Shorthand for dot product */
-    // template <GeneralScalar RHS>
-    // inline ScalarMult<Type, RHS> operator^(VectorN<RHS> rhs) const
-    //     requires requires(Type a, RHS b) { {a * b} -> GeneralScalar; }
-    // {
-    //     return Dot(rhs);
-    // }
 
     /** @brief Cross product */
     // template <GeneralScalar RHS>

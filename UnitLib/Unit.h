@@ -144,6 +144,12 @@ public:
     {
         return MultByRatio<Ratio, Type>(value);
     }
+    /** @brief Compute the value in terms of base units */
+    inline const Unit<Type, UID, std::ratio<1>> GetBaseUnitValue() const
+    {
+        return Unit<Type, UID, std::ratio<1>>{GetRealValue()};
+    }
+
     /**
      * Assignment operators
      */

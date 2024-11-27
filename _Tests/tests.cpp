@@ -92,7 +92,6 @@ constexpr bool CanOp()
     }
 }
 
-
 /** @brief Helper concept to check if a type supports IsZero */
 template <typename T>
 concept HasIsZero = requires(T t) {
@@ -257,6 +256,12 @@ int main()
 
         assert((CanOp<float, "==", dUEmpty>()));
         assert((CanOp<dUEmpty, "==", int>()));
+    }
+
+    // Real value getters
+    {
+        assert(((Kilometer{1}).GetRealValue() == 1000));
+        assert(((Kilometer{1}).GetBaseUnitValue() == Meter{1000}));
     }
 
     // Test assignment
@@ -540,7 +545,7 @@ int main()
     // unit_sqrt
     {
         Meter_2 v{100};
-        assert(( unit_sqrt(v) == Meter{10} ));
+        assert((unit_sqrt(v) == Meter{10}));
     }
 
     // unit_pow
@@ -691,7 +696,7 @@ int main()
 
         assert((CanOp<Vector3<Meter>, "+", Vector3<Kilometer>>()));
         assert((!CanOp<Vector3<Meter>, "+", Vector3<double>>()));
-        // assert((CanOp< Vector3<float>, "+", Vector3<dUEmpty> >()));
+        assert((CanOp<Vector3<float>, "+", Vector3<dUEmpty>>()));
     };
     // Componentwise Subtraction
     {
@@ -804,41 +809,44 @@ int main()
     std::cout << "Running norm tests" << std::endl;
     // NormSquared
     {
-        assert(( VectorHasNormSquared<double> ));
-        assert(( VectorHasNormSquared<Meter> ));
-        assert(( VectorHasNormSquared<Kilometer> ));
-        assert(( !VectorHasNormSquared<std::string> ));
+        assert((VectorHasNormSquared<double>));
+        assert((VectorHasNormSquared<Meter>));
+        assert((VectorHasNormSquared<Kilometer>));
+        assert((!VectorHasNormSquared<std::string>));
 
-        Vector2<double>v{2, 0};
-        assert(( NormSquared(v) == 4 ));
-        assert(( NormSquared(Vector2<Meter>{3, 4}) == Meter_2{25} )); 
-        assert(( NormSquared(Vector2<Kilometer>{0.003, 0.004}) == Meter_2{25} )); 
+        Vector2<double> v{2, 0};
+        assert((NormSquared(v) == 4));
+        assert((NormSquared(Vector2<Meter>{3, 4}) == Meter_2{25}));
+        assert((NormSquared(Vector2<Kilometer>{0.003, 0.004}) == Meter_2{25}));
     }
     // Norm
     {
-        assert(( VectorHasNorm<double> ));
-        assert(( VectorHasNorm<Meter> ));
-        assert(( VectorHasNorm<Kilometer> ));
-        assert(( !VectorHasNorm<std::string> ));
+        assert((VectorHasNorm<double>));
+        assert((VectorHasNorm<Meter>));
+        assert((VectorHasNorm<Kilometer>));
+        assert((!VectorHasNorm<std::string>));
 
         Vector2<double> v{2, 0};
-        assert(( Norm(v) == 2 ));
-        assert(( Norm(Vector2<Meter>{3, 4}) == Meter{5} )); 
-        assert(( Norm(Vector2<Kilometer>{0.003, 0.004}) == Meter{5} )); 
+        assert((Norm(v) == 2));
+        assert((Norm(Vector2<Meter>{3, 4}) == Meter{5}));
+        assert((Norm(Vector2<Kilometer>{0.003, 0.004}) == Meter{5}));
     }
     // Norm_d
     {
-        assert(( Norm_d(Vector2<double>{3, 4}) == 5 ));
-        assert(( Norm_d(Vector2<float>{3, 4}) == 5 ));
-        assert(( Norm_d(Vector2<Meter>{3, 4}) == 5 ));
-        assert(( Norm_d(Vector2<Kilometer>{3, 4}) == 5000 ));
+        assert((Norm_d(Vector2<double>{3, 4}) == 5));
+        assert((Norm_d(Vector2<float>{3, 4}) == 5));
+        assert((Norm_d(Vector2<Meter>{3, 4}) == 5));
+        assert((Norm_d(Vector2<Kilometer>{3, 4}) == 5000));
     }
-    
 
     std::cout << "Running product tests" << std::endl;
     // Dot product
+    {
+        assert((Vector3<double>{1, 1, 1}.Dot(Vector3<double>{1, 2, 3}) == 6));
+        assert((Vector3<double>{1, 1, 1}.Dot(Vector3<Meter>{1, 2, 3}) == Meter{6}));
+        assert((Vector3<Kilometer>{1, 1, 1}.Dot(Vector3<Meter>{1, 2, 3}) == Meter_2{6000}));
+    }
     // Cross product
-
 
     return 0;
 }

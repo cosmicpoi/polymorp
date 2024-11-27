@@ -86,7 +86,7 @@ using MultiplyType = typename MultiplyType_<A, B>::type;
 
 template <typename A, typename B>
 concept CanMultiply = requires(A a, B b) {
-    { a *b } -> std::convertible_to<MultiplyType<A, B>>;
+    { a *b } -> std::constructible_from<MultiplyType<A, B>>;
 };
 
 // Operator* version
@@ -116,7 +116,7 @@ using DivideType = typename DivideType_<A, B>::type;
 
 template <typename A, typename B>
 concept CanDivide = requires(A a, B b) {
-    { a / b } -> std::convertible_to<DivideType<A, B>>;
+    { a / b } -> std::constructible_from<DivideType<A, B>>;
 };
 
 // Operator/ version
@@ -147,7 +147,7 @@ using AddType = typename AddType_<A, B>::type;
 
 template <typename A, typename B>
 concept CanAdd = requires(A a, B b) {
-    { a + b } -> std::convertible_to<AddType<A, B>>;
+    { a + b } -> std::constructible_from<AddType<A, B>>;
 };
 
 // Operator+ version
@@ -177,7 +177,7 @@ using SubtractType = typename SubtractType_<A, B>::type;
 
 template <typename A, typename B>
 concept CanSubtract = requires(A a, B b) {
-    { a - b } -> std::convertible_to<SubtractType<A, B>>;
+    { a - b } -> std::constructible_from<SubtractType<A, B>>;
 };
 
 // Operator- version
