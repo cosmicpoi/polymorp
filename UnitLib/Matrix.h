@@ -280,6 +280,23 @@ public:
         }
     }
 
+    /** @brief Division assignment */
+    template <typename T>
+        requires requires(MatrixMN<Type> a, T b) { a / b; a = a / b; }
+    inline MatrixMN<Type> &operator/=(const T &rhs)
+    {
+        if constexpr (std::is_same_v<T, Type>)
+        {
+            _v = ((*this) / rhs)._v;
+            return *this;
+        }
+        else
+        {
+            _v = MatrixMN<Type>{(*this) / rhs}._v;
+            return *this;
+        }
+    }
+
 private:
     Array2D<Type, M, N> _v;
 };
