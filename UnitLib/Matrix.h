@@ -284,22 +284,6 @@ public:
         }
     }
 
-    /**
-     * @brief Matrix multiplication
-     */
-    template <typename RHS_Type, size_t N2, size_t P>
-
-    inline Matrix<M, P, std::common_type_t<Type, RHS_Type>> operator*(const Matrix<N2, P, RHS_Type> &rhs) const
-    requires (N2 == N) && requires(Type a, RHS_Type b) {
-            { a *b };
-            { (a * b) + (a * b) } -> std::same_as<decltype(a * b)>;
-            { (a * b) + (a * b) } -> std::convertible_to<MultiplyType<Type, RHS_Type>>;
-        }
-    {
-        static_assert(( N == N2 ));
-        return Matrix<M, P, std::common_type_t<Type, RHS_Type>>{};
-    }
-
 private:
     Array2D<Type, M, N> _v;
 };
@@ -346,9 +330,13 @@ concept IsMatrix = IsMatrix_<T>::value;
 // Operator overloads
 //--------------------------------------------------------------------------------
 
+/**
+ * Scalar multiplication
+ */
+
 /** @brief Right-multiply by scalar */
 template <typename LHS_MatType, size_t M, size_t N, typename RHS_Type>
-    requires ((!IsMatrix<RHS_Type>) && (!IsVector<RHS_Type>) && CanMultiply<LHS_MatType, RHS_Type>)
+    requires((!IsMatrix<RHS_Type>) && (!IsVector<RHS_Type>) && CanMultiply<LHS_MatType, RHS_Type>)
 inline Matrix<M, N, MultiplyType<LHS_MatType, RHS_Type>> operator*(const Matrix<M, N, LHS_MatType> &lhs_m, const RHS_Type &rhs)
 {
     return ([&]<std::size_t... Idxs>(std::index_sequence<Idxs...>)
@@ -361,7 +349,7 @@ inline Matrix<M, N, MultiplyType<LHS_MatType, RHS_Type>> operator*(const Matrix<
 
 /** @brief Left-multiply by scalar */
 template <typename RHS_MatType, size_t M, size_t N, typename LHS_Type>
-    requires ((!IsMatrix<LHS_Type>) && (!IsVector<LHS_Type>) && CanMultiply<LHS_Type, RHS_MatType>)
+    requires((!IsMatrix<LHS_Type>) && (!IsVector<LHS_Type>) && CanMultiply<LHS_Type, RHS_MatType>)
 inline Matrix<M, N, MultiplyType<LHS_Type, RHS_MatType>> operator*(const LHS_Type &lhs, const Matrix<M, N, RHS_MatType> &rhs_m)
 {
     return ([&]<std::size_t... Idxs>(std::index_sequence<Idxs...>)
@@ -369,5 +357,39 @@ inline Matrix<M, N, MultiplyType<LHS_Type, RHS_MatType>> operator*(const LHS_Typ
                 return Matrix<M, N, MultiplyType<LHS_Type, RHS_MatType>>{
                     (lhs * rhs_m[get_row<M, N>(Idxs)][get_col<M, N>(Idxs)])... //
                 }; //
+            })(std::make_index_sequence<M * N>{});
+}
+
+/**
+ * @brief Matrix-vector multiplication
+ */
+
+// template <typename LHS_MatType, size_t LHS_Rows, size_t RHS_Cols, typename LHS_MatType, size_t LHS_Rows, size_t LHS_Cols>
+// inline Matrix<RHS_Rows, LHS_Cols, MultiplyType<LHS_MatType, RHS_MatType>> operator*(const Matrix<LHS_Rows, LHS_Cols, LHS_MatType> &lhs_m, const Matrix<RHS_Rows, RHS_Cols, RHS_MatType> &rhs_m)
+//     requires((LHS_Cols == RHS_Rows) && HasDotProduct<LHS_MatType, RHS_MatType>)
+// {
+//     return Matrix<RHS_Rows, LHS_Cols, MultiplyType<LHS_MatType, RHS_MatType>>{};
+// }
+
+/**
+ * @brief Matrix multiplication
+ */
+template <typename RHS_MatType, size_t M, size_t N, typename LHS_MatType, size_t P>
+inline Matrix<M, P, MultiplyType<LHS_MatType, RHS_MatType>> operator*(const Matrix<M, N, LHS_MatType> &lhs_m, const Matrix<N, P, RHS_MatType> &rhs_m)
+    requires(HasDotProduct<LHS_MatType, RHS_MatType>)
+{
+    auto getCell = [&](size_t Row, size_t Col) -> MultiplyType<LHS_MatType, RHS_MatType>
+    {
+        return ([&]<size_t... Idxs>(std::index_sequence<Idxs...>)
+                {
+                    return ((rhs_m[Row][Idxs] * lhs_m[Idxs][Col]) + ...); //
+                })(std::make_index_sequence<N>{});
+    };
+
+    return ([&]<size_t... Idxs>(std::index_sequence<Idxs...>)
+            {
+                return Matrix<M, P, MultiplyType<LHS_MatType, RHS_MatType>>{
+                    (getCell(get_row<M, N>(Idxs), get_col<M, N>(Idxs)))... //
+                };
             })(std::make_index_sequence<M * N>{});
 }

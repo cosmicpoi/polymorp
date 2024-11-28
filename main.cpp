@@ -42,12 +42,12 @@ public:
 
 int main()
 {
-    Matrix<2, 2, double> m1 {1, 2, 3, 4};
-    Matrix<2, 4, double> m2;
+    Matrix<2, 2, double> m1 {1, 0, 0, 1};
+    Matrix<2, 2, double> m2 {1, 0, 0, -1};
     std::cout << m1 << std::endl;
     std::cout << m2 << std::endl;
 
-    std::cout << (2 * m1) << std::endl;
+    std::cout << (m1 * m2) << std::endl;
 
     // std::cout << (v2_a * v2_b) << std::endl;
     // std::cout << (v2_a * v3) << std::endl;

@@ -995,6 +995,10 @@ int main()
     //     Matrix2<Meter> m2{0, 1, 2, 3};
     //     assert(((m2 *= dUKilo{1}) == Matrix2<Meter>{0, 1000, 2000, 3000}));
     // }
+    // Multiplication assignment with matrices
+    {
+
+    }
 
     // // Division assignment
     // {
@@ -1004,8 +1008,6 @@ int main()
     //     Matrix2<Meter> m2{0, 1, 2, 3};
     //     assert(((m2 /= dUKilo{1}) == Matrix2<Meter>{0, 0.001, 0.002, 0.003}));
     // }
-
-    std::cout << "Running product tests" << std::endl;
 
     std::cout << "Running determinant tests" << std::endl;
 
