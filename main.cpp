@@ -56,7 +56,7 @@ int main()
 
     std::cout << (2 * v2_a) << std::endl;
     // std::cout << (v2_a * v2_b) << std::endl;
-    std::cout << (v2_a * v3) << std::endl;
+    // std::cout << (v2_a * v3) << std::endl;
 
     
     // std::cout << (m1 * m2) << std::endl;

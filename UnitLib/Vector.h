@@ -17,6 +17,20 @@
 //--------------------------------------------------------------------------------
 
 /**
+ * @brief HasDotProduct concept. Takes two types and check if they have the
+ * algebraic properties needed for dot product.
+ * This is surprisingly helpful because we can use the same logic to check for
+ * NormSquared (dot product with itself), matrix multiplication, etc
+ */
+
+template <typename L, typename R>
+concept HasDotProduct = requires(L l, R r) {
+    { l *r };
+    { (l * r) + (l * r) } -> std::same_as<decltype(l * r)>;
+    { (l * r) + (l * r) } -> std::convertible_to<MultiplyType<L, R>>;
+};
+
+/**
  * @brief Base class for Vector with units. Provides optimized versions for N=2, 3, 4, corresponding to `Vector2`, `Vector3`, and `Vector4`, but any length is actually supported.
  */
 template <size_t N, typename Type>
@@ -330,11 +344,7 @@ public:
 
     /** @brief Dot product */
     template <typename RHS_Type>
-        requires requires(Type l, RHS_Type r) {
-            { l *r };
-            { (l * r) + (l * r) } -> std::same_as<decltype(l * r)>;
-            { (l * r) + (l * r) } -> std::convertible_to<MultiplyType<Type, RHS_Type>>;
-        }
+        requires HasDotProduct<Type, RHS_Type>
     inline MultiplyType<Type, RHS_Type> Dot(const VectorN<RHS_Type> &rhs) const
     {
         auto res = ([&]<std::size_t... Is>(std::index_sequence<Is...>)
@@ -353,11 +363,10 @@ public:
 
     /** @brief Cross product */
     template <typename RHS_Type>
-        requires(requires(Type l, RHS_Type r) {
-            { l *r };
-            { (l * r) + (l * r) } -> std::same_as<decltype(l * r)>;
-            { (l * r) + (l * r) } -> std::convertible_to<MultiplyType<Type, RHS_Type>>;
-        } && (N == 3))
+        requires(HasDotProduct<Type, RHS_Type> &&
+                 (requires(Type l, RHS_Type r) {
+                     { (l * r) - (l * r) } -> std::same_as<decltype(l * r)>;
+                 }) && (N == 3))
     inline VectorN<MultiplyType<Type, RHS_Type>> Cross(const VectorN<RHS_Type> &rhs) const
     {
         using ResType = decltype((std::declval<Type>() * std::declval<RHS_Type>()) + (std::declval<Type>() * std::declval<RHS_Type>()));
@@ -437,10 +446,7 @@ inline Vector<N, MultiplyType<LHS_Type, RHS_VecType>> operator*(const LHS_Type &
 
 /** @brief Helper concept to check if a type supports norm squared */
 template <typename Type>
-concept VectorHasNormSquared = requires(Type a) {
-    { a *a };
-    { (a * a) + (a * a) } -> std::same_as<decltype(a * a)>;
-    { (a * a) + (a * a) } -> std::convertible_to<MultiplyType<Type, Type>>; };
+concept VectorHasNormSquared = HasDotProduct<Type, Type>;
 
 /** @brief Compute norm-squared of a vector */
 template <typename Type, size_t N>
