@@ -24,37 +24,6 @@ public:
     using MatrixMN = Matrix<M, N, T>;
 
     /**
-     * Constructors
-     */
-
-    explicit inline Matrix() : _v(create_default_matrix<Type, M, N>()) {}
-
-    template <typename OtherType>
-        requires ConvertibleOrConstructible<Type, OtherType>
-    inline Matrix(std::initializer_list<std::initializer_list<OtherType>> initList)
-        : Matrix()
-    {
-        if (initList.size() > M)
-        {
-            throw std::invalid_argument("Initializer list size exceeds the maximum allowed size.");
-        }
-        uint i = 0;
-        for (const auto &it : initList)
-        {
-            if (it.size() > N)
-            {
-                throw std::invalid_argument("Initializer list size exceeds the maximum allowed size.");
-            }
-            uint j = 0;
-            for (const auto &jt : it)
-            {
-                _v[i][j++] = ConvertOrConstruct<Type, OtherType>(jt);
-            }
-            i++;
-        }
-    }
-
-    /**
      * Accessors
      */
 
@@ -102,6 +71,41 @@ public:
         }
         return _v[i][j];
     }
+
+    /**
+     * Constructors
+     */
+
+    /** @brief Default constructor - use underlying default constructors */
+    explicit inline Matrix() : _v(create_default_matrix<Type, M, N>()) {}
+
+    /** @brief Generalized initializer list constructor */
+    template <typename OtherType>
+        requires ConvertibleOrConstructible<Type, OtherType>
+    inline Matrix(std::initializer_list<std::initializer_list<OtherType>> initList)
+        : Matrix()
+    {
+        if (initList.size() > M)
+        {
+            throw std::invalid_argument("Initializer list size exceeds the maximum allowed size.");
+        }
+        uint i = 0;
+        for (const auto &it : initList)
+        {
+            if (it.size() > N)
+            {
+                throw std::invalid_argument("Initializer list size exceeds the maximum allowed size.");
+            }
+            uint j = 0;
+            for (const auto &jt : it)
+            {
+                _v[i][j++] = ConvertOrConstruct<Type, OtherType>(jt);
+            }
+            i++;
+        }
+    }
+
+    // /** @brief */
 
     /**
      * @brief Assign between compatible types
