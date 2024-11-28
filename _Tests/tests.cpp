@@ -985,6 +985,14 @@ int main()
         Matrix2<Meter> m2{0, 1, 2, 3};
         assert(((m2 += Matrix2<Kilometer>{-1, 0, 0, 0}) == Matrix2<Meter>{-1000, 1, 2, 3}));
     }
+    // Multiplication assignment
+    {
+        Matrix2<double> m1{0, 1, 2, 3};
+        m1 *= 2;
+        assert((m1 == Matrix2<double>{0, 2, 4, 6}));
+        Matrix2<Meter> m2{0, 1, 2, 3};
+        assert(((m2 * Kilometer{1}) == Matrix2<Meter_2>{0, 1000, 2000, 3000}));
+    }
 
     std::cout << "Running product tests" << std::endl;
 

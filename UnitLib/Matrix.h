@@ -248,7 +248,7 @@ public:
 
     /** @brief Subtraction assignment */
     template <typename T>
-        requires requires(MatrixMN<Type> a, T b) { a - b; a = a + b; }
+        requires requires(MatrixMN<Type> a, T b) { a - b; a = a - b; }
     inline MatrixMN<Type> &operator-=(const T &rhs)
     {
         if constexpr (std::is_same_v<T, Type>)
@@ -259,6 +259,23 @@ public:
         else
         {
             _v = MatrixMN<Type>{(*this) - rhs}._v;
+            return *this;
+        }
+    }
+
+    /** @brief Multiplication assignment */
+    template <typename T>
+        requires requires(MatrixMN<Type> a, T b) { a * b; a = a * b; }
+    inline MatrixMN<Type> &operator*=(const T &rhs)
+    {
+        if constexpr (std::is_same_v<T, Type>)
+        {
+            _v = ((*this) * rhs)._v;
+            return *this;
+        }
+        else
+        {
+            _v = MatrixMN<Type>{(*this) * rhs}._v;
             return *this;
         }
     }
