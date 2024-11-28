@@ -177,8 +177,36 @@ public:
                 {
                     return MatrixMN<AddType<Type, RHS>>{
                         (
-                            _v[get_row<M, N>(Idxs)][get_col<M, N>(Idxs)] -      //
-                            rhs[get_row<M, N>(Idxs)][get_col<M, N>(Idxs)])...}; //
+                            _v[get_row<M, N>(Idxs)][get_col<M, N>(Idxs)] - //
+                            rhs[get_row<M, N>(Idxs)][get_col<M, N>(Idxs)]  //
+                            )...                                           //
+                    }; //
+                })(std::make_index_sequence<M * N>{});
+    }
+
+    /** @brief Multiplication by scalar (unit or plain type) */
+    template <typename RHS>
+        requires CanMultiply<Type, RHS>
+    inline MatrixMN<MultiplyType<Type, RHS>> operator*(const RHS &rhs) const
+    {
+        return ([&]<std::size_t... Idxs>(std::index_sequence<Idxs...>)
+                {
+                    return MatrixMN<MultiplyType<Type, RHS>>{
+                        (_v[get_row<M, N>(Idxs)][get_col<M, N>(Idxs)] * rhs)... //
+                    }; //
+                })(std::make_index_sequence<M * N>{});
+    }
+
+    /** @brief Division by scalar (unit or plain type) */
+    template <typename RHS>
+        requires CanDivide<Type, RHS>
+    inline MatrixMN<DivideType<Type, RHS>> operator/(const RHS &rhs) const
+    {
+        return ([&]<std::size_t... Idxs>(std::index_sequence<Idxs...>)
+                {
+                    return MatrixMN<DivideType<Type, RHS>>{
+                        (_v[get_row<M, N>(Idxs)][get_col<M, N>(Idxs)] / rhs)... //
+                    }; //
                 })(std::make_index_sequence<M * N>{});
     }
 
@@ -201,13 +229,11 @@ using Matrix4 = Matrix<4, 4, T>;
 // Concepts
 //--------------------------------------------------------------------------------
 
-// Define the primary template
 template <typename T>
 struct IsMatrix_ : std::false_type
 {
 };
 
-// Specialization for the `Unit` template
 template <size_t M, size_t N, typename T>
 struct IsMatrix_<Matrix<M, N, T>> : std::true_type
 {
@@ -218,3 +244,15 @@ struct IsMatrix_<Matrix<M, N, T>> : std::true_type
  */
 template <typename T>
 concept IsMatrix = IsMatrix_<T>::value;
+
+//--------------------------------------------------------------------------------
+// Operator overloads
+//--------------------------------------------------------------------------------
+
+/** @brief Left-multiply by scalar */
+template <typename LHS, IsMatrix Matrix_RHS>
+    requires CanOpMultiply<Matrix_RHS, LHS>
+OpMultiplyType<Matrix_RHS, LHS> operator*(LHS lhs, Matrix_RHS rhs)
+{
+    return rhs.operator*(lhs);
+}

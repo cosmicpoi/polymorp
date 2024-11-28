@@ -423,7 +423,7 @@ template <typename LHS, IsVector Vector_RHS>
     requires CanOpMultiply<Vector_RHS, LHS>
 OpMultiplyType<Vector_RHS, LHS> operator*(LHS lhs, Vector_RHS rhs)
 {
-    return rhs * lhs;
+    return rhs.operator*(lhs);
 }
 
 // Vector math functions
