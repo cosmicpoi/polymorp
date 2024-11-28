@@ -11,6 +11,7 @@
  * @brief Base class for an `M` row by `N` column matrix holding values of type `Type`
  */
 template <size_t M, size_t N, typename Type>
+    requires((M > 0) && (N > 0))
 class Matrix
 {
 public:
@@ -292,8 +293,8 @@ public:
     {
         return ([&]<size_t... Idxs>(std::index_sequence<Idxs...>)
                 {
-                    return Matrix<N, M, Type>{(_v[get_col<N, M>(Idxs)][get_row<N, M>(Idxs)]) ...}; //
-                })(std::make_index_sequence<N* M>{}); 
+                    return Matrix<N, M, Type>{(_v[get_col<N, M>(Idxs)][get_row<N, M>(Idxs)])...}; //
+                })(std::make_index_sequence<N * M>{});
     }
 
 private:

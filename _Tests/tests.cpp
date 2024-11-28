@@ -1025,10 +1025,6 @@ int main()
         Matrix m5 = Matrix<2, 2, double>{{2, 3}, {4, 5}};
         m5 *= Matrix<2, 2, double>{{2, 3}, {4, 5}};
         assert((m5 == Matrix<2, 2, double>{{16, 21}, {28, 37}}));
-
-        Matrix m8 = Matrix<3, 3, double>{{1, 0, 2}, {-1, 3, 1}, {4, -2, 1}};
-        m8 *= Matrix<3, 3, double>{{3, 1, 2}, {2, 1, 0}, {1, 4, 5}};
-        assert((m8 == Matrix<3, 3, double>{{5, 9, 12}, {4, 12, 13}, {11, 5, 13}}));
     }
 
     // // Division assignment
@@ -1042,7 +1038,11 @@ int main()
 
     std::cout << "Running transposition tests" << std::endl;
     {
-        assert(((Matrix<2, 3, double> {1, 2, 3, 4, 5, 6}).Transpose() == Matrix<3, 2, double>{{1, 4}, {2, 5}, {3, 6}}));
+        assert(((Matrix<2, 3, double>{1, 2, 3, 4, 5, 6}).Transpose() == Matrix<3, 2, double>{{1, 4}, {2, 5}, {3, 6}}));
+        assert((Matrix<3, 3, int>{{1, 2, 3}, {4, 5, 6}, {7, 8, 9}}.Transpose() == Matrix<3, 3, int>{{1, 4, 7}, {2, 5, 8}, {3, 6, 9}}));
+        assert((Matrix<2, 4, float>{{1.1f, 2.2f, 3.3f, 4.4f}, {5.5f, 6.6f, 7.7f, 8.8f}}.Transpose() == Matrix<4, 2, float>{{1.1f, 5.5f}, {2.2f, 6.6f}, {3.3f, 7.7f}, {4.4f, 8.8f}}));
+        assert((Matrix<4, 2, double>{{1.0, 2.0}, {3.0, 4.0}, {5.0, 6.0}, {7.0, 8.0}}.Transpose() == Matrix<2, 4, double>{{1.0, 3.0, 5.0, 7.0}, {2.0, 4.0, 6.0, 8.0}}));
+        assert((Matrix<1, 5, int>{10, 20, 30, 40, 50}.Transpose() == Matrix<5, 1, int>{{10}, {20}, {30}, {40}, {50}}));
     }
 
     std::cout << "Running determinant tests" << std::endl;
