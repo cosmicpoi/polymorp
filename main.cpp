@@ -42,9 +42,10 @@ public:
 
 int main()
 {
-    Matrix<2, 3, double> m1;
-    Matrix<2, 3, double> m2;
-    std::cout << (m1 == m2) <<std::endl;
+
+    Matrix<2, 3, double> m1{1, 2, 3, 4, 5, 6};
+    std::cout << m1 << std::endl;
+    std::cout << m1.Transpose() << std::endl;
     
     // std::cout << (Matrix<2, 3, double>{{1, 2, 3}, {4, 5, 6}} * Matrix<3, 3, double>{{0, 0, 0}, {0, 0, 0}, {0, 0, 0}}) << std::endl;
     //     std::cout << Matrix<2, 3, double>{{0, 0, 0}, {0, 0, 0}} << std::endl;

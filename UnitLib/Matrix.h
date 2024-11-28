@@ -284,6 +284,18 @@ public:
         }
     }
 
+    /**
+     * Transpose
+     */
+
+    inline Matrix<N, M, Type> Transpose()
+    {
+        return ([&]<size_t... Idxs>(std::index_sequence<Idxs...>)
+                {
+                    return Matrix<N, M, Type>{(_v[get_col<N, M>(Idxs)][get_row<N, M>(Idxs)]) ...}; //
+                })(std::make_index_sequence<N* M>{}); 
+    }
+
 private:
     Array2D<Type, M, N> _v;
 };
@@ -396,3 +408,7 @@ inline Matrix<M, P, MultiplyType<LHS_MatType, RHS_MatType>> operator*(const Matr
                   (getCell(get_row<M, P>(Idxs), get_col<M, P>(Idxs)))... //
               }; })(std::make_index_sequence<M * P>{});
 }
+
+//--------------------------------------------------------------------------------
+// Determinant
+//--------------------------------------------------------------------------------
