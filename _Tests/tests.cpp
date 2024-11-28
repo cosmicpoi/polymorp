@@ -972,9 +972,18 @@ int main()
         Matrix2<double> m;
         Matrix2<double> m1{0, 1, 2, 3};
         m += m1;
-        assert((m1 == Matrix2<double>{0, 1, 2, 3}));
+        assert((m == Matrix2<double>{0, 1, 2, 3}));
         Matrix2<Meter> m2{0, 1, 2, 3};
         assert(((m2 += Matrix2<Kilometer>{1, 0, 0, 0}) == Matrix2<Meter>{1000, 1, 2, 3}));
+    }
+    // Subtraction assignment
+    {
+        Matrix2<double> m;
+        Matrix2<double> m1{0, 1, 2, 3};
+        m -= m1;
+        assert((m == Matrix2<double>{0, -1, -2, -3}));
+        Matrix2<Meter> m2{0, 1, 2, 3};
+        assert(((m2 += Matrix2<Kilometer>{-1, 0, 0, 0}) == Matrix2<Meter>{-1000, 1, 2, 3}));
     }
 
     std::cout << "Running product tests" << std::endl;
