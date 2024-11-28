@@ -31,6 +31,18 @@ concept HasDotProduct = requires(L l, R r) {
 };
 
 /**
+ * @brief HasCrossProduct concept. Takes two types and check if they have the
+ * algebraic properties needed for cross product.
+ * Surprisingly helpful because if a type supports cross product, it also
+ * supports Matrix determinant
+ */
+template <typename L, typename R>
+concept HasCrossProduct = HasDotProduct<L, R> &&
+                          (requires(L l, R r) {
+                              { (l * r) - (l * r) } -> std::same_as<decltype(l * r)>;
+                          });
+
+/**
  * @brief Base class for Vector with units. Provides optimized versions for N=2, 3, 4, corresponding to `Vector2`, `Vector3`, and `Vector4`, but any length is actually supported.
  */
 template <size_t N, typename Type>
@@ -157,7 +169,7 @@ public:
         requires AssignableTo<Type, OtherType> && (!std::is_same_v<Type, OtherType>)
     explicit inline Vector(const VectorN<OtherType> &other)
     {
-        ([&]<size_t... Is>(std::index_sequence<Is...>)
+        ([&]<size_t... Is>(std::index_sequence<Is...>) constexpr
          {
              ((_v[Is] = other[Is]), ...); //
          })(std::make_index_sequence<N>{});
@@ -175,7 +187,7 @@ public:
         requires(requires(Type a, OtherType b) { a = b; })
     inline VectorN<Type> &operator=(const VectorN<OtherType> &rhs)
     {
-        ([&]<size_t... Is>(std::index_sequence<Is...>)
+        ([&]<size_t... Is>(std::index_sequence<Is...>) constexpr
          {
              ((_v[Is] = rhs[Is]), ...); //
          })(std::make_index_sequence<N>{});
@@ -187,7 +199,7 @@ public:
         requires(requires(Type a) { {a == 0} -> std::convertible_to<bool>; }) //
                 || (requires(Type a) { {a.IsZero() } -> std::convertible_to<bool>; })
     {
-        return ([&]<size_t... Is>(std::index_sequence<Is...>)
+        return ([&]<size_t... Is>(std::index_sequence<Is...>) constexpr
                 {
                     if constexpr(requires(Type a) { a.IsZero(); })
                     {
@@ -205,7 +217,7 @@ public:
         requires CanDivide<Type, RHS>
     inline VectorN<DivideType<Type, RHS>> operator/(const RHS &rhs) const
     {
-        return ([&]<size_t... Is>(std::index_sequence<Is...>)
+        return ([&]<size_t... Is>(std::index_sequence<Is...>) constexpr
                 {
                     return VectorN<DivideType<Type, RHS>>{(_v[Is] / rhs)...}; // Expands the expression for each index
                 })(std::make_index_sequence<N>{});
@@ -222,7 +234,7 @@ public:
         requires CanAdd<Type, RHS>
     inline VectorN<AddType<Type, RHS>> operator+(const VectorN<RHS> &rhs) const
     {
-        return ([&]<size_t... Is>(std::index_sequence<Is...>)
+        return ([&]<size_t... Is>(std::index_sequence<Is...>) constexpr
                 {
                     return VectorN<AddType<Type, RHS>>{(_v[Is] + rhs[Is])...}; // Expands the expression for each index
                 })(std::make_index_sequence<N>{});
@@ -233,7 +245,7 @@ public:
         requires CanSubtract<Type, RHS>
     inline VectorN<SubtractType<Type, RHS>> operator-(const VectorN<RHS> &rhs) const
     {
-        return ([&]<size_t... Is>(std::index_sequence<Is...>)
+        return ([&]<size_t... Is>(std::index_sequence<Is...>) constexpr
                 {
                     return VectorN<SubtractType<Type, RHS>>{(_v[Is] - rhs[Is])...}; // Expands the expression for each index
                 })(std::make_index_sequence<N>{});
@@ -244,7 +256,7 @@ public:
         requires CanMultiply<Type, RHS>
     inline VectorN<MultiplyType<Type, RHS>> operator*(const VectorN<RHS> &rhs) const
     {
-        return ([&]<size_t... Is>(std::index_sequence<Is...>)
+        return ([&]<size_t... Is>(std::index_sequence<Is...>) constexpr
                 {
                     return VectorN<MultiplyType<Type, RHS>>{(_v[Is] * rhs[Is])...}; // Expands the expression for each index
                 })(std::make_index_sequence<N>{});
@@ -255,7 +267,7 @@ public:
         requires CanDivide<Type, RHS>
     inline VectorN<DivideType<Type, RHS>> operator/(const VectorN<RHS> &rhs) const
     {
-        return ([&]<size_t... Is>(std::index_sequence<Is...>)
+        return ([&]<size_t... Is>(std::index_sequence<Is...>) constexpr
                 {
                     return VectorN<DivideType<Type, RHS>>{(_v[Is] / rhs[Is])...}; // Expands the expression for each index
                 })(std::make_index_sequence<N>{});
@@ -266,7 +278,7 @@ public:
         requires requires(Type a, RHS b) { {a == b} -> std::convertible_to<bool>; }
     inline bool operator==(const VectorN<RHS> &rhs) const
     {
-        return ([&]<size_t... Is>(std::index_sequence<Is...>)
+        return ([&]<size_t... Is>(std::index_sequence<Is...>) constexpr
                 {
                     return ((_v[Is] == rhs[Is]) && ...); // Expands the expression for each index
                 })(std::make_index_sequence<N>{});
@@ -347,7 +359,7 @@ public:
         requires HasDotProduct<Type, RHS_Type>
     inline MultiplyType<Type, RHS_Type> Dot(const VectorN<RHS_Type> &rhs) const
     {
-        auto res = ([&]<size_t... Is>(std::index_sequence<Is...>)
+        auto res = ([&]<size_t... Is>(std::index_sequence<Is...>) constexpr
                     {
                         return ((_v[Is] * rhs[Is]) + ...); //
                     })(std::make_index_sequence<N>{});
@@ -363,10 +375,7 @@ public:
 
     /** @brief Cross product */
     template <typename RHS_Type>
-        requires(HasDotProduct<Type, RHS_Type> &&
-                 (requires(Type l, RHS_Type r) {
-                     { (l * r) - (l * r) } -> std::same_as<decltype(l * r)>;
-                 }) && (N == 3))
+        requires(HasCrossProduct<Type, RHS_Type> && (N == 3))
     inline VectorN<MultiplyType<Type, RHS_Type>> Cross(const VectorN<RHS_Type> &rhs) const
     {
         using ResType = decltype((std::declval<Type>() * std::declval<RHS_Type>()) + (std::declval<Type>() * std::declval<RHS_Type>()));
@@ -425,7 +434,7 @@ template <typename LHS_VecType, size_t N, typename RHS_Type>
     requires(!IsVector<RHS_Type>) && CanMultiply<LHS_VecType, RHS_Type>
 inline Vector<N, MultiplyType<LHS_VecType, RHS_Type>> operator*(const Vector<N, LHS_VecType> &lhs_v, const RHS_Type &rhs)
 {
-    return ([&]<size_t... Is>(std::index_sequence<Is...>)
+    return ([&]<size_t... Is>(std::index_sequence<Is...>) constexpr
             {
                 return Vector<N, MultiplyType<LHS_VecType, RHS_Type>>{(lhs_v[Is] * rhs)...}; // Expands the expression for each index
             })(std::make_index_sequence<N>{});
@@ -436,7 +445,7 @@ template <typename RHS_VecType, size_t N, typename LHS_Type>
     requires(!IsVector<LHS_Type>) && CanMultiply<RHS_VecType, LHS_Type>
 inline Vector<N, MultiplyType<LHS_Type, RHS_VecType>> operator*(const LHS_Type &lhs, const Vector<N, RHS_VecType> &rhs_v)
 {
-    return ([&]<size_t... Is>(std::index_sequence<Is...>)
+    return ([&]<size_t... Is>(std::index_sequence<Is...>) constexpr
             {
                 return Vector<N, MultiplyType<LHS_Type, RHS_VecType>>{(lhs * rhs_v[Is])...}; // Expands the expression for each index
             })(std::make_index_sequence<N>{});
@@ -455,7 +464,7 @@ inline MultiplyType<Type, Type> NormSquared(const Vector<N, Type> &v)
 
 {
     // Theoretically we could implement this as v.dot(v) but this is less overhead
-    return ([&v]<size_t... Is>(std::index_sequence<Is...>)
+    return ([&]<size_t... Is>(std::index_sequence<Is...>) constexpr
             {
                 return MultiplyType<Type, Type>{((v[Is] * v[Is]) + ...)}; // Fold expression
             })(std::make_index_sequence<N>{});
