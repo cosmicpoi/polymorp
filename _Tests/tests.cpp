@@ -932,59 +932,61 @@ int main()
     }
 
     // std::cout << "Running arithmetic tests" << std::endl;
-    // // Addition
-    // {
-    //     Matrix2<double> m1 = {{1, 2}, {3, 4}};
-    //     Matrix2<dUKilo> m2{1, 1, 1, 1};
-    //     assert((((m1 + m2) == Matrix2<double>{1001, 1002, 1003, 1004})));
-    //     assert(((Matrix2<Meter>{1, 0, 0, 0} + Matrix2<Meter>{0, 1, 0, 0}) == Matrix2<Meter>{1, 1, 0, 0}));
-    // }
-    // // Subtraction
-    // {
-    //     Matrix2<double> m1 = {{1, 2}, {3, 4}};
-    //     Matrix2<dUKilo> m2{1, 1, 1, 1};
-    //     assert((((m1 - m2) == Matrix2<double>{-999, -998, -997, -996})));
-    //     assert(((Matrix2<Meter>{1, 0, 0, 0} - Matrix2<Meter>{0, 1, 0, 0}) == Matrix2<Meter>{1, -1, 0, 0}));
-    // }
-    // // Multiplication with scalar (right and left)
-    // {
-    //     Matrix2<double> m1 = {{1, 2}, {3, 4}};
-    //     assert((m1 * 2 == Matrix2<double>{2, 4, 6, 8}));
-    //     assert((2 * m1 == Matrix2<double>{2, 4, 6, 8}));
-    //     assert((Matrix2<Meter>{1, 1, 1, 1} * Meter{1} == Matrix2<Meter_2>{1, 1, 1, 1}));
-    //     assert((Kilometer{0.001} * Matrix2<Meter>{1, 1, 1, 1} == Matrix2<Meter_2>{1, 1, 1, 1}));
-    // }
-    // // Division with scalar (right  only)
-    // {
-    //     Matrix2<double> m1 = {{2, 4}, {6, 8}};
-    //     assert((m1 / 2 == Matrix2<double>{1, 2, 3, 4}));
-    //     assert((Matrix2<Meter>{1, 1, 1, 1} / Meter{1} == Matrix2<double>{1, 1, 1, 1}));
-    //     assert((Matrix2<Kilometer>{1, 1, 1, 1} / Meter{1} == Matrix2<double>{1000, 1000, 1000, 1000}));
-    // }
-    // // Unary negation
-    // {
-    //     assert((-Matrix2<Kilometer>{1, 2, 3, 4} == Matrix2<Meter>{-1000, -2000, -3000, -4000}));
-    // }
+    // Addition
+    {
+        Matrix2<double> m1 = {{1, 2}, {3, 4}};
+        Matrix2<dUKilo> m2{1, 1, 1, 1};
+        assert((((m1 + m2) == Matrix2<double>{1001, 1002, 1003, 1004})));
+        assert(((Matrix2<Meter>{1, 0, 0, 0} + Matrix2<Meter>{0, 1, 0, 0}) == Matrix2<Meter>{1, 1, 0, 0}));
+    }
+    // Subtraction
+    {
+        Matrix2<double> m1 = {{1, 2}, {3, 4}};
+        Matrix2<dUKilo> m2{1, 1, 1, 1};
+        assert((((m1 - m2) == Matrix2<double>{-999, -998, -997, -996})));
+        assert(((Matrix2<Meter>{1, 0, 0, 0} - Matrix2<Meter>{0, 1, 0, 0}) == Matrix2<Meter>{1, -1, 0, 0}));
+    }
+    // Multiplication with scalar (right and left)
+    {
+        Matrix2<double> m1 = {{1, 2}, {3, 4}};
+        assert((m1 * 2 == Matrix2<double>{2, 4, 6, 8}));
+        assert((2 * m1 == Matrix2<double>{2, 4, 6, 8}));
+        assert((Matrix2<Meter>{1, 1, 1, 1} * Meter{1} == Matrix2<Meter_2>{1, 1, 1, 1}));
+        assert((Kilometer{0.001} * Matrix2<Meter>{1, 1, 1, 1} == Matrix2<Meter_2>{1, 1, 1, 1}));
+    }
+    // Division with scalar (right  only)
+    {
+        Matrix2<double> m1 = {{2, 4}, {6, 8}};
+        assert((m1 / 2 == Matrix2<double>{1, 2, 3, 4}));
+        assert((Matrix2<Meter>{1, 1, 1, 1} / Meter{1} == Matrix2<double>{1, 1, 1, 1}));
+        assert((Matrix2<Kilometer>{1, 1, 1, 1} / Meter{1} == Matrix2<double>{1000, 1000, 1000, 1000}));
+    }
+    // Unary negation
+    {
+        assert((-Matrix2<Kilometer>{1, 2, 3, 4} == Matrix2<Meter>{-1000, -2000, -3000, -4000}));
+    }
 
-    // std::cout << "Running arithmetic assignment tests" << std::endl;
-    // // Addition assignment
-    // {
-    //     Matrix2<double> m;
-    //     Matrix2<double> m1{0, 1, 2, 3};
-    //     m += m1;
-    //     assert((m == Matrix2<double>{0, 1, 2, 3}));
-    //     Matrix2<Meter> m2{0, 1, 2, 3};
-    //     assert(((m2 += Matrix2<Kilometer>{1, 0, 0, 0}) == Matrix2<Meter>{1000, 1, 2, 3}));
-    // }
-    // // Subtraction assignment
-    // {
-    //     Matrix2<double> m;
-    //     Matrix2<double> m1{0, 1, 2, 3};
-    //     m -= m1;
-    //     assert((m == Matrix2<double>{0, -1, -2, -3}));
-    //     Matrix2<Meter> m2{0, 1, 2, 3};
-    //     assert(((m2 += Matrix2<Kilometer>{-1, 0, 0, 0}) == Matrix2<Meter>{-1000, 1, 2, 3}));
-    // }
+    std::cout << "Running matrix multiplication assignment tests" << std::endl; 
+
+    std::cout << "Running compound assignment tests" << std::endl;
+    // Addition assignment
+    {
+        Matrix2<double> m;
+        Matrix2<double> m1{0, 1, 2, 3};
+        m += m1;
+        assert((m == Matrix2<double>{0, 1, 2, 3}));
+        Matrix2<Meter> m2{0, 1, 2, 3};
+        assert(((m2 += Matrix2<Kilometer>{1, 0, 0, 0}) == Matrix2<Meter>{1000, 1, 2, 3}));
+    }
+    // Subtraction assignment
+    {
+        Matrix2<double> m;
+        Matrix2<double> m1{0, 1, 2, 3};
+        m -= m1;
+        assert((m == Matrix2<double>{0, -1, -2, -3}));
+        Matrix2<Meter> m2{0, 1, 2, 3};
+        assert(((m2 += Matrix2<Kilometer>{-1, 0, 0, 0}) == Matrix2<Meter>{-1000, 1, 2, 3}));
+    }
     // // Multiplication assignment
     // {
     //     Matrix2<double> m1{0, 1, 2, 3};

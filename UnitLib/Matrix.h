@@ -346,23 +346,28 @@ concept IsMatrix = IsMatrix_<T>::value;
 // Operator overloads
 //--------------------------------------------------------------------------------
 
-/** @brief Right-multiply by scalar (unit or plain type) */
-// template <typename Matrix_LHS, typename Scalar_RHS>
-//     requires IsMatrix<Matrix_LHS> &&  CanMultiply<Type, Scalar_RHS>
-// inline MatrixMN<MultiplyType<Type, RHS>> operator*(const RHS &rhs) const
-// {
-//     return ([&]<std::size_t... Idxs>(std::index_sequence<Idxs...>)
-//             {
-//                 return MatrixMN<MultiplyType<Type, RHS>>{
-//                     (_v[get_row<M, N>(Idxs)][get_col<M, N>(Idxs)] * rhs)... //
-//                 }; //
-//             })(std::make_index_sequence<M * N>{});
-// }
+/** @brief Right-multiply by scalar */
+template <typename LHS_MatType, size_t M, size_t N, typename RHS_Type>
+    requires ((!IsMatrix<RHS_Type>) && (!IsVector<RHS_Type>) && CanMultiply<LHS_MatType, RHS_Type>)
+inline Matrix<M, N, MultiplyType<LHS_MatType, RHS_Type>> operator*(const Matrix<M, N, LHS_MatType> &lhs_m, const RHS_Type &rhs)
+{
+    return ([&]<std::size_t... Idxs>(std::index_sequence<Idxs...>)
+            {
+                return Matrix<M, N, MultiplyType<LHS_MatType, RHS_Type>>{
+                    (lhs_m[get_row<M, N>(Idxs)][get_col<M, N>(Idxs)] * rhs)... //
+                }; //
+            })(std::make_index_sequence<M * N>{});
+}
 
 /** @brief Left-multiply by scalar */
-template <typename LHS, IsMatrix Matrix_RHS>
-    requires CanOpMultiply<Matrix_RHS, LHS>
-OpMultiplyType<Matrix_RHS, LHS> operator*(LHS lhs, Matrix_RHS rhs)
+template <typename RHS_MatType, size_t M, size_t N, typename LHS_Type>
+    requires ((!IsMatrix<LHS_Type>) && (!IsVector<LHS_Type>) && CanMultiply<LHS_Type, RHS_MatType>)
+inline Matrix<M, N, MultiplyType<LHS_Type, RHS_MatType>> operator*(const LHS_Type &lhs, const Matrix<M, N, RHS_MatType> &rhs_m)
 {
-    return rhs.operator*(lhs);
+    return ([&]<std::size_t... Idxs>(std::index_sequence<Idxs...>)
+            {
+                return Matrix<M, N, MultiplyType<LHS_Type, RHS_MatType>>{
+                    (lhs * rhs_m[get_row<M, N>(Idxs)][get_col<M, N>(Idxs)])... //
+                }; //
+            })(std::make_index_sequence<M * N>{});
 }
