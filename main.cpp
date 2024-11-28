@@ -42,16 +42,13 @@ public:
 
 int main()
 {
-    Matrix<3, 2, double> m1 {1, 0, 0, 1};
-    Matrix<2, 2, double> m2 {1, 0, 0, -1};
-    std::cout << m1 << std::endl;
-    std::cout << m2 << std::endl;
-
-    std::cout << (m1 * m2) << std::endl;
-
-    Vector<2, double> v1{1, 2};
-
-    std::cout << (m1 * v1) << std::endl;
+    Matrix<2, 3, double> m1;
+    Matrix<2, 3, double> m2;
+    std::cout << (m1 == m2) <<std::endl;
+    
+    // std::cout << (Matrix<2, 3, double>{{1, 2, 3}, {4, 5, 6}} * Matrix<3, 3, double>{{0, 0, 0}, {0, 0, 0}, {0, 0, 0}}) << std::endl;
+    //     std::cout << Matrix<2, 3, double>{{0, 0, 0}, {0, 0, 0}} << std::endl;
+    //     std::cout << (((Matrix<2, 3, double>{{1, 2, 3}, {4, 5, 6}} * Matrix<3, 3, double>{{0, 0, 0}, {0, 0, 0}, {0, 0, 0}}) == Matrix<2, 3, double>{{0, 0, 0}, {0, 0, 0}})) << std::endl;
 
 
 

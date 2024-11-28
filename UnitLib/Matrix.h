@@ -124,7 +124,7 @@ public:
         requires(requires(Type a, OtherType b) { a = b; })
     inline Matrix(const MatrixMN<OtherType> &rhs)
     {
-        ([this, &rhs]<size_t... Idxs>(std::index_sequence<Idxs...>)
+        ([&]<size_t... Idxs>(std::index_sequence<Idxs...>)
          {
              (
                  (_v[get_row<M, N>(Idxs)][get_col<M, N>(Idxs)] = rhs[get_row<M, N>(Idxs)][get_col<M, N>(Idxs)]), ...); //
@@ -140,7 +140,7 @@ public:
         requires(requires(Type a, OtherType b) { a = b; })
     inline MatrixMN<Type> &operator=(const MatrixMN<OtherType> &rhs)
     {
-        ([this, &rhs]<size_t... Idxs>(std::index_sequence<Idxs...>)
+        ([&]<size_t... Idxs>(std::index_sequence<Idxs...>)
          {
              (
                  (_v[get_row<M, N>(Idxs)][get_col<M, N>(Idxs)] = rhs[get_row<M, N>(Idxs)][get_col<M, N>(Idxs)]), ...); //
@@ -153,7 +153,7 @@ public:
         requires requires(Type a, RHS b) { {a == b} -> std::convertible_to<bool>; }
     inline bool operator==(const MatrixMN<RHS> &rhs) const
     {
-        return ([this, &rhs]<size_t... Idxs>(std::index_sequence<Idxs...>)
+        return ([&]<size_t... Idxs>(std::index_sequence<Idxs...>) -> bool
                 {
                     return ((_v[get_row<M, N>(Idxs)][get_col<M, N>(Idxs)] == rhs[get_row<M, N>(Idxs)][get_col<M, N>(Idxs)]) && ...); //
                 })(std::make_index_sequence<M * N>{});
@@ -393,6 +393,6 @@ inline Matrix<M, P, MultiplyType<LHS_MatType, RHS_MatType>> operator*(const Matr
 
     return ([&]<size_t... Idxs>(std::index_sequence<Idxs...>)
             { return Matrix<M, P, MultiplyType<LHS_MatType, RHS_MatType>>{
-                  (getCell(get_row<M, N>(Idxs), get_col<M, N>(Idxs)))... //
-              }; })(std::make_index_sequence<M * N>{});
+                  (getCell(get_row<M, P>(Idxs), get_col<M, P>(Idxs)))... //
+              }; })(std::make_index_sequence<M * P>{});
 }

@@ -966,7 +966,21 @@ int main()
         assert((-Matrix2<Kilometer>{1, 2, 3, 4} == Matrix2<Meter>{-1000, -2000, -3000, -4000}));
     }
 
-    std::cout << "Running matrix multiplication assignment tests" << std::endl; 
+    std::cout << "Running matrix multiplication tests" << std::endl;
+    {
+        assert((Matrix2<double>{{1, 0}, {0, 1}} * Matrix2<double>{{1, 0}, {0, -1}} == Matrix2<double>{{1, 0}, {0, -1}}));
+        assert((Matrix2<Meter>{{1, 0}, {0, 1}} * Matrix2<Meter>{{1, 0}, {0, -1}} == Matrix2<Meter_2>{{1, 0}, {0, -1}}));
+        assert((Matrix2<Meter>{{1, 0}, {0, 1}} * Matrix2<Kilometer>{{1, 0}, {0, -1}} == Matrix2<Meter_2>{{1000, 0}, {0, -1000}}));
+
+        assert((Matrix<2, 3, double>{{1, 0, 1}, {0, 1, 1}} * Matrix<3, 2, double>{{1, 0}, {0, 1}, {1, 1}} == Matrix<2, 2, double>{{2, 1}, {1, 2}}));
+        assert((Matrix<3, 2, double>{{1, 0}, {0, 1}, {1, 1}} * Matrix<2, 3, double>{{1, 0, 1}, {0, 1, 1}} == Matrix<3, 3, double>{{1, 0, 1}, {0, 1, 1}, {1, 1, 2}}));
+
+        assert((Matrix<3, 3, double>{{1, 0, 0}, {0, 1, 0}, {0, 0, 1}} * Matrix<3, 3, double>{{2, 3, 4}, {5, 6, 7}, {8, 9, 10}} == Matrix<3, 3, double>{{2, 3, 4}, {5, 6, 7}, {8, 9, 10}}));
+        assert((Matrix<2, 3, double>{{1, 2, 3}, {4, 5, 6}} * Matrix<3, 2, double>{{7, 8}, {9, 10}, {11, 12}} == Matrix<2, 2, double>{{58, 64}, {139, 154}}));
+        assert((Matrix<2, 2, double>{{1, 2}, {3, 4}} * Matrix<2, 2, double>{{5, 6}, {7, 8}} == Matrix<2, 2, double>{{19, 22}, {43, 50}}));
+        assert((Matrix<2, 3, double>{{1, 2, 3}, {4, 5, 6}} * Matrix<3, 3, double>{{0, 0, 0}, {0, 0, 0}, {0, 0, 0}} == Matrix<2, 3, double>{{0, 0, 0}, {0, 0, 0}}));
+        assert((Matrix<2, 2, double>{{2, 3}, {4, 5}} * Matrix<2, 2, double>{{2, 3}, {4, 5}} == Matrix<2, 2, double>{{16, 21}, {28, 37}}));
+    }
 
     std::cout << "Running compound assignment tests" << std::endl;
     // Addition assignment
@@ -987,17 +1001,16 @@ int main()
         Matrix2<Meter> m2{0, 1, 2, 3};
         assert(((m2 += Matrix2<Kilometer>{-1, 0, 0, 0}) == Matrix2<Meter>{-1000, 1, 2, 3}));
     }
-    // // Multiplication assignment
-    // {
-    //     Matrix2<double> m1{0, 1, 2, 3};
-    //     m1 *= 2;
-    //     assert((m1 == Matrix2<double>{0, 2, 4, 6}));
-    //     Matrix2<Meter> m2{0, 1, 2, 3};
-    //     assert(((m2 *= dUKilo{1}) == Matrix2<Meter>{0, 1000, 2000, 3000}));
-    // }
+    // Multiplication assignment
+    {
+        Matrix2<double> m1{0, 1, 2, 3};
+        m1 *= 2;
+        assert((m1 == Matrix2<double>{0, 2, 4, 6}));
+        Matrix2<Meter> m2{0, 1, 2, 3};
+        assert(((m2 *= dUKilo{1}) == Matrix2<Meter>{0, 1000, 2000, 3000}));
+    }
     // Multiplication assignment with matrices
     {
-
     }
 
     // // Division assignment

@@ -69,13 +69,13 @@ constexpr Array2D<T, M, N> create_default_matrix()
 template <size_t M, size_t N>
 constexpr size_t get_row(size_t idx)
 {
-    return idx / M;
+    return idx / N;
 }
 
 template <size_t M, size_t N>
 constexpr size_t get_col(size_t idx)
 {
-    return idx % M;
+    return idx % N;
 }
 
 // Helpers concepts initializer casts and constructibility
