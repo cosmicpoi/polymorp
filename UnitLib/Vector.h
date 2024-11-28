@@ -118,12 +118,12 @@ public:
     /** Default constructors */
 
     explicit inline Vector()
-        : _v(create_zero_array<Type, N>())
+        : _v(create_default_array<Type, N>())
     {
     }
 
     /**
-     *  @brief Variadic casting constructor 
+     *  @brief Variadic casting constructor
      *  If the current type is primitive,
      *    And all the constructor args are primitive,
      *    And we can convert from constructor args to our type,
@@ -132,18 +132,15 @@ public:
 
     template <typename... Args>
         requires(
-            (sizeof...(Args) <= N) &&                    //
-            (IsPrimitive<Type>) &&                       //
-            (IsPrimitive<Args> && ...) &&                //
-            ((std::is_convertible_v<Args, Type>) && ...) //
-            )
+            (sizeof...(Args) <= N) &&
+            ConvertibleToPrimitive<Type, Args...>)
     explicit inline Vector(const Args &...initList)
         : _v{static_cast<Type>(initList)...}
     {
     }
 
     /**
-     *  @brief Variadic constructiin-place constructor 
+     *  @brief Variadic constructiin-place constructor
      *  Otherwise, i.e. the current type is not primitive
      *    And all the constructor args are primitive,
      *    But we can construct the type from the constructor args,
@@ -151,30 +148,36 @@ public:
      */
     template <typename... Args>
         requires(
-            (sizeof...(Args) <= N) &&                      //
-            (!IsPrimitive<Type>) &&                        //
-            ((std::constructible_from<Type, Args>) && ...) //
-            )
+            (sizeof...(Args) <= N) &&
+            NonprimitiveConstructibleFrom<Type, Args...>)
     explicit inline Vector(const Args &...initList)
         : _v{Type{initList}...}
     {
     }
 
-    /** @brief Variadic constructing constructor (constructs components in-place) */
-    // template <typename... Args>
-    //     requires(sizeof...(Args) <= N && (std::constructible_from<Type, Args> && ...))
-    // explicit inline Vector(const Args &...initList)
-    //     : _v{Type{initList}...}
-    // {
-    // }
-
-    // /** @brief Initializer list constructor */
-    // template <typename OtherType>
-    //     requires std::constructible_from<Type, OtherType>
-    // explicit inline Vector(std::initializer_list<OtherType> initList)
-    //     : _v{static_cast<Type>(initList)...}
-    // {
-    // }
+    /**
+     * @brief Initializer list constructor
+     * Slower, but allows for `Vector2<double> = {1, 2}`.
+     * It's our only non-explicit constructor so this kind of copy initialization should
+     * always target this constructor.
+     *
+     * We don't want to incur the cost of range checking so out-of-bounds list sizes are simply ignored
+     */
+    template <typename OtherType>
+        requires NonprimitiveConstructibleFrom<Type, OtherType>
+    inline Vector(std::initializer_list<OtherType> initList)
+        : Vector()
+    {
+        if (initList.size() > N)
+        {
+            throw std::invalid_argument("Initializer list size exceeds the maximum allowed size.");
+        }
+        uint i = 0;
+        for (const auto &it : initList)
+        {
+            _v[i++] = Type{it};
+        }
+    }
 
     /** @brief Construct from vector of convertible type */
     template <typename OtherType>

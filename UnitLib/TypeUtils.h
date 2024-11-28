@@ -48,23 +48,24 @@ using Array2D = std::array<std::array<T, N>, M>;
 
 // Helper function to create a compile-time zero-initialized array of type T and size N
 template <typename T, size_t N>
-constexpr Array<T, N> create_zero_array()
+constexpr Array<T, N> create_default_array()
 {
     return ([]<std::size_t... Is>(std::index_sequence<Is...>) -> Array<T, N>
             {
-                return {((void)Is, T{0})...}; //
+                return {((void)Is, T{})...}; //
             })(std::make_index_sequence<N>{});
 }
 
 template <typename T, size_t M, size_t N>
-constexpr Array2D<T, M, N> create_zero_matrix()
+constexpr Array2D<T, M, N> create_default_matrix()
 {
     return ([]<std::size_t... Js>(std::index_sequence<Js...>) -> Array2D<T, M, N>
             {
-                return {((void)Js, create_zero_array<T, N>())...}; //
+                return {((void)Js, create_default_array<T, N>())...}; //
             })(std::make_index_sequence<M>{});
 }
 
+// Helpers for 2D constexpr initializtion
 template <size_t M, size_t N>
 constexpr size_t get_row(size_t idx)
 {
@@ -77,14 +78,19 @@ constexpr size_t get_col(size_t idx)
     return idx % M;
 }
 
-template <size_t M, size_t N>
-constexpr void iterate_over()
-{
-    ([]<std::size_t... Idxs>(std::index_sequence<Idxs...>)
-     {
-         ((std::cout << get_row<M, N>(Idxs) << "," << get_col<M, N>(Idxs) << " "), ...); //
-     })(std::make_index_sequence<M * N>{});
-}
+// Helpers concepts initializer casts and constructibility
+
+/**
+ * Check if FromArgs can be converted to primitive ToType
+ */
+template <typename ToType, typename... FromArgs>
+concept ConvertibleToPrimitive = IsPrimitive<ToType> && ((std::is_convertible_v<FromArgs, ToType>) && ...);
+
+/**
+ * Check if non-primitive FromType can be constructed from to ToType, which is primitive
+ */
+template <typename ToType, typename... FromArgs>
+concept NonprimitiveConstructibleFrom = (!IsPrimitive<ToType>) && ((std::constructible_from<ToType, FromArgs>) && ...);
 
 /**
  * UniversalFalse - a fallback for templates whose values may not always exist,

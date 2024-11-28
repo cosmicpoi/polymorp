@@ -27,7 +27,7 @@ public:
      * Constructors
      */
 
-    explicit inline Matrix() : _v(create_zero_matrix<Type, M, N>()) {}
+    explicit inline Matrix() : _v(create_default_matrix<Type, M, N>()) {}
     // explicit inline Matrix(Array<Type, N>... Rows) {
 
     // }

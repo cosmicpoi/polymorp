@@ -34,25 +34,19 @@ using dUKilo = UnitMultRatio<dUEmpty, std::ratio<1000>>;
 
 using M_S = UnitDivide<Meter, Second>;
 
-
-template<typename T>
+template <typename T>
 struct MyClass
 {
 public:
-
 };
 
 int main()
 {
-    Matrix2<double> m{};
-    std::cout << m[0][0] << std::endl;
-    std::cout << m.Get(0, 0) << std::endl;
+    Vector2<Meter> x = {2, 2};
+    std::cout << x << std::endl;
 
-    std::cout << m << std::endl;
-
-    iterate_over<5, 5>();
+    // std::cout << v << std::endl;
 
     // PrintInfo<M_S>();
     // int x = 10;
-
 }
