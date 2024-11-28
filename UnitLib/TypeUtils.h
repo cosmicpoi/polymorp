@@ -50,7 +50,7 @@ using Array2D = std::array<std::array<T, N>, M>;
 template <typename T, size_t N>
 constexpr Array<T, N> create_default_array()
 {
-    return ([]<std::size_t... Is>(std::index_sequence<Is...>) -> Array<T, N>
+    return ([]<size_t... Is>(std::index_sequence<Is...>) -> Array<T, N>
             {
                 return {((void)Is, T{})...}; //
             })(std::make_index_sequence<N>{});
@@ -59,7 +59,7 @@ constexpr Array<T, N> create_default_array()
 template <typename T, size_t M, size_t N>
 constexpr Array2D<T, M, N> create_default_matrix()
 {
-    return ([]<std::size_t... Js>(std::index_sequence<Js...>) -> Array2D<T, M, N>
+    return ([]<size_t... Js>(std::index_sequence<Js...>) -> Array2D<T, M, N>
             {
                 return {((void)Js, create_default_array<T, N>())...}; //
             })(std::make_index_sequence<M>{});

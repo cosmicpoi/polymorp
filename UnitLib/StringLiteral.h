@@ -4,7 +4,7 @@
 #include <iostream>
 #include <algorithm>
 
-template <std::size_t N>
+template <size_t N>
 struct StringLiteral
 {
     constexpr static size_t n = N;
