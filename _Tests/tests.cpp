@@ -801,10 +801,7 @@ int main()
         assert(((v *= 2) == Vector2<double>{4, 8}));
 
         Vector2<Meter> v2{1, 1};
-
-        std::cout << (v2 *= Vector2<dUKilo>{1, 2}) << std::endl;
-        std::cout << Vector2<Meter>{1000, 2000} << std::endl;
-        // assert(((v2 *= Vector2<dUKilo>{1, 2}) == Vector2<Meter>{1000, 2000}));
+        assert(((v2 *= Vector2<dUKilo>{1, 2}) == Vector2<Meter>{1000, 2000}));
     }
     // Division assignment /=
     {
@@ -897,14 +894,36 @@ int main()
     std::cout << "------ BEGIN TESTING MATRIX ------" << std::endl;
 
     std::cout << "Running constructor and accessor tests" << std::endl;
-    // Const
+    // Constructor and accessor
     {
+        // Default constructor
         Matrix2<double> m;
         assert((m.At(0, 0) == 0 && m.At(0, 1) == 0));
         assert((m.At(1, 0) == 0 && m.At(1, 1) == 0));
+
+        // Copy-initialized initializer list syntax
+        Matrix2<Meter> m2 = {{1, 2}, {3, 4}};
+
+        // Standard initializer list syntax
+        Matrix2<Kilometer> m3{{0.001, 0.002}, {0.003, 0.004}};
+
+        assert((m2.At(0, 0) == m3.At(0, 0) && m2.At(0, 1) == m3.At(0, 1)));
+        assert((m2.At(1, 0) == m3.At(1, 0) && m2.At(1, 1) == m3.At(1, 1)));
     }
 
     std::cout << "Running equality and assignment tests" << std::endl;
+    {
+        // Equality
+        Matrix2<Meter> m1 = {{1, 2}, {3, 4}};
+        Matrix2<Kilometer> m2{{0.001, 0.002}, {0.003, 0.004}};
+        assert((m1 == m2));
+
+        // Assignment
+        Matrix2<Kilometer> m3 = {{1, 2}, {3, 4}};
+        m1 = m3;
+        assert((m1 == m3));
+        assert(((m1 = Matrix2<Meter>{{1, 2}, {3, 5}}) == Matrix2<Meter>{{1, 2}, {3, 5}}));
+    }
 
     std::cout << "Running arithmetic tests" << std::endl;
 

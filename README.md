@@ -82,3 +82,12 @@ Since the library is header-only, one important consequence of this, and a key a
 One instance of a situation where these principles help to guide our design is in the inclusion of `.x()`, `.y()`, `.z()`, and `.w()` accessors for Vectors. Technically this runs against our usual design philosophy of having the vectors be size-generic as possible. However, because these patterns are common in industry-standard libraries such as `glm`, we consider them important enough to special-case.
 
 Another example of design principles at play: We choose to define the typical `NormSq()` and `Norm()` functions as non-members. The reason is that `Norm()` needs to use square root, and we need to provide a generalized square root that's compatible with units (so that we can support `sqrt(m^1) -> m^1/2`). If `Norm()` was a member of `Vector`, then `Vector` would need to be aware of the details of `Unit`, which goes against our philosophy.
+
+
+# Other random notes
+
+**Prefer parameter packs to `std::initializer_list` when possible**
+- Why? Because one of our primary aims is to have total equivalency between Empty Units and floats. With `initializer_list`, we can't do this (since it enforces homogeneous typing):
+```
+Matrix2<Meter> m2 = {{1, 2}, {(double)3, EmptyUnit{4}}};
+```

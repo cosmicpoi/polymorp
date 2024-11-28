@@ -188,8 +188,8 @@ public:
 
     /** @brief Multiplication by scalar (unit or plain type) */
     template <typename RHS>
-    inline VectorN<MultiplyType<Type, RHS>> operator*(const RHS &rhs) const
         requires CanMultiply<Type, RHS>
+    inline VectorN<MultiplyType<Type, RHS>> operator*(const RHS &rhs) const
     {
         return ([this, &rhs]<std::size_t... Is>(std::index_sequence<Is...>)
                 {
@@ -199,8 +199,8 @@ public:
 
     /** @brief Division by scalar (unit or plain type) */
     template <typename RHS>
-    inline VectorN<DivideType<Type, RHS>> operator/(const RHS &rhs) const
         requires CanDivide<Type, RHS>
+    inline VectorN<DivideType<Type, RHS>> operator/(const RHS &rhs) const
     {
         return ([this, &rhs]<std::size_t... Is>(std::index_sequence<Is...>)
                 {
@@ -216,8 +216,8 @@ public:
 
     /** @brief Addition with another vector */
     template <typename RHS>
-    inline VectorN<AddType<Type, RHS>> operator+(const VectorN<RHS> &rhs) const
         requires CanAdd<Type, RHS>
+    inline VectorN<AddType<Type, RHS>> operator+(const VectorN<RHS> &rhs) const
     {
         return ([this, &rhs]<std::size_t... Is>(std::index_sequence<Is...>)
                 {
@@ -227,8 +227,8 @@ public:
 
     /** @brief Subtraction with another vector */
     template <typename RHS>
-    inline VectorN<SubtractType<Type, RHS>> operator-(const VectorN<RHS> &rhs) const
         requires CanSubtract<Type, RHS>
+    inline VectorN<SubtractType<Type, RHS>> operator-(const VectorN<RHS> &rhs) const
     {
         return ([this, &rhs]<std::size_t... Is>(std::index_sequence<Is...>)
                 {
@@ -238,8 +238,8 @@ public:
 
     /** @brief Multiplication with another vector */
     template <typename RHS>
-    inline VectorN<MultiplyType<Type, RHS>> operator*(const VectorN<RHS> &rhs) const
         requires CanMultiply<Type, RHS>
+    inline VectorN<MultiplyType<Type, RHS>> operator*(const VectorN<RHS> &rhs) const
     {
         return ([this, &rhs]<std::size_t... Is>(std::index_sequence<Is...>)
                 {
@@ -249,8 +249,8 @@ public:
 
     /** @brief Division with another vector */
     template <typename RHS>
-    inline VectorN<DivideType<Type, RHS>> operator/(const VectorN<RHS> &rhs) const
         requires CanDivide<Type, RHS>
+    inline VectorN<DivideType<Type, RHS>> operator/(const VectorN<RHS> &rhs) const
     {
         return ([this, &rhs]<std::size_t... Is>(std::index_sequence<Is...>)
                 {
@@ -260,8 +260,8 @@ public:
 
     /** @brief Check for equality */
     template <typename RHS>
-    inline bool operator==(const VectorN<RHS> &rhs) const
         requires requires(Type a, RHS b) { {a == b} -> std::convertible_to<bool>; }
+    inline bool operator==(const VectorN<RHS> &rhs) const
     {
         return ([this, &rhs]<std::size_t... Is>(std::index_sequence<Is...>)
                 {
