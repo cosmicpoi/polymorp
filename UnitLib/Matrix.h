@@ -88,8 +88,11 @@ public:
     {
         ([&]<std::size_t... Idxs>(std::index_sequence<Idxs...>)
          {
-             (
-                 (_v[get_row<M, N>(Idxs)][get_col<M, N>(Idxs)] = initList), ...); //
+             (                                                              //
+                 ConvertOrAssignOrConstruct<Type, Args>(                    //
+                     _v[get_row<M, N>(Idxs)][get_col<M, N>(Idxs)], initList //
+                     ),                                                     //
+                 ...);                                                      //
          })(std::make_index_sequence<sizeof...(Args)>{});
     }
 
@@ -148,19 +151,22 @@ public:
     }
 
     /**
-     * Arighmetic
+     * Arithmetic
      */
 
     /** @brief Addition with matrix of same size */
-    // template <typename RHS>
-    //     requires CanAdd<Type, RHS>
-    // inline MatrixMN<AddType<Type, RHS>> operator+(const MatrixMN<RHS> &rhs) const
-    // {
-    //     return ([this, &rhs]<std::size_t... Idxs>(std::index_sequence<Idxs...>)
-    //             {
-    //                 // return ((_v[get_row<M, N>(Idxs)][get_col<M, N>(Idxs)] == rhs[get_row<M, N>(Idxs)][get_col<M, N>(Idxs)]) && ...); //
-    //             })(std::make_index_sequence<M * N>{});
-    // }
+    template <typename RHS>
+        requires CanAdd<Type, RHS>
+    inline MatrixMN<AddType<Type, RHS>> operator+(const MatrixMN<RHS> &rhs) const
+    {
+        return ([&]<std::size_t... Idxs>(std::index_sequence<Idxs...>)
+                {
+                    return MatrixMN<AddType<Type, RHS>>{
+                        (
+                            _v[get_row<M, N>(Idxs)][get_col<M, N>(Idxs)] +      //
+                            rhs[get_row<M, N>(Idxs)][get_col<M, N>(Idxs)])...}; //
+                })(std::make_index_sequence<M * N>{});
+    }
 
 private:
     Array2D<Type, M, N> _v;

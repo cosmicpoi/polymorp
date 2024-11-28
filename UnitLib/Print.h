@@ -1,7 +1,7 @@
-#include "TypeUtils.h"
 #include "Unit.h"
 #include "Vector.h"
 #include "Matrix.h"
+#include "TypeUtils.h"
 
 #include <iostream>
 #include <cxxabi.h>

@@ -42,17 +42,15 @@ public:
 
 int main()
 {
-    Matrix2<Meter> x{{2, 2}, {2, 2}};
-    Matrix2<double> y = {{2, 2}, {2, 2}};
+    dUKilo x;
+    x = 1;
+
     std::cout << x << std::endl;
-    std::cout << y << std::endl;
 
-    Vector2<Meter> v = {1, 1};
-
-    std::cout << v << std::endl;
-
-    Vector2<Meter> v2{1, 1};
-    std::cout << (v2 *= Vector2<dUKilo>{1, 2}) << std::endl;
+    // Matrix2<double> m1 = {{1, 2}, {3, 4}};
+    // Matrix2<dUKilo> m2{1, 1, 1, 1};
+    // std::cout << m2 << std::endl;
+    // std::cout << (m1 + m2) << std::endl;
 
     // PrintInfo<M_S>();
     // int x = 10;

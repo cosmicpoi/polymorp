@@ -151,7 +151,7 @@ public:
 
     /** @brief Construct from rvalue of convertible type */
     template <typename OtherType>
-        requires requires(Type a, OtherType b) { a = b; } && (!std::is_same_v<Type, OtherType>)
+        requires AssignableTo<Type, OtherType> && (!std::is_same_v<Type, OtherType>)
     explicit inline Vector(const VectorN<OtherType> &&other) : Vector(other)
     {
     }

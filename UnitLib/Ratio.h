@@ -43,14 +43,15 @@ T MultiplyByRatio(T val)
 }
 
 /** Function to divide out a ratio* Compute val / R */
-template <IsRatio R, typename T>
-T DivideByRatio(T val)
+template <IsRatio R, typename OutType, typename T>
+OutType DivideByRatio(T val)
 {
     if (R::num == 1 && R::den == 1)
     {
         return val;
     }
-    return (T)(val * ((T)R::den) / ((T)R::num));
+    
+    return static_cast<OutType>(val * ( static_cast<OutType>(R::den) / static_cast<OutType>(R::num)) );
 };
 
 /** Convert ratio to double */

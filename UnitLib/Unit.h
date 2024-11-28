@@ -151,7 +151,7 @@ public:
         requires IsEmptyUid<UID> && std::is_arithmetic_v<T> && std::is_convertible_v<T, Type>
     inline ThisType &operator=(const T &rhs)
     {
-        value = DivideByRatio<Ratio>(rhs);
+        value = DivideByRatio<Ratio, Type>(rhs);
         return *this;
     }
 

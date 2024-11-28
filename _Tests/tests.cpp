@@ -934,7 +934,12 @@ int main()
     std::cout << "Running arithmetic tests" << std::endl;
     // Addition
     {
-
+        Matrix2<double> m1 = {{1, 2}, {3, 4}};
+        Matrix2<dUKilo> m2{1, 1, 1, 1};
+        std::cout << m1 << std::endl;
+        std::cout << m2 << std::endl;
+        std::cout << m2 << std::endl;
+        assert((((m1 + m2) == Matrix2<double>{2, 3, 4, 5})));
     }
 
     std::cout << "Running arithmetic assignment tests" << std::endl;
