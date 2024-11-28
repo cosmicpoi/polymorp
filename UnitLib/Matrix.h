@@ -207,6 +207,16 @@ public:
                 })(std::make_index_sequence<M * N>{});
     }
 
+    /** @brief Unary negation */
+    inline MatrixMN<Type> operator-() const
+    {
+        return -1 * (*this);
+    }
+
+    /**
+     * Arithmetic assignment
+     */
+
 private:
     Array2D<Type, M, N> _v;
 };
