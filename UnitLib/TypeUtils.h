@@ -97,12 +97,6 @@ template <typename ToType, typename... FromArgs>
 concept ConvertibleOrConstructible = ConvertibleToPrimitive<ToType, FromArgs...> || //
                                      ConstructibleFrom<ToType, FromArgs...>;
 
-/** @brief Helper for ConvertOrAssignOrConstruct. */
-template <typename ToType, typename... FromArgs>
-concept ConvertibleOrAssignableOrConstructible = ConvertibleToPrimitive<ToType, FromArgs...> || //
-                                                 AssignableTo<ToType, FromArgs...> ||           //
-                                                 ConstructibleFrom<ToType, FromArgs...>;
-
 /**
  * @brief All-purpose low-overhead converter.
  * - If a type is convertible, convert it
@@ -120,31 +114,6 @@ constexpr ToType ConvertOrConstruct(const FromType &from)
     else
     {
         return ToType{from};
-    }
-}
-
-/**
- * @brief All-purpose low-overhead assigner.
- * - If a type is convertible, convert it
- * - Otherwise, if it is constructible, construct it
- * - Otherwise, if it is assignable, assign it
- * The order is based on assumed speed.
- */
-template <typename ToType, typename FromType>
-    requires ConvertibleOrAssignableOrConstructible<ToType, FromType>
-constexpr void ConvertOrAssignOrConstruct(ToType &to, const FromType &from)
-{
-    if constexpr (std::is_convertible_v<ToType, FromType>)
-    {
-        to = static_cast<ToType>(from);
-    }
-    else if constexpr (AssignableTo<ToType, FromType>)
-    {
-        to = from;
-    }
-    else
-    {
-        to = ToType{from};
     }
 }
 

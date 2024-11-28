@@ -936,14 +936,14 @@ int main()
     {
         Matrix2<double> m1 = {{1, 2}, {3, 4}};
         Matrix2<dUKilo> m2{1, 1, 1, 1};
-        assert((((m1 + m2) == Matrix2<double>{2, 3, 4, 5})));
+        assert((((m1 + m2) == Matrix2<double>{1001, 1002, 1003, 1004})));
         assert(((Matrix2<Meter>{1, 0, 0, 0} + Matrix2<Meter>{0, 1, 0, 0}) == Matrix2<Meter>{1, 1, 0, 0}));
     }
     // Subtraction
     {
         Matrix2<double> m1 = {{1, 2}, {3, 4}};
         Matrix2<dUKilo> m2{1, 1, 1, 1};
-        assert((((m1 - m2) == Matrix2<double>{0, 1, 2, 3})));
+        assert((((m1 - m2) == Matrix2<double>{-999, -998, -997, -996})));
         assert(((Matrix2<Meter>{1, 0, 0, 0} - Matrix2<Meter>{0, 1, 0, 0}) == Matrix2<Meter>{1, -1, 0, 0}));
     }
     // Multiplication with scalar (right and left)
