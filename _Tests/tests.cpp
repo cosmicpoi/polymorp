@@ -1011,16 +1011,39 @@ int main()
     }
     // Multiplication assignment with matrices
     {
+        Matrix m1 = Matrix2<double>{{1, 0}, {0, 1}};
+        m1 *= Matrix2<double>{{1, 0}, {0, -1}};
+        assert((m1 == Matrix2<double>{{1, 0}, {0, -1}}));
+
+        Matrix m3 = Matrix<3, 3, double>{{1, 0, 0}, {0, 1, 0}, {0, 0, 1}};
+        assert(((m3 *= Matrix<3, 3, double>{{2, 3, 4}, {5, 6, 7}, {8, 9, 10}}) == Matrix<3, 3, double>{{2, 3, 4}, {5, 6, 7}, {8, 9, 10}}));
+
+        Matrix m4 = Matrix<2, 2, double>{{1, 2}, {3, 4}};
+        m4 *= Matrix<2, 2, double>{{5, 6}, {7, 8}};
+        assert((m4 == Matrix<2, 2, double>{{19, 22}, {43, 50}}));
+
+        Matrix m5 = Matrix<2, 2, double>{{2, 3}, {4, 5}};
+        m5 *= Matrix<2, 2, double>{{2, 3}, {4, 5}};
+        assert((m5 == Matrix<2, 2, double>{{16, 21}, {28, 37}}));
+
+        Matrix m8 = Matrix<3, 3, double>{{1, 0, 2}, {-1, 3, 1}, {4, -2, 1}};
+        m8 *= Matrix<3, 3, double>{{3, 1, 2}, {2, 1, 0}, {1, 4, 5}};
+        assert((m8 == Matrix<3, 3, double>{{5, 9, 12}, {4, 12, 13}, {11, 5, 13}}));
     }
 
     // // Division assignment
-    // {
-    //     Matrix2<double> m1{0, 1, 2, 3};
-    //     m1 /= 2;
-    //     assert((m1 == Matrix2<double>{0, 0.5, 1, 1.5}));
-    //     Matrix2<Meter> m2{0, 1, 2, 3};
-    //     assert(((m2 /= dUKilo{1}) == Matrix2<Meter>{0, 0.001, 0.002, 0.003}));
-    // }
+    {
+        Matrix2<double> m1{0, 1, 2, 3};
+        m1 /= 2;
+        assert((m1 == Matrix2<double>{0, 0.5, 1, 1.5}));
+        Matrix2<Meter> m2{0, 1, 2, 3};
+        assert(((m2 /= dUKilo{1}) == Matrix2<Meter>{0, 0.001, 0.002, 0.003}));
+    }
+
+    std::cout << "Running transposition tests" << std::endl;
+    {
+        assert(((Matrix<2, 3, double> {1, 2, 3, 4, 5, 6}).Transpose() == Matrix<3, 2, double>{{1, 4}, {2, 5}, {3, 6}}));
+    }
 
     std::cout << "Running determinant tests" << std::endl;
 
