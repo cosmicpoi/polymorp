@@ -928,7 +928,7 @@ int main()
         Matrix2<Kilometer> m3 = {{1, 2}, {3, 4}};
         m1 = m3;
         assert((m1 == m3));
-        assert(((m1 = Matrix2<Meter>{{1, 2}, {3, 5}}) == Matrix2<Meter>{{1, 2}, {3, 5}}));
+        assert(((m1 = Matrix2<Kilometer>{{0.001, 0.002}, {0.003, 0.005}}) == Matrix2<Meter>{{1, 2}, {3, 5}}));
     }
 
     std::cout << "Running arithmetic tests" << std::endl;
@@ -967,6 +967,15 @@ int main()
     }
 
     std::cout << "Running arithmetic assignment tests" << std::endl;
+    // Addition assignment
+    {
+        Matrix2<double> m;
+        Matrix2<double> m1{0, 1, 2, 3};
+        m += m1;
+        assert((m1 == Matrix2<double>{0, 1, 2, 3}));
+        Matrix2<Meter> m2{0, 1, 2, 3};
+        assert(((m2 += Matrix2<Kilometer>{1, 0, 0, 0}) == Matrix2<Meter>{1000, 1, 2, 3}));
+    }
 
     std::cout << "Running product tests" << std::endl;
 

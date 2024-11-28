@@ -119,6 +119,18 @@ public:
         }
     }
 
+    /** @brief Construct from compatible array */
+    template <typename OtherType>
+        requires(requires(Type a, OtherType b) { a = b; })
+    inline Matrix(const MatrixMN<OtherType> &rhs)
+    {
+        ([this, &rhs]<std::size_t... Idxs>(std::index_sequence<Idxs...>)
+         {
+             (
+                 (_v[get_row<M, N>(Idxs)][get_col<M, N>(Idxs)] = rhs[get_row<M, N>(Idxs)][get_col<M, N>(Idxs)]), ...); //
+         })(std::make_index_sequence<M * N>{});
+    }
+
     /**
      * Equality and assignment
      */
@@ -216,6 +228,23 @@ public:
     /**
      * Arithmetic assignment
      */
+
+    /** @brief Addition assignment */
+    template <typename T>
+        requires requires(MatrixMN<Type> a, T b) { a + b; a = a + b; }
+    inline MatrixMN<Type> &operator+=(const T &rhs)
+    {
+        if constexpr (std::is_same_v<T, Type>)
+        {
+            _v = ((*this) + rhs)._v;
+            return *this;
+        }
+        else
+        {
+            _v = MatrixMN<Type>{(*this) + rhs}._v;
+            return *this;
+        }
+    }
 
 private:
     Array2D<Type, M, N> _v;
