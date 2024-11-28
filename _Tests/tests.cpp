@@ -909,9 +909,15 @@ int main()
 
         assert((m2.At(0, 0) == m3.At(0, 0) && m2.At(0, 1) == m3.At(0, 1)));
         assert((m2.At(1, 0) == m3.At(1, 0) && m2.At(1, 1) == m3.At(1, 1)));
+
+        // 1D initializer list syntax
+        Matrix2<double> m4{1, 2, 3, 4};
+        assert((m4.At(0, 0) == 1 && m4.At(0, 1) == 2));
+        assert((m4.At(1, 0) == 3 && m4.At(1, 1) == 4));
     }
 
     std::cout << "Running equality and assignment tests" << std::endl;
+    // Equality and assignment
     {
         // Equality
         Matrix2<Meter> m1 = {{1, 2}, {3, 4}};
@@ -926,6 +932,10 @@ int main()
     }
 
     std::cout << "Running arithmetic tests" << std::endl;
+    // Addition
+    {
+
+    }
 
     std::cout << "Running arithmetic assignment tests" << std::endl;
 

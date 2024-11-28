@@ -143,7 +143,7 @@ public:
         requires AssignableTo<Type, OtherType> && (!std::is_same_v<Type, OtherType>)
     explicit inline Vector(const VectorN<OtherType> &other)
     {
-        ([this, &other]<std::size_t... Is>(std::index_sequence<Is...>)
+        ([&]<std::size_t... Is>(std::index_sequence<Is...>)
          {
              ((_v[Is] = other[Is]), ...); //
          })(std::make_index_sequence<N>{});
@@ -161,7 +161,7 @@ public:
         requires(requires(Type a, OtherType b) { a = b; })
     inline VectorN<Type> &operator=(const VectorN<OtherType> &rhs)
     {
-        ([this, &rhs]<std::size_t... Is>(std::index_sequence<Is...>)
+        ([&]<std::size_t... Is>(std::index_sequence<Is...>)
          {
              ((_v[Is] = rhs[Is]), ...); //
          })(std::make_index_sequence<N>{});
@@ -173,7 +173,7 @@ public:
         requires(requires(Type a) { {a == 0} -> std::convertible_to<bool>; }) //
                 || (requires(Type a) { {a.IsZero() } -> std::convertible_to<bool>; })
     {
-        return ([this]<std::size_t... Is>(std::index_sequence<Is...>)
+        return ([&]<std::size_t... Is>(std::index_sequence<Is...>)
                 {
                     if constexpr(requires(Type a) { a.IsZero(); })
                     {
@@ -191,7 +191,7 @@ public:
         requires CanMultiply<Type, RHS>
     inline VectorN<MultiplyType<Type, RHS>> operator*(const RHS &rhs) const
     {
-        return ([this, &rhs]<std::size_t... Is>(std::index_sequence<Is...>)
+        return ([&]<std::size_t... Is>(std::index_sequence<Is...>)
                 {
                     return VectorN<MultiplyType<Type, RHS>>{(_v[Is] * rhs)...}; // Expands the expression for each index
                 })(std::make_index_sequence<N>{});
@@ -202,7 +202,7 @@ public:
         requires CanDivide<Type, RHS>
     inline VectorN<DivideType<Type, RHS>> operator/(const RHS &rhs) const
     {
-        return ([this, &rhs]<std::size_t... Is>(std::index_sequence<Is...>)
+        return ([&]<std::size_t... Is>(std::index_sequence<Is...>)
                 {
                     return VectorN<DivideType<Type, RHS>>{(_v[Is] / rhs)...}; // Expands the expression for each index
                 })(std::make_index_sequence<N>{});
@@ -219,7 +219,7 @@ public:
         requires CanAdd<Type, RHS>
     inline VectorN<AddType<Type, RHS>> operator+(const VectorN<RHS> &rhs) const
     {
-        return ([this, &rhs]<std::size_t... Is>(std::index_sequence<Is...>)
+        return ([&]<std::size_t... Is>(std::index_sequence<Is...>)
                 {
                     return VectorN<AddType<Type, RHS>>{(_v[Is] + rhs[Is])...}; // Expands the expression for each index
                 })(std::make_index_sequence<N>{});
@@ -230,7 +230,7 @@ public:
         requires CanSubtract<Type, RHS>
     inline VectorN<SubtractType<Type, RHS>> operator-(const VectorN<RHS> &rhs) const
     {
-        return ([this, &rhs]<std::size_t... Is>(std::index_sequence<Is...>)
+        return ([&]<std::size_t... Is>(std::index_sequence<Is...>)
                 {
                     return VectorN<SubtractType<Type, RHS>>{(_v[Is] - rhs[Is])...}; // Expands the expression for each index
                 })(std::make_index_sequence<N>{});
@@ -241,7 +241,7 @@ public:
         requires CanMultiply<Type, RHS>
     inline VectorN<MultiplyType<Type, RHS>> operator*(const VectorN<RHS> &rhs) const
     {
-        return ([this, &rhs]<std::size_t... Is>(std::index_sequence<Is...>)
+        return ([&]<std::size_t... Is>(std::index_sequence<Is...>)
                 {
                     return VectorN<MultiplyType<Type, RHS>>{(_v[Is] * rhs[Is])...}; // Expands the expression for each index
                 })(std::make_index_sequence<N>{});
@@ -252,7 +252,7 @@ public:
         requires CanDivide<Type, RHS>
     inline VectorN<DivideType<Type, RHS>> operator/(const VectorN<RHS> &rhs) const
     {
-        return ([this, &rhs]<std::size_t... Is>(std::index_sequence<Is...>)
+        return ([&]<std::size_t... Is>(std::index_sequence<Is...>)
                 {
                     return VectorN<DivideType<Type, RHS>>{(_v[Is] / rhs[Is])...}; // Expands the expression for each index
                 })(std::make_index_sequence<N>{});
@@ -263,7 +263,7 @@ public:
         requires requires(Type a, RHS b) { {a == b} -> std::convertible_to<bool>; }
     inline bool operator==(const VectorN<RHS> &rhs) const
     {
-        return ([this, &rhs]<std::size_t... Is>(std::index_sequence<Is...>)
+        return ([&]<std::size_t... Is>(std::index_sequence<Is...>)
                 {
                     return ((_v[Is] == rhs[Is]) && ...); // Expands the expression for each index
                 })(std::make_index_sequence<N>{});
@@ -283,8 +283,7 @@ public:
         }
         else
         {
-            VectorN<Type> temp{(*this) + rhs};
-            _v = temp._v;
+            _v = VectorN<Type>{(*this) + rhs}._v;
             return *this;
         }
     }
@@ -301,8 +300,7 @@ public:
         }
         else
         {
-            VectorN<Type> temp{(*this) - rhs};
-            _v = temp._v;
+            _v = VectorN<Type>{(*this) - rhs}._v;
             return *this;
         }
     }
@@ -319,8 +317,7 @@ public:
         }
         else
         {
-            VectorN<Type> temp{(*this) * rhs};
-            _v = temp._v;
+            _v = VectorN<Type>{(*this) * rhs}._v;
             return *this;
         }
     }
@@ -337,8 +334,7 @@ public:
         }
         else
         {
-            VectorN<Type> temp{(*this) / rhs};
-            _v = temp._v;
+            _v = VectorN<Type>{(*this) / rhs}._v;
             return *this;
         }
     }
@@ -351,7 +347,7 @@ public:
         }
     inline MultiplyType<Type, RHS_Type> Dot(const VectorN<RHS_Type> &rhs) const
     {
-        auto res = ([this, &rhs]<std::size_t... Is>(std::index_sequence<Is...>)
+        auto res = ([&]<std::size_t... Is>(std::index_sequence<Is...>)
                     {
                         return ((_v[Is] * rhs[Is]) + ...); //
                     })(std::make_index_sequence<N>{});

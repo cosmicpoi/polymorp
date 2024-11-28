@@ -79,6 +79,20 @@ public:
     /** @brief Default constructor - use underlying default constructors */
     explicit inline Matrix() : _v(create_default_matrix<Type, M, N>()) {}
 
+    /** @brief One-dimensional list constructor (list of size M * N) */
+    template <typename... Args>
+        requires(
+            (sizeof...(Args) <= M * N) &&
+            ConvertibleOrAssignableOrConstructible<Type, Args...>)
+    explicit inline Matrix(const Args &...initList) : Matrix()
+    {
+        ([&]<std::size_t... Idxs>(std::index_sequence<Idxs...>)
+         {
+             (
+                 (_v[get_row<M, N>(Idxs)][get_col<M, N>(Idxs)] = initList), ...); //
+         })(std::make_index_sequence<sizeof...(Args)>{});
+    }
+
     /** @brief Generalized initializer list constructor */
     template <typename OtherType>
         requires ConvertibleOrAssignableOrConstructible<Type, OtherType>
@@ -105,15 +119,11 @@ public:
         }
     }
 
-    /** @brief  */
-
     /**
-     *
+     * Equality and assignment
      */
 
-    /**
-     * @brief Assign between compatible types
-     */
+    /** @brief Assign between compatible types */
     template <typename OtherType>
         requires(requires(Type a, OtherType b) { a = b; })
     inline MatrixMN<Type> &operator=(const MatrixMN<OtherType> &rhs)
@@ -126,9 +136,7 @@ public:
         return *this;
     }
 
-    /**
-     * Equality
-     */
+    /** @brief Equality operator */
     template <typename RHS>
         requires requires(Type a, RHS b) { {a == b} -> std::convertible_to<bool>; }
     inline bool operator==(const MatrixMN<RHS> &rhs) const
@@ -138,6 +146,21 @@ public:
                     return ((_v[get_row<M, N>(Idxs)][get_col<M, N>(Idxs)] == rhs[get_row<M, N>(Idxs)][get_col<M, N>(Idxs)]) && ...); //
                 })(std::make_index_sequence<M * N>{});
     }
+
+    /**
+     * Arighmetic
+     */
+
+    /** @brief Addition with matrix of same size */
+    // template <typename RHS>
+    //     requires CanAdd<Type, RHS>
+    // inline MatrixMN<AddType<Type, RHS>> operator+(const MatrixMN<RHS> &rhs) const
+    // {
+    //     return ([this, &rhs]<std::size_t... Idxs>(std::index_sequence<Idxs...>)
+    //             {
+    //                 // return ((_v[get_row<M, N>(Idxs)][get_col<M, N>(Idxs)] == rhs[get_row<M, N>(Idxs)][get_col<M, N>(Idxs)]) && ...); //
+    //             })(std::make_index_sequence<M * N>{});
+    // }
 
 private:
     Array2D<Type, M, N> _v;
