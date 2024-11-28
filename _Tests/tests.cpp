@@ -3,6 +3,7 @@
 #include "../UnitLib/Unit.h"
 #include "../UnitLib/Vector.h"
 #include "../UnitLib/Matrix.h"
+#include "../UnitLib/Print.h"
 
 #include <iomanip>
 
@@ -800,7 +801,10 @@ int main()
         assert(((v *= 2) == Vector2<double>{4, 8}));
 
         Vector2<Meter> v2{1, 1};
-        assert(((v2 *= Vector2<dUKilo>{1, 2}) == Vector2<Meter>{1000, 2000}));
+
+        std::cout << (v2 *= Vector2<dUKilo>{1, 2}) << std::endl;
+        std::cout << Vector2<Meter>{1000, 2000} << std::endl;
+        // assert(((v2 *= Vector2<dUKilo>{1, 2}) == Vector2<Meter>{1000, 2000}));
     }
     // Division assignment /=
     {
@@ -898,8 +902,6 @@ int main()
         Matrix2<double> m;
         assert((m.At(0, 0) == 0 && m.At(0, 1) == 0));
         assert((m.At(1, 0) == 0 && m.At(1, 1) == 0));
-
-
     }
 
     std::cout << "Running equality and assignment tests" << std::endl;

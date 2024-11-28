@@ -123,49 +123,24 @@ public:
     }
 
     /**
-     *  @brief Variadic casting constructor
-     *  If the current type is primitive,
-     *    And all the constructor args are primitive,
-     *    And we can convert from constructor args to our type,
-     *    Then initializer directly susing a cast
+     *  @brief Construct from convertible/constructible values
      */
 
     template <typename... Args>
         requires(
             (sizeof...(Args) <= N) &&
             ConvertibleOrConstructible<Type, Args...>)
-    explicit inline Vector(const Args &...initList)
+    inline Vector(const Args &...initList)
         : _v{ConvertOrConstruct<Type, Args>(initList)...}
     {
     }
 
     /**
-     * @brief Initializer list constructor
-     * Slower, but allows for `Vector2<double> = {1, 2}`.
-     * It's our only non-explicit constructor so this kind of copy initialization should
-     * always target this constructor.
-     *
-     * We don't want to incur the cost of range checking so out-of-bounds list sizes are simply ignored
+     * @brief Construct from vector of assignable type
+     * Note: need to check !is_same_v to avoid overriding copy constructor
      */
     template <typename OtherType>
-        requires ConvertibleOrConstructible<Type, OtherType>
-    inline Vector(std::initializer_list<OtherType> initList)
-        : Vector()
-    {
-        if (initList.size() > N)
-        {
-            throw std::invalid_argument("Initializer list size exceeds the maximum allowed size.");
-        }
-        uint i = 0;
-        for (const auto &it : initList)
-        {
-            _v[i++] = ConvertOrConstruct<Type, OtherType>(it);
-        }
-    }
-
-    /** @brief Construct from vector of convertible type */
-    template <typename OtherType>
-        requires requires(Type a, OtherType b) { a = b; } && (!std::is_same_v<Type, OtherType>)
+        requires AssignableTo<Type, OtherType> && (!std::is_same_v<Type, OtherType>)
     explicit inline Vector(const VectorN<OtherType> &other)
     {
         ([this, &other]<std::size_t... Is>(std::index_sequence<Is...>)

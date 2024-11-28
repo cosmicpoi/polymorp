@@ -47,7 +47,12 @@ int main()
     std::cout << x << std::endl;
     std::cout << y << std::endl;
 
-    // std::cout << v << std::endl;
+    Vector2<Meter> v = {1, 1};
+
+    std::cout << v << std::endl;
+
+    Vector2<Meter> v2{1, 1};
+    std::cout << (v2 *= Vector2<dUKilo>{1, 2}) << std::endl;
 
     // PrintInfo<M_S>();
     // int x = 10;

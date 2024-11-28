@@ -81,7 +81,7 @@ public:
 
     /** @brief Generalized initializer list constructor */
     template <typename OtherType>
-        requires ConvertibleOrConstructible<Type, OtherType>
+        requires ConvertibleOrAssignableOrConstructible<Type, OtherType>
     inline Matrix(std::initializer_list<std::initializer_list<OtherType>> initList)
         : Matrix()
     {
@@ -99,13 +99,17 @@ public:
             uint j = 0;
             for (const auto &jt : it)
             {
-                _v[i][j++] = ConvertOrConstruct<Type, OtherType>(jt);
+                ConvertOrAssignOrConstruct<Type, OtherType>(_v[i][j++], jt);
             }
             i++;
         }
     }
 
-    // /** @brief */
+    /** @brief  */
+
+    /**
+     *
+     */
 
     /**
      * @brief Assign between compatible types

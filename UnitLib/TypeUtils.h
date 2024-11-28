@@ -80,40 +80,71 @@ constexpr size_t get_col(size_t idx)
 
 // Helpers concepts initializer casts and constructibility
 
-/**
- * @brief Check if FromArgs can be converted to primitive ToType
- */
+/** @brief Check if FromArgs can be converted to primitive ToType */
 template <typename ToType, typename... FromArgs>
-concept ConvertibleToPrimitive = IsPrimitive<ToType> && ((std::is_convertible_v<FromArgs, ToType>) && ...);
+concept ConvertibleToPrimitive = ((std::is_convertible_v<FromArgs, ToType>) && ...);
+
+/** @brief Check if FromArgs can be assigned to type ToType */
+template <typename ToType, typename... FromArgs>
+concept AssignableTo = ((requires(ToType a, FromArgs b) { a = b; }) && ...);
+
+/** @brief Check if non-primitive FromType can be constructed from to ToType (which must be primitive) */
+template <typename ToType, typename... FromArgs>
+concept ConstructibleFrom = ((std::constructible_from<ToType, FromArgs>) && ...);
+
+/** @brief Helper for ConvertOrConstruct. */
+template <typename ToType, typename... FromArgs>
+concept ConvertibleOrConstructible = ConvertibleToPrimitive<ToType, FromArgs...> || //
+                                     ConstructibleFrom<ToType, FromArgs...>;
+
+/** @brief Helper for ConvertOrAssignOrConstruct. */
+template <typename ToType, typename... FromArgs>
+concept ConvertibleOrAssignableOrConstructible = ConvertibleToPrimitive<ToType, FromArgs...> || //
+                                                 AssignableTo<ToType, FromArgs...> ||           //
+                                                 ConstructibleFrom<ToType, FromArgs...>;
 
 /**
- * @brief Check if non-primitive FromType can be constructed from to ToType, which is primitive
- */
-template <typename ToType, typename... FromArgs>
-concept NonprimitiveConstructibleFrom = (!IsPrimitive<ToType>) && ((std::constructible_from<ToType, FromArgs>) && ...);
-
-/**
- * @brief Helper for ConvertOrConstruct. Check if a type is (a primitive and convertible) or (not a primitive and constructible)
- */
-template <typename ToType, typename... FromArgs>
-concept ConvertibleOrConstructible = ConvertibleToPrimitive<ToType, FromArgs...> || NonprimitiveConstructibleFrom<ToType, FromArgs...>;
-
-/**
- * @brief All-purpose low-overhead converter. Check if a type is a primitive and convertible. If so, convert it. Otherwise check if it
- * nonprimitive and construtible. Then, construct it.
+ * @brief All-purpose low-overhead converter.
+ * - If a type is convertible, convert it
+ * - Otherwise, if it is constructible, construct it
+ * The order is based on assumed speed.
  */
 template <typename ToType, typename FromType>
     requires ConvertibleOrConstructible<ToType, FromType>
 constexpr ToType ConvertOrConstruct(const FromType &from)
 {
-    if constexpr (ConvertibleToPrimitive<ToType, FromType>)
+    if constexpr (std::is_convertible_v<ToType, FromType>)
     {
         return static_cast<ToType>(from);
     }
     else
     {
-        static_assert((NonprimitiveConstructibleFrom<ToType, FromType>));
         return ToType{from};
+    }
+}
+
+/**
+ * @brief All-purpose low-overhead assigner.
+ * - If a type is convertible, convert it
+ * - Otherwise, if it is constructible, construct it
+ * - Otherwise, if it is assignable, assign it
+ * The order is based on assumed speed.
+ */
+template <typename ToType, typename FromType>
+    requires ConvertibleOrAssignableOrConstructible<ToType, FromType>
+constexpr void ConvertOrAssignOrConstruct(ToType &to, const FromType &from)
+{
+    if constexpr (std::is_convertible_v<ToType, FromType>)
+    {
+        to = static_cast<ToType>(from);
+    }
+    else if constexpr (AssignableTo<ToType, FromType>)
+    {
+        to = from;
+    }
+    else
+    {
+        to = ToType{from};
     }
 }
 

@@ -171,11 +171,9 @@ inline void Print(T val, std::ostream &os = std::cout)
 }
 
 template <typename T>
-concept HasPrint = requires(T a, std::ostream &o) {
-    Print<T>(a, o);
-};
+concept UserDefinedPrint = IsUnit<T> || IsVector<T> || IsMatrix<T>;
 
-template <HasPrint T>
+template <UserDefinedPrint T>
 std::ostream &operator<<(std::ostream &os, const T &val)
 {
     Print<T>(val, os);
