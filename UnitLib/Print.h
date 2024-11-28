@@ -84,7 +84,7 @@ static constexpr inline void PrintInfo(std::ostream &os = std::cout)
     else if constexpr (IsMatrix<T>)
     {
         PrintInfo<typename T::type>();
-        os << "[M=" << (T::n) << ", N=" << (T::n) << "];";
+        os << "[M=" << (T::m) << ", N=" << (T::n) << "];";
     }
     else
     {

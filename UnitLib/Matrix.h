@@ -193,19 +193,6 @@ public:
                 })(std::make_index_sequence<M * N>{});
     }
 
-    /** @brief Multiplication by scalar (unit or plain type) */
-    template <typename RHS>
-        requires CanMultiply<Type, RHS>
-    inline MatrixMN<MultiplyType<Type, RHS>> operator*(const RHS &rhs) const
-    {
-        return ([&]<std::size_t... Idxs>(std::index_sequence<Idxs...>)
-                {
-                    return MatrixMN<MultiplyType<Type, RHS>>{
-                        (_v[get_row<M, N>(Idxs)][get_col<M, N>(Idxs)] * rhs)... //
-                    }; //
-                })(std::make_index_sequence<M * N>{});
-    }
-
     /** @brief Division by scalar (unit or plain type) */
     template <typename RHS>
         requires CanDivide<Type, RHS>
@@ -297,6 +284,22 @@ public:
         }
     }
 
+    /**
+     * @brief Matrix multiplication
+     */
+    template <typename RHS_Type, size_t N2, size_t P>
+
+    inline Matrix<M, P, std::common_type_t<Type, RHS_Type>> operator*(const Matrix<N2, P, RHS_Type> &rhs) const
+    requires (N2 == N) && requires(Type a, RHS_Type b) {
+            { a *b };
+            { (a * b) + (a * b) } -> std::same_as<decltype(a * b)>;
+            { (a * b) + (a * b) } -> std::convertible_to<MultiplyType<Type, RHS_Type>>;
+        }
+    {
+        static_assert(( N == N2 ));
+        return Matrix<M, P, std::common_type_t<Type, RHS_Type>>{};
+    }
+
 private:
     Array2D<Type, M, N> _v;
 };
@@ -316,6 +319,10 @@ using Matrix4 = Matrix<4, 4, T>;
 // Concepts
 //--------------------------------------------------------------------------------
 
+/**
+ * IsMatrix concept
+ */
+
 template <typename T>
 struct IsMatrix_ : std::false_type
 {
@@ -326,15 +333,31 @@ struct IsMatrix_<Matrix<M, N, T>> : std::true_type
 {
 };
 
-/**
- * @brief Concept to check if a type is a `Matrix`
- */
+/** @brief Concept to check if a type is a `Matrix` */
 template <typename T>
 concept IsMatrix = IsMatrix_<T>::value;
+
+/**
+ * IsScalar concept
+ *   See note for NotVector
+ */
 
 //--------------------------------------------------------------------------------
 // Operator overloads
 //--------------------------------------------------------------------------------
+
+/** @brief Right-multiply by scalar (unit or plain type) */
+// template <typename Matrix_LHS, typename Scalar_RHS>
+//     requires IsMatrix<Matrix_LHS> &&  CanMultiply<Type, Scalar_RHS>
+// inline MatrixMN<MultiplyType<Type, RHS>> operator*(const RHS &rhs) const
+// {
+//     return ([&]<std::size_t... Idxs>(std::index_sequence<Idxs...>)
+//             {
+//                 return MatrixMN<MultiplyType<Type, RHS>>{
+//                     (_v[get_row<M, N>(Idxs)][get_col<M, N>(Idxs)] * rhs)... //
+//                 }; //
+//             })(std::make_index_sequence<M * N>{});
+// }
 
 /** @brief Left-multiply by scalar */
 template <typename LHS, IsMatrix Matrix_RHS>

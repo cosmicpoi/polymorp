@@ -184,6 +184,14 @@ using OpMultiplyType = decltype(std::declval<A>().operator*(std::declval<B>()));
 template <typename A, typename B>
 concept CanOpMultiply = requires(A a, B b) { { a.operator*(b) } -> std::same_as<OpMultiplyType<A, B>>; };
 
+// Binary operator operator*(a, b) version
+// template <typename A, typename B>
+//     requires requires(A a, B b) { { operator*(a, b) }; }
+// using BinOpMultiplyType = decltype(operator*(std::declval<A>(), std::declval<B>()));
+
+// template <typename A, typename B>
+// concept CanBinOpMultiply = requires(A a, B b) { { operator*(a, b) }; };
+
 /** Divide */
 template <typename, typename>
 struct DivideType_

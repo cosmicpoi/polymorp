@@ -42,18 +42,22 @@ public:
 
 int main()
 {
-    dUKilo x;
-    x = 1;
+    Matrix<2, 3, double> m1;
+    Matrix<2, 4, double> m2;
+    std::cout << m1 << std::endl;
+    std::cout << m2 << std::endl;
 
-    std::cout << x << std::endl;
+    // std::cout << (m1 * m2) << std::endl;
+
+    Vector2<double> v2_a = {1, 1};
+    Vector2<double> v2_b = {2, 2};
+    Vector3<double> v3 = {1, 1, 1};
+
+
+    std::cout << (2 * v2_a) << std::endl;
+    // std::cout << (v2_a * v2_b) << std::endl;
+    std::cout << (v2_a * v3) << std::endl;
 
     
-
-    // Matrix2<double> m1 = {{1, 2}, {3, 4}};
-    // Matrix2<dUKilo> m2{1, 1, 1, 1};
-    // std::cout << m2 << std::endl;
-    // std::cout << (m1 + m2) << std::endl;
-
-    // PrintInfo<M_S>();
-    // int x = 10;
+    // std::cout << (m1 * m2) << std::endl;
 }

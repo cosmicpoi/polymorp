@@ -186,17 +186,6 @@ public:
                     } })(std::make_index_sequence<N>{});
     }
 
-    /** @brief Multiplication by scalar (unit or plain type) */
-    template <typename RHS>
-        requires CanMultiply<Type, RHS>
-    inline VectorN<MultiplyType<Type, RHS>> operator*(const RHS &rhs) const
-    {
-        return ([&]<std::size_t... Is>(std::index_sequence<Is...>)
-                {
-                    return VectorN<MultiplyType<Type, RHS>>{(_v[Is] * rhs)...}; // Expands the expression for each index
-                })(std::make_index_sequence<N>{});
-    }
-
     /** @brief Division by scalar (unit or plain type) */
     template <typename RHS>
         requires CanDivide<Type, RHS>
@@ -343,7 +332,8 @@ public:
     template <typename RHS_Type>
         requires requires(Type l, RHS_Type r) {
             { l *r };
-            { (l * r) + (l * r) } -> std::constructible_from<MultiplyType<Type, RHS_Type>>;
+            { (l * r) + (l * r) } -> std::same_as<decltype(l * r)>;
+            { (l * r) + (l * r) } -> std::convertible_to<MultiplyType<Type, RHS_Type>>;
         }
     inline MultiplyType<Type, RHS_Type> Dot(const VectorN<RHS_Type> &rhs) const
     {
@@ -365,7 +355,8 @@ public:
     template <typename RHS_Type>
         requires(requires(Type l, RHS_Type r) {
             { l *r };
-            { (l * r) + (l * r) } -> std::constructible_from<MultiplyType<Type, RHS_Type>>;
+            { (l * r) + (l * r) } -> std::same_as<decltype(l * r)>;
+            { (l * r) + (l * r) } -> std::convertible_to<MultiplyType<Type, RHS_Type>>;
         } && (N == 3))
     inline VectorN<MultiplyType<Type, RHS_Type>> Cross(const VectorN<RHS_Type> &rhs) const
     {
@@ -396,7 +387,9 @@ using Vector4 = Vector<4, T>;
 // Concepts
 //--------------------------------------------------------------------------------
 
-/* ******* Is Vector ********* */
+/**
+ * IsVector
+ */
 
 // Define the primary template
 template <typename T>
@@ -410,20 +403,34 @@ struct IsVectorHelper<Vector<N, T>> : std::true_type
 {
 };
 
-/**
- * @brief Concept to check if a type is a `Vector` with `Units`
- */
+/** @brief Concept to check if a type is a `Vector` */
 template <typename T>
 concept IsVector = IsVectorHelper<T>::value;
 
+//--------------------------------------------------------------------------------
 // Operator overloads
+//--------------------------------------------------------------------------------
+
+/** @brief Right-multiply by scalar */
+template <typename LHS_VecType, size_t N, typename RHS_Type>
+    requires(!IsVector<RHS_Type>) && CanMultiply<LHS_VecType, RHS_Type>
+inline Vector<N, MultiplyType<LHS_VecType, RHS_Type>> operator*(const Vector<N, LHS_VecType> &lhs_v, const RHS_Type &rhs)
+{
+    return ([&]<std::size_t... Is>(std::index_sequence<Is...>)
+            {
+                return Vector<N, MultiplyType<LHS_VecType, RHS_Type>>{(lhs_v[Is] * rhs)...}; // Expands the expression for each index
+            })(std::make_index_sequence<N>{});
+}
 
 /** @brief Left-multiply by scalar */
-template <typename LHS, IsVector Vector_RHS>
-    requires CanOpMultiply<Vector_RHS, LHS>
-OpMultiplyType<Vector_RHS, LHS> operator*(LHS lhs, Vector_RHS rhs)
+template <typename RHS_VecType, size_t N, typename LHS_Type>
+    requires(!IsVector<LHS_Type>) && CanMultiply<RHS_VecType, LHS_Type>
+inline Vector<N, MultiplyType<LHS_Type, RHS_VecType>> operator*(const LHS_Type &lhs, const Vector<N, RHS_VecType> &rhs_v)
 {
-    return rhs.operator*(lhs);
+    return ([&]<std::size_t... Is>(std::index_sequence<Is...>)
+            {
+                return Vector<N, MultiplyType<LHS_Type, RHS_VecType>>{(lhs * rhs_v[Is])...}; // Expands the expression for each index
+            })(std::make_index_sequence<N>{});
 }
 
 // Vector math functions
@@ -432,8 +439,8 @@ OpMultiplyType<Vector_RHS, LHS> operator*(LHS lhs, Vector_RHS rhs)
 template <typename Type>
 concept VectorHasNormSquared = requires(Type a) {
     { a *a };
-    { (a * a) + (a * a) };
-};
+    { (a * a) + (a * a) } -> std::same_as<decltype(a * a)>;
+    { (a * a) + (a * a) } -> std::convertible_to<MultiplyType<Type, Type>>; };
 
 /** @brief Compute norm-squared of a vector */
 template <typename Type, size_t N>
