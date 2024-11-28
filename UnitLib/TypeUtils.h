@@ -81,16 +81,41 @@ constexpr size_t get_col(size_t idx)
 // Helpers concepts initializer casts and constructibility
 
 /**
- * Check if FromArgs can be converted to primitive ToType
+ * @brief Check if FromArgs can be converted to primitive ToType
  */
 template <typename ToType, typename... FromArgs>
 concept ConvertibleToPrimitive = IsPrimitive<ToType> && ((std::is_convertible_v<FromArgs, ToType>) && ...);
 
 /**
- * Check if non-primitive FromType can be constructed from to ToType, which is primitive
+ * @brief Check if non-primitive FromType can be constructed from to ToType, which is primitive
  */
 template <typename ToType, typename... FromArgs>
 concept NonprimitiveConstructibleFrom = (!IsPrimitive<ToType>) && ((std::constructible_from<ToType, FromArgs>) && ...);
+
+/**
+ * @brief Helper for ConvertOrConstruct. Check if a type is (a primitive and convertible) or (not a primitive and constructible)
+ */
+template <typename ToType, typename... FromArgs>
+concept ConvertibleOrConstructible = ConvertibleToPrimitive<ToType, FromArgs...> || NonprimitiveConstructibleFrom<ToType, FromArgs...>;
+
+/**
+ * @brief All-purpose low-overhead converter. Check if a type is a primitive and convertible. If so, convert it. Otherwise check if it
+ * nonprimitive and construtible. Then, construct it.
+ */
+template <typename ToType, typename FromType>
+    requires ConvertibleOrConstructible<ToType, FromType>
+constexpr ToType ConvertOrConstruct(const FromType &from)
+{
+    if constexpr (ConvertibleToPrimitive<ToType, FromType>)
+    {
+        return static_cast<ToType>(from);
+    }
+    else
+    {
+        static_assert((NonprimitiveConstructibleFrom<ToType, FromType>));
+        return ToType{from};
+    }
+}
 
 /**
  * UniversalFalse - a fallback for templates whose values may not always exist,

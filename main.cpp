@@ -42,8 +42,10 @@ public:
 
 int main()
 {
-    Vector2<double> x = {2, 2};
+    Matrix2<Meter> x = {{{2, 2}, {2, 2}}};
+    Matrix2<double> y = {{{2, 2}, {2, 2}}};
     std::cout << x << std::endl;
+    std::cout << y << std::endl;
 
     // std::cout << v << std::endl;
 
