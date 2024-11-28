@@ -364,17 +364,28 @@ inline Matrix<M, N, MultiplyType<LHS_Type, RHS_MatType>> operator*(const LHS_Typ
  * @brief Matrix-vector multiplication
  */
 
-// template <typename LHS_MatType, size_t LHS_Rows, size_t RHS_Cols, typename LHS_MatType, size_t LHS_Rows, size_t LHS_Cols>
-// inline Matrix<RHS_Rows, LHS_Cols, MultiplyType<LHS_MatType, RHS_MatType>> operator*(const Matrix<LHS_Rows, LHS_Cols, LHS_MatType> &lhs_m, const Matrix<RHS_Rows, RHS_Cols, RHS_MatType> &rhs_m)
-//     requires((LHS_Cols == RHS_Rows) && HasDotProduct<LHS_MatType, RHS_MatType>)
-// {
-//     return Matrix<RHS_Rows, LHS_Cols, MultiplyType<LHS_MatType, RHS_MatType>>{};
-// }
+template <typename LHS_MatType, size_t M, size_t N, typename RHS_VecType>
+inline Vector<M, MultiplyType<LHS_MatType, RHS_VecType>> operator*(const Matrix<M, N, LHS_MatType> &lhs_m, const Vector<N, RHS_VecType> &rhs_v)
+    requires(HasDotProduct<LHS_MatType, RHS_VecType>)
+{
+    auto getComponent = [&](size_t i) -> MultiplyType<LHS_MatType, RHS_VecType>
+    {
+        return ([&]<size_t... Idxs>(std::index_sequence<Idxs...>)
+                {
+                    return ((lhs_m[i][Idxs] * rhs_v[i]) + ...); //
+                })(std::make_index_sequence<N>{});
+    };
+
+    return ([&]<size_t... Idxs>(std::index_sequence<Idxs...>)
+            { return Vector<M, MultiplyType<LHS_MatType, RHS_VecType>>{
+                  (getComponent(Idxs))... //
+              }; })(std::make_index_sequence<M>{});
+}
 
 /**
  * @brief Matrix multiplication
  */
-template <typename RHS_MatType, size_t M, size_t N, typename LHS_MatType, size_t P>
+template <typename LHS_MatType, size_t M, size_t N, typename RHS_MatType, size_t P>
 inline Matrix<M, P, MultiplyType<LHS_MatType, RHS_MatType>> operator*(const Matrix<M, N, LHS_MatType> &lhs_m, const Matrix<N, P, RHS_MatType> &rhs_m)
     requires(HasDotProduct<LHS_MatType, RHS_MatType>)
 {
@@ -382,14 +393,12 @@ inline Matrix<M, P, MultiplyType<LHS_MatType, RHS_MatType>> operator*(const Matr
     {
         return ([&]<size_t... Idxs>(std::index_sequence<Idxs...>)
                 {
-                    return ((rhs_m[Row][Idxs] * lhs_m[Idxs][Col]) + ...); //
+                    return ((lhs_m[Row][Idxs] * rhs_m[Idxs][Col]) + ...); //
                 })(std::make_index_sequence<N>{});
     };
 
     return ([&]<size_t... Idxs>(std::index_sequence<Idxs...>)
-            {
-                return Matrix<M, P, MultiplyType<LHS_MatType, RHS_MatType>>{
-                    (getCell(get_row<M, N>(Idxs), get_col<M, N>(Idxs)))... //
-                };
-            })(std::make_index_sequence<M * N>{});
+            { return Matrix<M, P, MultiplyType<LHS_MatType, RHS_MatType>>{
+                  (getCell(get_row<M, N>(Idxs), get_col<M, N>(Idxs)))... //
+              }; })(std::make_index_sequence<M * N>{});
 }
