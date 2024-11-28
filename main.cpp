@@ -42,7 +42,7 @@ public:
 
 int main()
 {
-    Vector2<Meter> x = {2, 2};
+    Vector2<double> x = {2, 2};
     std::cout << x << std::endl;
 
     // std::cout << v << std::endl;

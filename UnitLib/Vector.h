@@ -179,6 +179,23 @@ public:
         }
     }
 
+    /** @brief Initializer list for primitives */
+    template <typename OtherType>
+        requires ConvertibleToPrimitive<Type, OtherType>
+    inline Vector(std::initializer_list<OtherType> initList)
+        : Vector()
+    {
+        if (initList.size() > N)
+        {
+            throw std::invalid_argument("Initializer list size exceeds the maximum allowed size.");
+        }
+        uint i = 0;
+        for (const auto &it : initList)
+        {
+            _v[i++] = static_cast<Type>(it);
+        }
+    }
+
     /** @brief Construct from vector of convertible type */
     template <typename OtherType>
         requires requires(Type a, OtherType b) { a = b; } && (!std::is_same_v<Type, OtherType>)
