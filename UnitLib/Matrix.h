@@ -168,6 +168,20 @@ public:
                 })(std::make_index_sequence<M * N>{});
     }
 
+    /** @brief Subtraction with matrix of same size */
+    template <typename RHS>
+        requires CanSubtract<Type, RHS>
+    inline MatrixMN<SubtractType<Type, RHS>> operator-(const MatrixMN<RHS> &rhs) const
+    {
+        return ([&]<std::size_t... Idxs>(std::index_sequence<Idxs...>)
+                {
+                    return MatrixMN<AddType<Type, RHS>>{
+                        (
+                            _v[get_row<M, N>(Idxs)][get_col<M, N>(Idxs)] -      //
+                            rhs[get_row<M, N>(Idxs)][get_col<M, N>(Idxs)])...}; //
+                })(std::make_index_sequence<M * N>{});
+    }
+
 private:
     Array2D<Type, M, N> _v;
 };
