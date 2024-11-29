@@ -52,6 +52,9 @@ int main()
     Matrix<4, 4, Meter> mat3{1, 2, 3, 4, 5, 6, 7, 8, 0, 1, 1, 3, 6, 7, 8};
     std::cout << Inv(mat3) << std::endl;
 
+    constexpr Matrix2<double> m2{};
+    std::cout << m2 << std::endl;
+
     // Matrix<3, 3, Meter> mat{1, 2, 3, 4, 5, 6, 7, 8, 0};
     // auto v = GetCofactor<0, 1>(mat);
     // std::cout << v << std::endl;

@@ -28,12 +28,12 @@ public:
      * Accessors
      */
 
-    inline Array<Type, N> &operator[](size_t index)
+    inline constexpr Array<Type, N> &operator[](size_t index)
     {
         return _v[index];
     }
 
-    inline const Array<Type, N> &operator[](size_t index) const
+    inline constexpr const Array<Type, N> &operator[](size_t index) const
     {
         return _v[index];
     }
@@ -42,12 +42,12 @@ public:
      * @brief Directly access member `i`, `j`.
      * Slightly faster than `[i][j]` because the intermediate `[i]` is not constructed.
      */
-    inline Type &At(size_t i, size_t j)
+    inline constexpr Type &At(size_t i, size_t j)
     {
         return _v[i][j];
     }
 
-    inline const Type &At(size_t i, size_t j) const
+    inline constexpr const Type &At(size_t i, size_t j) const
     {
         return _v[i][j];
     }
@@ -55,7 +55,7 @@ public:
     /**
      * @brief Safe and slightly slower versions of accessors that do range checking
      */
-    inline Type &Get(size_t i, size_t j)
+    inline constexpr Type &Get(size_t i, size_t j)
     {
         if (i >= M || j >= N)
         {
@@ -64,7 +64,7 @@ public:
         return _v[i][j];
     }
 
-    inline const Type &Get(size_t i, size_t j) const
+    inline constexpr const Type &Get(size_t i, size_t j) const
     {
         if (i >= M || j >= N)
         {
@@ -74,18 +74,23 @@ public:
     }
 
     /**
+     * Static members
+     */
+    // static Matrix<
+
+    /**
      * Constructors
      */
 
     /** @brief Default constructor - use underlying default constructors */
-    explicit inline Matrix() : _v(create_default_matrix<Type, M, N>()) {}
+    explicit inline constexpr Matrix() : _v(create_default_matrix<Type, M, N>()) {}
 
     /** @brief One-dimensional list constructor (list of size M * N) */
     template <typename... Args>
         requires(
             (sizeof...(Args) <= M * N) &&
             ConvertibleOrConstructible<Type, Args...>)
-    explicit inline Matrix(const Args &...initList) : Matrix()
+    explicit inline constexpr Matrix(const Args &...initList) : Matrix()
     {
         ([&]<size_t... Idxs>(std::index_sequence<Idxs...>) constexpr
          { (
@@ -97,13 +102,14 @@ public:
     /** @brief Generalized initializer list constructor */
     template <typename OtherType>
         requires ConvertibleOrConstructible<Type, OtherType>
-    inline Matrix(std::initializer_list<std::initializer_list<OtherType>> initList)
+    inline constexpr Matrix(std::initializer_list<std::initializer_list<OtherType>> initList)
         : Matrix()
     {
         if (initList.size() > M)
         {
             throw std::invalid_argument("Initializer list size exceeds the maximum allowed size.");
         }
+
         uint i = 0;
         for (const auto &it : initList)
         {
@@ -123,7 +129,7 @@ public:
     /** @brief Construct from compatible array */
     template <typename OtherType>
         requires(requires(Type a, OtherType b) { a = b; })
-    inline Matrix(const MatrixMN<OtherType> &rhs)
+    inline constexpr Matrix(const MatrixMN<OtherType> &rhs)
     {
         ([&]<size_t... Idxs>(std::index_sequence<Idxs...>) constexpr
          {
@@ -139,7 +145,7 @@ public:
     /** @brief Assign between compatible types */
     template <typename OtherType>
         requires(requires(Type a, OtherType b) { a = b; })
-    inline MatrixMN<Type> &operator=(const MatrixMN<OtherType> &rhs)
+    inline constexpr MatrixMN<Type> &operator=(const MatrixMN<OtherType> &rhs)
     {
         ([&]<size_t... Idxs>(std::index_sequence<Idxs...>) constexpr
          {
@@ -152,7 +158,7 @@ public:
     /** @brief Equality operator */
     template <typename RHS>
         requires requires(Type a, RHS b) { {a == b} -> std::convertible_to<bool>; }
-    inline bool operator==(const MatrixMN<RHS> &rhs) const
+    inline constexpr bool operator==(const MatrixMN<RHS> &rhs) const
     {
         return ([&]<size_t... Idxs>(std::index_sequence<Idxs...>) constexpr -> bool
                 {
@@ -167,7 +173,7 @@ public:
     /** @brief Addition with matrix of same size */
     template <typename RHS>
         requires CanAdd<Type, RHS>
-    inline MatrixMN<AddType<Type, RHS>> operator+(const MatrixMN<RHS> &rhs) const
+    inline constexpr MatrixMN<AddType<Type, RHS>> operator+(const MatrixMN<RHS> &rhs) const
     {
         return ([&]<size_t... Idxs>(std::index_sequence<Idxs...>) constexpr
                 {
@@ -181,7 +187,7 @@ public:
     /** @brief Subtraction with matrix of same size */
     template <typename RHS>
         requires CanSubtract<Type, RHS>
-    inline MatrixMN<SubtractType<Type, RHS>> operator-(const MatrixMN<RHS> &rhs) const
+    inline constexpr MatrixMN<SubtractType<Type, RHS>> operator-(const MatrixMN<RHS> &rhs) const
     {
         return ([&]<size_t... Idxs>(std::index_sequence<Idxs...>) constexpr
                 {
@@ -197,7 +203,7 @@ public:
     /** @brief Division by scalar (unit or plain type) */
     template <typename RHS>
         requires CanDivide<Type, RHS>
-    inline MatrixMN<DivideType<Type, RHS>> operator/(const RHS &rhs) const
+    inline constexpr MatrixMN<DivideType<Type, RHS>> operator/(const RHS &rhs) const
     {
         return ([&]<size_t... Idxs>(std::index_sequence<Idxs...>) constexpr
                 {
@@ -208,7 +214,7 @@ public:
     }
 
     /** @brief Unary negation */
-    inline MatrixMN<Type> operator-() const
+    inline constexpr MatrixMN<Type> operator-() const
     {
         return -1 * (*this);
     }
@@ -220,7 +226,7 @@ public:
     /** @brief Addition assignment */
     template <typename T>
         requires requires(MatrixMN<Type> a, T b) { a + b; a = a + b; }
-    inline MatrixMN<Type> &operator+=(const T &rhs)
+    inline constexpr MatrixMN<Type> &operator+=(const T &rhs)
     {
         if constexpr (std::is_same_v<T, Type>)
         {
@@ -237,7 +243,7 @@ public:
     /** @brief Subtraction assignment */
     template <typename T>
         requires requires(MatrixMN<Type> a, T b) { a - b; a = a - b; }
-    inline MatrixMN<Type> &operator-=(const T &rhs)
+    inline constexpr MatrixMN<Type> &operator-=(const T &rhs)
     {
         if constexpr (std::is_same_v<T, Type>)
         {
@@ -254,7 +260,7 @@ public:
     /** @brief Multiplication assignment */
     template <typename T>
         requires requires(MatrixMN<Type> a, T b) { a * b; a = a * b; }
-    inline MatrixMN<Type> &operator*=(const T &rhs)
+    inline constexpr MatrixMN<Type> &operator*=(const T &rhs)
     {
         if constexpr (std::is_same_v<T, Type>)
         {
@@ -271,7 +277,7 @@ public:
     /** @brief Division assignment */
     template <typename T>
         requires requires(MatrixMN<Type> a, T b) { a / b; a = a / b; }
-    inline MatrixMN<Type> &operator/=(const T &rhs)
+    inline constexpr MatrixMN<Type> &operator/=(const T &rhs)
     {
         if constexpr (std::is_same_v<T, Type>)
         {
@@ -289,7 +295,7 @@ public:
      * Transpose
      */
 
-    inline Matrix<N, M, Type> Transpose()
+    inline constexpr Matrix<N, M, Type> Transpose()
     {
         return ([&]<size_t... Idxs>(std::index_sequence<Idxs...>) constexpr
                 {
@@ -512,18 +518,18 @@ inline Matrix<N, N, InvertType<Type>> Inv(const Matrix<N, N, Type> &mat)
     {
         return Matrix<N, N, InvertType<Type>>{};
     }
-    else if constexpr(N == 2)
+    else if constexpr (N == 2)
     {
         return Matrix<N, N, InvertType<Type>>{mat[1][1] / d, (-1 * mat[0][1]) / d, (-1 * mat[1][0]) / d, mat[0][0] / d};
     }
     else
     {
         return ([&]<size_t... Idxs>(std::index_sequence<Idxs...>) constexpr
-         {
-             return (Matrix<N, N, InvertType<Type>>{
-                         (GetCofactor<get_row<N, N>(Idxs), get_col<N, N>(Idxs)>(mat) / d)... //
-                     })
-                 .Transpose(); //
-         })(std::make_index_sequence<N * N>{});
+                {
+                    return (Matrix<N, N, InvertType<Type>>{
+                                (GetCofactor<get_row<N, N>(Idxs), get_col<N, N>(Idxs)>(mat) / d)... //
+                            })
+                        .Transpose(); //
+                })(std::make_index_sequence<N * N>{});
     }
 }

@@ -1,7 +1,9 @@
 #include <cassert>
 
 #include "../UnitLib/Unit.h"
+#include "../UnitLib/UnitMath.h"
 #include "../UnitLib/Vector.h"
+#include "../UnitLib/VectorMath.h"
 #include "../UnitLib/Matrix.h"
 #include "../UnitLib/Print.h"
 
