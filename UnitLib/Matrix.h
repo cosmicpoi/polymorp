@@ -414,29 +414,34 @@ inline Matrix<M, P, MultiplyType<LHS_MatType, RHS_MatType>> operator*(const Matr
 // Determinant
 //--------------------------------------------------------------------------------
 
-// template <size_t... Idxs>
-
-template <std::size_t... Indices>
-void printIndexSequence(std::index_sequence<Indices...>)
-{
-    // Use fold expression (C++17) to print the elements
-    ((std::cout << Indices << " "), ...);
-    std::cout << std::endl;
-}
-
-// template <size_t RemoveIndex, size_t... Indices>
-// constexpr std::index_sequence<sizeof...(Indices) - 1> remove_index(std::index_sequence<Indices...>)
-// {
-//     return std::index_sequence<((Indices == RemoveIndex ? (void) : Indices))...>{};
-// }
 
 /** Helper for Det */
+
+// N - the size of the square (N x N) matrix
+// Rows - the current set of rows
+// Cols - the current set of cols
+// IterSize - the size of the current iteration (starting from N going down to 2)
 template <size_t IterSize, typename Type, size_t N, size_t... Rows, size_t... Cols>
-    requires HasCrossProduct<Type, Type>
-inline Type _Det(Matrix<N, N, Type> &mat, std::index_sequence<Rows...>, std::index_sequence<Cols...>)
+    requires HasCrossProduct<Type, Type> &&          //
+             (sizeof...(Rows) == sizeof...(Cols)) && //
+             (sizeof...(Rows) == IterSize) &&        //
+             (IterSize <= N)
+inline Type _Det(Matrix<N, N, Type> &mat, std::index_sequence<Rows...> rows, std::index_sequence<Cols...> cols)
 {
-    std::cout << "in det" << std::endl;
-    return Type{0};
+    // if constexpr(IterSize == 2)
+    // {
+    //     std::get<0>(std::tuple<Rows...>({}));
+    // }
+
+    return 0;
+    // else
+    // {
+
+    // }
+    // auto get
+
+    //     return ([&]<size_t... Idxs>(std::index_sequence<Idxs...>) -> Type
+    //             { return })(rows, cols);
 }
 
 /**

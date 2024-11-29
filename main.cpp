@@ -45,9 +45,14 @@ int main()
     Matrix<3, 3, double> mat = {{1, 0, 0}, {0, 1, 0}, {0, 0, 1}};
     _Det<3>(mat, std::make_index_sequence<3>{}, std::make_index_sequence<3>{});
 
+
     
     // remove_index<2>(std::make_index_sequence<4>{});
-    // printIndexSequence();
+    using filtered = typename FilterValue<2, std::index_sequence<1, 2, 3>>::type;
+    
+    std::cout << GetSequenceElement<1, filtered>::idx  << std::endl;
+    printIdxSequence(filtered{});
+    printIdxSequence(std::index_sequence<1,2, 3>{});
     // Matrix<2, 3, double> m1{1, 2, 3, 4, 5, 6};
     // std::cout << m1 << std::endl;
     // std::cout << m1.Transpose() << std::endl;

@@ -30,13 +30,6 @@ concept IsPrimitive =
     std::is_convertible_v<T, int>;
 
 /**
- * Maybe construct
- */
-// We have a lot of convertible types; this function allows us to conditionally run a constructor
-// template <typename To, typename From>
-// inline constexpr To
-
-/**
  * Array, folding, pack expansion
  */
 
@@ -76,6 +69,79 @@ template <size_t M, size_t N>
 constexpr size_t get_col(size_t idx)
 {
     return idx % N;
+}
+
+// Index sequence manipulation
+
+// Merge index sequences
+template <typename A, typename B>
+struct MergeSequences_
+{
+};
+
+template <size_t... As, size_t... Bs>
+struct MergeSequences_<std::index_sequence<As...>, std::index_sequence<Bs...>>
+{
+    using type = std::index_sequence<As..., Bs...>;
+};
+
+template <typename A, typename B>
+using MergeSequences = typename MergeSequences_<A, B>::type;
+
+// Get the ith
+
+// Filter out a value from a sequence
+template <size_t Val, typename T>
+struct FilterValue
+{
+};
+
+template <size_t Val, size_t... Idxs>
+struct FilterValue<Val, std::index_sequence<Val, Idxs...>>
+{
+    using type = typename FilterValue<Val, std::index_sequence<Idxs...>>::type;
+};
+
+template <size_t Val, size_t A, size_t... Idxs>
+    requires(Val != A)
+struct FilterValue<Val, std::index_sequence<A, Idxs...>>
+{
+    using type = MergeSequences<std::index_sequence<A>, typename FilterValue<Val, std::index_sequence<Idxs...>>::type>;
+};
+
+template <size_t Val, size_t... Idxs>
+    requires(sizeof...(Idxs) == 0)
+struct FilterValue<Val, std::index_sequence<Idxs...>>
+{
+    using type = std::index_sequence<Idxs...>;
+};
+
+// Get a particular element from an index sequence
+
+template <size_t AtIndex, typename A>
+struct GetSequenceElement
+{
+};
+
+template <size_t AtIndex, size_t H, size_t... Rest>
+    requires(AtIndex != 0)
+struct GetSequenceElement<AtIndex, std::index_sequence<H, Rest...>>
+{
+    static constexpr size_t idx = GetSequenceElement<AtIndex - 1, std::index_sequence<Rest...>>::idx;
+};
+
+template <size_t H, size_t... Rest>
+struct GetSequenceElement<0, std::index_sequence<H, Rest...>>
+{
+    static constexpr size_t idx = H;
+};
+
+template <size_t... Indices>
+void printIdxSequence(std::index_sequence<Indices...>)
+{
+    // Use fold expression (C++17) to print the elements
+    ((std::cout << Indices << " "), ...);
+    std::cout << std::endl;
 }
 
 // Helpers concepts initializer casts and constructibility
