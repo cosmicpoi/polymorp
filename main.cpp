@@ -49,13 +49,18 @@ int main()
     // Matrix<2, 2, Meter> mat2{1, 2, 3, 4};
     // std::cout << Inv(mat2) << std::endl;
 
-    // Matrix<4, 4, Meter> mat3{1, 2, 3, 4, 5, 6, 7, 8, 0, 1, 1, 3, 6, 7, 8};
-    // std::cout << Inv(mat3) << std::endl;
+    Matrix<4, 4, Meter> mat3{1, 2, 3, 4, 5, 6, 7, 8, 0, 1, 1, 3, 6, 7, 8};
+    std::cout << Inv(mat3) << std::endl;
 
     // constexpr Matrix2<double> m2{};
     // std::cout << m2 << std::endl;
 
-    std::cout << Matrix<2, 3, Meter>::Zero().IsZero() << std::endl;
+    Meter v0{1};
+    std::cout << ((v0 = Kilometer{1.001}) == Meter{1001}) << std::endl;
+
+    // std::cout << v0 << std::endl;
+
+    // std::cout << Matrix<2, 3, Meter>::Zero().IsZero() << std::endl;
 
 
 

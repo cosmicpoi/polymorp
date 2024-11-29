@@ -558,9 +558,8 @@ inline Matrix<N, N, InvertType<Type>> Inv(const Matrix<N, N, Type> &mat)
         return ([&]<size_t... Idxs>(std::index_sequence<Idxs...>) constexpr
                 {
                     return (Matrix<N, N, InvertType<Type>>{
-                                (GetCofactor<get_row<N, N>(Idxs), get_col<N, N>(Idxs)>(mat) / d)... //
-                            })
-                        .Transpose(); //
+                                (GetCofactor<get_col<N, N>(Idxs), get_row<N, N>(Idxs)>(mat) / d)... //
+                            });
                 })(std::make_index_sequence<N * N>{});
     }
 }

@@ -60,9 +60,11 @@ struct RatioEqualityHelper
 
 // Used for equality
 template <typename Type, IsRatio Ratio, typename RHS_Type, IsRatio RHS_Ratio>
-    requires(RHS_Ratio::num > 0)
+    requires(RHS_Ratio::num > 0 && Ratio::num > 0 )
 constexpr bool typed_ratio_equality(Type value, RHS_Type rhs)
 {
+    // It might be tempting to add a check for if constexpr (std::is_same_v<Ratio, RHS_Ratio>), but
+    // we want to override the default eps tolerance even for plain types (since they may have converted from Kilo)
     using Helper = RatioEqualityHelper<Type, Ratio, RHS_Type, RHS_Ratio>;
     using CommonType = typename Helper::CommonType;
     return std::abs(static_cast<CommonType>(value * Helper::fac1) - static_cast<CommonType>(rhs * Helper::fac2)) < Helper::epsilon;
