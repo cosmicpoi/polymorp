@@ -380,24 +380,6 @@ concept UnitSameRatio = IsUnit<A> && IsUnit<B> && UnitSameRatio_<A, B>;
 template <typename From, typename To>
 concept UnitIsConvertible = IsUnit<From> && IsUnit<To> && UnitIsConvertible_<From, To>;
 
-// Get the resulant unit from multiplying two units. Left-side type always dominates.
-template <IsUnit A, IsUnit B>
-using UnitMult = decltype(std::declval<A>() * std::declval<B>());
-
-template <IsUnit A, IsUnit B>
-using UnitDivide = decltype(std::declval<A>() / std::declval<B>());
-
-// Get the resulting unit from adding two units of type A and B.
-// Note this doesn't actually "add units" (because what does that even mean),
-// it just computes the type of Unit A + Unit B.
-template <IsUnit A, IsUnit B>
-using UnitAdd = decltype(std::declval<A>() + std::declval<B>());
-
-// In principle this should be the same as add, but if we get zero values
-// weird things can happen
-template <IsUnit A, IsUnit B>
-using UnitSubtract = decltype(std::declval<A>() - std::declval<B>());
-
 // Check if unit U can actually be exponentiated by ratio Exp
 template <typename U, typename Exp>
 concept UnitExpableRatio = requires {

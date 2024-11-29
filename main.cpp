@@ -10,7 +10,6 @@
 // using iMeter = iAtomic<"meter">;
 // using Second = dAtomic<"second">;
 // using Kilometer = UnitMultRatio<Meter, std::ratio<1000>>;
-// // using m__s2 = UnitMult<Meter, UnitExpI<Second, -2>>;
 
 // using Complex = MakeUnitIdentifier<UnitAtomic<"meter">, UnitAtomic<"second">>;
 
@@ -33,7 +32,6 @@ using Second = dAtomic<"second">;
 using dUEmpty = EmptyUnit<double>;
 using dUKilo = UnitMultRatio<dUEmpty, std::ratio<1000>>;
 
-using M_S = UnitDivide<Meter, Second>;
 
 template <typename T>
 struct MyClass

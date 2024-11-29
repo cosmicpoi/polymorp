@@ -204,7 +204,7 @@ int main()
     static_assert(!UnitExpableRatio<Kilometer, std::ratio<1, 2>>);
 
     using Second = dAtomic<"second">;
-    using MeterPerSecond_2 = UnitMult<Meter, UnitExpI<Second, -2>>;
+    using MeterPerSecond_2 = MultiplyType<Meter, UnitExpI<Second, -2>>;
     static_assert((std::is_same_v<MeterPerSecond_2::uid, MakeUnitIdentifier<UnitBase<"meter", std::ratio<1>>, UnitBase<"second", std::ratio<-2>>>>));
     static_assert((std::is_same_v<MeterPerSecond_2::ratio, std::ratio<1>>));
 
@@ -980,10 +980,12 @@ int main()
 
     std::cout << "Running matrix multiplication tests" << std::endl;
     {
+        // Basic unit conversions
         assert((Matrix2<double>{{1, 0}, {0, 1}} * Matrix2<double>{{1, 0}, {0, -1}} == Matrix2<double>{{1, 0}, {0, -1}}));
         assert((Matrix2<Meter>{{1, 0}, {0, 1}} * Matrix2<Meter>{{1, 0}, {0, -1}} == Matrix2<Meter_2>{{1, 0}, {0, -1}}));
         assert((Matrix2<Meter>{{1, 0}, {0, 1}} * Matrix2<Kilometer>{{1, 0}, {0, -1}} == Matrix2<Meter_2>{{1000, 0}, {0, -1000}}));
 
+        // Matrices of various sizes
         assert((Matrix<2, 3, double>{{1, 0, 1}, {0, 1, 1}} * Matrix<3, 2, double>{{1, 0}, {0, 1}, {1, 1}} == Matrix<2, 2, double>{{2, 1}, {1, 2}}));
         assert((Matrix<3, 2, double>{{1, 0}, {0, 1}, {1, 1}} * Matrix<2, 3, double>{{1, 0, 1}, {0, 1, 1}} == Matrix<3, 3, double>{{1, 0, 1}, {0, 1, 1}, {1, 1, 2}}));
 
@@ -992,6 +994,15 @@ int main()
         assert((Matrix<2, 2, double>{{1, 2}, {3, 4}} * Matrix<2, 2, double>{{5, 6}, {7, 8}} == Matrix<2, 2, double>{{19, 22}, {43, 50}}));
         assert((Matrix<2, 3, double>{{1, 2, 3}, {4, 5, 6}} * Matrix<3, 3, double>{{0, 0, 0}, {0, 0, 0}, {0, 0, 0}} == Matrix<2, 3, double>{{0, 0, 0}, {0, 0, 0}}));
         assert((Matrix<2, 2, double>{{2, 3}, {4, 5}} * Matrix<2, 2, double>{{2, 3}, {4, 5}} == Matrix<2, 2, double>{{16, 21}, {28, 37}}));
+
+        // Converting from one uint to another
+        using Worldspace = dAtomic<"world">; 
+        using Screenspace = dAtomic<"screen">;
+        using Screen_per_World = DivideType<Screenspace, Worldspace>;
+        Matrix4<Worldspace> mat_ws = Matrix4<Worldspace>::Identity();
+        Matrix4<Screen_per_World> world_screen_convert = Matrix4<Screen_per_World>::Identity(); 
+        auto res = mat_ws * world_screen_convert;
+        assert(( std::is_same_v<decltype(res), Matrix4<Screenspace>> ));
     }
 
     std::cout << "Running compound assignment tests" << std::endl;
