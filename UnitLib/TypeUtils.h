@@ -88,37 +88,6 @@ struct MergeSequences_<std::index_sequence<As...>, std::index_sequence<Bs...>>
 template <typename A, typename B>
 using MergeSequences = typename MergeSequences_<A, B>::type;
 
-// Get the ith
-
-// Filter out a value from a sequence
-// template <size_t Val, typename T>
-// struct FilterValue_
-// {
-// };
-
-// template <size_t Val, size_t... Idxs>
-// struct FilterValue_<Val, std::index_sequence<Val, Idxs...>>
-// {
-//     using type = typename FilterValue_<Val, std::index_sequence<Idxs...>>::type;
-// };
-
-// template <size_t Val, size_t A, size_t... Idxs>
-//     requires(Val != A)
-// struct FilterValue_<Val, std::index_sequence<A, Idxs...>>
-// {
-//     using type = MergeSequences<std::index_sequence<A>, typename FilterValue_<Val, std::index_sequence<Idxs...>>::type>;
-// };
-
-// template <size_t Val, size_t... Idxs>
-//     requires(sizeof...(Idxs) == 0)
-// struct FilterValue_<Val, std::index_sequence<Idxs...>>
-// {
-//     using type = std::index_sequence<Idxs...>;
-// };
-
-// template <size_t Val, typename T>
-// using FilterValue = typename FilterValue_<Val, T>::type;
-
 // Remove the ith value of a sequence
 template <size_t Idx, typename A>
 struct RemoveAtIndex_
