@@ -43,25 +43,29 @@ concept UnitIsConvertible_ = requires {
  * Helpers for difficult ratio math
  */
 
+template <typename LHS_Type, IsRatio LHS_Ratio, typename RHS_Type, IsRatio RHS_Ratio>
+struct RatioEqualityHelper
+{
+    using CommonType = std::common_type_t<LHS_Type, RHS_Type>;
+
+    static constexpr intmax_t fac1 = LHS_Ratio::num * RHS_Ratio::den;
+    static constexpr intmax_t fac2 = RHS_Ratio::num * LHS_Ratio::den;
+    static constexpr intmax_t facMax = fac1 > fac2 ? fac1 : fac2;
+    static constexpr CommonType eps1 = std::numeric_limits<LHS_Type>::epsilon();
+    static constexpr CommonType eps2 = std::numeric_limits<RHS_Type>::epsilon();
+    static constexpr CommonType eps = eps1 > eps2 ? eps1 : eps2;
+
+    static constexpr CommonType epsilon = eps * facMax * EPS_TOLERANCE;
+};
+
 // Used for equality
 template <typename Type, IsRatio Ratio, typename RHS_Type, IsRatio RHS_Ratio>
     requires(RHS_Ratio::num > 0)
 constexpr bool typed_ratio_equality(Type value, RHS_Type rhs)
 {
-    using CommonType = std::common_type_t<Type, RHS_Type>;
-
-    constexpr auto fac1 = Ratio::num * RHS_Ratio::den;
-    constexpr auto fac2 = RHS_Ratio::num * Ratio::den;
-    constexpr auto facMax = fac1 > fac2 ? fac1 : fac2;
-    constexpr CommonType eps1 = std::numeric_limits<Type>::epsilon();
-    constexpr CommonType eps2 = std::numeric_limits<RHS_Type>::epsilon();
-    constexpr CommonType eps = eps1 > eps2 ? eps1 : eps2;
-
-    constexpr CommonType epsilon = eps * facMax * EPS_TOLERANCE;
-
-    CommonType val1 = (value * fac1);
-    CommonType val2 = (rhs * fac2);
-    return std::abs(val1 - val2) < epsilon;
+    using Helper = RatioEqualityHelper<Type, Ratio, RHS_Type, RHS_Ratio>;
+    using CommonType = typename Helper::CommonType;
+    return std::abs(static_cast<CommonType>(value * Helper::fac1) - static_cast<CommonType>(rhs * Helper::fac2)) < Helper::epsilon;
 }
 
 /**
