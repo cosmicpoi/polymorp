@@ -414,23 +414,31 @@ inline Matrix<M, P, MultiplyType<LHS_MatType, RHS_MatType>> operator*(const Matr
 // Determinant
 //--------------------------------------------------------------------------------
 
-/** Helper for Det */
-
-// N - the size of the square (N x N) matrix
-// Rows - the current set of rows
-// Cols - the current set of cols
-// IterSize - the size of the current iteration (starting from N going down to 2)
+/**
+ * @brief Helper for Determinant. Get the determinant of the matrix resulting from
+ * using `Rows` for the rows and `Cols` for the cols, i.e. after having eliminated
+ * `(N - sizeof(Rows))` rows/cols from the original matrix.
+ * N - the size of the square (N x N) matrix
+ * Rows - the current set of rows
+ * Cols - the current set of cols
+ * IterSize - the size of the current iteration (starting from N going down to 2)
+ */
 template <size_t IterSize, typename Type, size_t N, size_t... Rows, size_t... Cols>
     requires HasCrossProduct<Type, Type> &&          //
+             CanExp<IterSize, Type> &&               //
              (sizeof...(Rows) == sizeof...(Cols)) && //
              (sizeof...(Rows) == IterSize) &&        //
-             (IterSize <= N)
-constexpr inline Type _Det(Matrix<N, N, Type> &mat, std::index_sequence<Rows...> rows, std::index_sequence<Cols...> cols)
+             (IterSize <= N && IterSize >= 1)
+constexpr inline ExpType<IterSize, Type> _Det(const Matrix<N, N, Type> &mat, std::index_sequence<Rows...>, std::index_sequence<Cols...>)
 {
     using Rows_t = std::index_sequence<Rows...>;
     using Cols_t = std::index_sequence<Cols...>;
 
-    if constexpr (IterSize == 2)
+    if constexpr (IterSize == 1)
+    {
+        return mat[GetSequenceElement<0, Rows_t>::idx][GetSequenceElement<0, Cols_t>::idx];
+    }
+    else if constexpr (IterSize == 2)
     {
         constexpr size_t r0 = GetSequenceElement<0, Rows_t>::idx;
         constexpr size_t r1 = GetSequenceElement<1, Rows_t>::idx;
@@ -441,13 +449,12 @@ constexpr inline Type _Det(Matrix<N, N, Type> &mat, std::index_sequence<Rows...>
     else
     {
         return ([&]<size_t... I>(std::index_sequence<I...>) constexpr
-         {
-            return ((
-             (I % 2 == 0 ? 1 : -1)                                                             //
-                 * mat[GetSequenceElement<0, Rows_t>::idx][GetSequenceElement<I, Cols_t>::idx] //
-                 * _Det<2>(mat, RemoveAtIndex<0, Rows_t>{}, RemoveAtIndex<I, Cols_t>{})            //
-            ) + ...);
-         })(std::make_index_sequence<IterSize>{});
+                { return ((
+                              (I % 2 == 0 ? 1 : -1)                                                             //
+                              * mat[GetSequenceElement<0, Rows_t>::idx][GetSequenceElement<I, Cols_t>::idx]     //
+                              * _Det<IterSize - 1>(mat, RemoveAtIndex<0, Rows_t>{}, RemoveAtIndex<I, Cols_t>{}) //
+                              ) +
+                          ...); })(std::make_index_sequence<IterSize>{});
     }
 }
 
@@ -455,8 +462,68 @@ constexpr inline Type _Det(Matrix<N, N, Type> &mat, std::index_sequence<Rows...>
  * @brief Compute the determinant of a square matrix via laplace expansion
  */
 template <typename Type, size_t N>
-    requires HasCrossProduct<Type, Type>
-inline Type Det(Matrix<N, N, Type> &mat)
+    requires HasCrossProduct<Type, Type> && CanExp<N, Type>
+inline ExpType<N, Type> Det(const Matrix<N, N, Type> &mat)
 {
-    return Type{0};
+    return _Det<N>(mat, std::make_index_sequence<N>{}, std::make_index_sequence<N>{});
+}
+
+//--------------------------------------------------------------------------------
+// Inverse
+//--------------------------------------------------------------------------------
+template <size_t Row, size_t Col, typename Type, size_t N>
+    requires HasCrossProduct<Type, Type> && //
+             (Row <= N && Col <= N) &&      //
+             CanExp<N - 1, Type> &&         //
+             Negatable<Type>
+constexpr inline ExpType<N - 1, Type> GetCofactor(const Matrix<N, N, Type> &mat)
+{
+    if constexpr (N == 1)
+    {
+        return mat[0][0];
+    }
+    return (((Row + Col) % 2 == 0) ? 1 : -1) *                            //
+           _Det<N - 1>(mat,                                               //
+                       RemoveAtIndex<Row, std::make_index_sequence<N>>{}, //
+                       RemoveAtIndex<Col, std::make_index_sequence<N>>{});
+}
+
+/**
+ * @brief Compute the inverse of a matrix. If it is not invertbile, return
+ * a default-constructed empty matrix.
+ */
+
+template <typename Type, size_t N>
+    requires requires(ExpType<N - 1, Type> en1, ExpType<N, Type> en) {
+        requires HasCrossProduct<Type, Type>;
+        requires CanInvert<Type>;
+        requires CanExp<N, Type>;
+        requires Negatable<Type>;
+        // Inverse is computed as cofactor (exp n-1) / det (exp n)
+        requires CanDivide<ExpType<N - 1, Type>, ExpType<N, Type>>;
+        { en1 / en } -> std::constructible_from<InvertType<Type>>;
+        { ExpType<N, Type>{0} }; // For checking determinant
+    }
+inline Matrix<N, N, InvertType<Type>> Inv(const Matrix<N, N, Type> &mat)
+{
+    // return Matrix<N, N, InvertType<Type>>{};
+    ExpType<N, Type> d = Det(mat);
+    if (d == ExpType<N, Type>{0})
+    {
+        return Matrix<N, N, InvertType<Type>>{};
+    }
+    else if constexpr(N == 2)
+    {
+        return Matrix<N, N, InvertType<Type>>{mat[1][1] / d, (-1 * mat[0][1]) / d, (-1 * mat[1][0]) / d, mat[0][0] / d};
+    }
+    else
+    {
+        return ([&]<size_t... Idxs>(std::index_sequence<Idxs...>) constexpr
+         {
+             return (Matrix<N, N, InvertType<Type>>{
+                         (GetCofactor<get_row<N, N>(Idxs), get_col<N, N>(Idxs)>(mat) / d)... //
+                     })
+                 .Transpose(); //
+         })(std::make_index_sequence<N * N>{});
+    }
 }

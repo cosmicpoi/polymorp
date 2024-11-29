@@ -94,7 +94,8 @@ struct RemoveAtIndex_
 {
 };
 
-template <size_t Idx, size_t H, size_t... Rest> requires (Idx != 0)
+template <size_t Idx, size_t H, size_t... Rest>
+    requires(Idx != 0)
 struct RemoveAtIndex_<Idx, std::index_sequence<H, Rest...>>
 {
     using type = MergeSequences<std::index_sequence<H>, typename RemoveAtIndex_<Idx - 1, std::index_sequence<Rest...>>::type>;
@@ -243,14 +244,6 @@ using OpMultiplyType = decltype(std::declval<A>().operator*(std::declval<B>()));
 template <typename A, typename B>
 concept CanOpMultiply = requires(A a, B b) { { a.operator*(b) } -> std::same_as<OpMultiplyType<A, B>>; };
 
-// Binary operator operator*(a, b) version
-// template <typename A, typename B>
-//     requires requires(A a, B b) { { operator*(a, b) }; }
-// using BinOpMultiplyType = decltype(operator*(std::declval<A>(), std::declval<B>()));
-
-// template <typename A, typename B>
-// concept CanBinOpMultiply = requires(A a, B b) { { operator*(a, b) }; };
-
 /** Divide */
 template <typename, typename>
 struct DivideType_
@@ -341,6 +334,68 @@ using OpSubtractType = decltype(std::declval<A>().operator-(std::declval<B>()));
 
 template <typename A, typename B>
 concept CanOpSubtract = requires(A a, B b) { { a.operator-(b) } -> std::same_as<OpSubtractType<A, B>>; };
+
+template <size_t N, typename A>
+struct CanExp_
+{
+};
+
+template <typename A>
+struct CanExp_<1, A>
+{
+    static constexpr bool canExp = true;
+    using expType = A;
+};
+// Check if a type can be raised to the Nth power
+template <size_t N, typename A>
+    requires(N > 2)
+struct CanExp_<N, A>
+{
+    static constexpr bool canExp = CanMultiply<typename CanExp_<N - 1, A>::expType, A> && CanExp_<N - 1, A>::canExp;
+    using expType = MultiplyType<typename CanExp_<N - 1, A>::expType, A>;
+};
+
+template <typename A>
+    requires CanMultiply<A, A>
+struct CanExp_<2, A>
+{
+    static constexpr bool canExp = true;
+    using expType = MultiplyType<A, A>;
+};
+
+template <typename A>
+    requires(!CanMultiply<A, A>)
+struct CanExp_<2, A>
+{
+    static constexpr bool canExp = false;
+    using expType = UniversalFalse;
+};
+
+template <size_t N, typename A>
+concept CanExp = (N >= 1) && CanExp_<N, A>::canExp;
+
+template <size_t N, typename A>
+    requires(N >= 1) && CanExp<N, A>
+using ExpType = typename CanExp_<N, A>::expType;
+
+// Check if a type can be inverted
+template <typename A>
+concept CanInvert = requires(A a) {
+    requires CanDivide<A, A>;
+    requires CanDivide<DivideType<A, A>, A>;
+    { a / a } -> std::constructible_from<DivideType<A, A>>;
+    { (a / a) / a } -> std::constructible_from<DivideType<DivideType<A, A>, A>>;
+};
+
+template <typename A>
+using InvertType = DivideType<DivideType<A, A>, A>;
+
+// Check if the type is negatable (non-unary only for now)
+template <typename A>
+concept Negatable = requires(A a) {
+    { -1 * a } -> std::constructible_from<A>;
+    { 1 * a } -> std::constructible_from<A>;
+};
 
 // ------------------------------------------------------
 

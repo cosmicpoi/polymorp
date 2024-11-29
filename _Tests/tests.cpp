@@ -88,6 +88,16 @@ concept HasIsZero = requires(T t) {
     { t.IsZero() };
 };
 
+template <typename T>
+concept HasDet = requires(T a) {
+    { Det(a) } -> std::same_as<double>;
+};
+
+template <typename T>
+concept DetInvalid = !(requires(T a){
+    Det(a);
+});
+
 int main()
 {
     // ------------------------------------------------------------
@@ -1046,6 +1056,12 @@ int main()
     }
 
     std::cout << "Running determinant tests" << std::endl;
+    {
+        Matrix<3, 3, double> mat = {{1, 7, 3}, {-1, 2, 4}, {2, 2, 1}};
+        assert((Det(mat) == 39));
+        static_assert((HasDet<Matrix<3, 3, double>>));
+        static_assert((DetInvalid<Matrix<2, 3, double>>));
+    }
 
     return 0;
 }
