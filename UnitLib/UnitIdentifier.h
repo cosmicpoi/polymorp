@@ -20,23 +20,27 @@ using EmptyUid = UnitLeafVector<>;
 template <typename T>
 concept IsEmptyUid = std::is_same_v<T, EmptyUid>;
 
-
-/** Other aliases */
-template <UnitIdentifier V>
-using UIInvert = InvertUnitLeafVector<V>;
-
 /** Shorthand to make a UnitIdentifier */
 template<typename... T> 
 using MakeUnitIdentifier = ULGetUnique<UnitLeafVector<T...>>;
 
-/** Multiply two UnitIdentifiers */
+
+/** 
+ * Type transformers
+ */
+
+/** @brief Get reciprocal of a UnitIdentifier */
+template <UnitIdentifier V>
+using UIInvert = InvertUnitLeafVector<V>;
+
+/** @brief Multiply two UnitIdentifiers */
 template <UnitIdentifier A, UnitIdentifier B>
 using UIMult = ULGetUnique<ULConcat<A, B>>;
 
-/** Divide = compute A / B */
+/** @brief Divide two UnitIdentifiers */
 template <UnitIdentifier A, UnitIdentifier B>
 using UIDivide = ULGetUnique<ULConcat<A, UIInvert<B>>>;
 
-/** Exponentiate: compute UID^(some ratio) */
+/** @brief Exponentiate a UnitIdentifier, i.e. compute UID^(some ratio) */
 template <UnitIdentifier A, IsRatio Exp>
 using UIExp = ExpUnitLeafVector<A, Exp>;

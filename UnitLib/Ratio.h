@@ -30,7 +30,6 @@ concept RatioIsZero_ = requires {
 template <typename T>
 concept RatioIsZero = IsRatio<T> && RatioIsZero_<T>;
 
-
 /** Function to multiply out a ratio: Compute val * R */
 template <IsRatio R, typename T>
 T MultiplyByRatio(T val)
@@ -39,7 +38,7 @@ T MultiplyByRatio(T val)
     {
         return val;
     }
-    return (T)(val * ((T)R::num) / ((T)R::den));
+    return static_cast<T>(val * (R::num) / (R::den));
 }
 
 /** Function to divide out a ratio* Compute val / R */
@@ -50,15 +49,15 @@ OutType DivideByRatio(T val)
     {
         return val;
     }
-    
-    return static_cast<OutType>(val * ( static_cast<OutType>(R::den) / static_cast<OutType>(R::num)) );
+
+    return static_cast<OutType>(val * (static_cast<OutType>(R::den) / static_cast<OutType>(R::num)));
 };
 
 /** Convert ratio to double */
 template <IsRatio R>
 constexpr double RatioAsDouble()
 {
-    return ((double)R::num) / ((double)R::den);
+    return static_cast<double>(R::num) / static_cast<double>(R::den);
 }
 
 /**
@@ -82,7 +81,6 @@ constexpr intmax_t lcm(intmax_t a, intmax_t b)
 {
     return (a * b) / gcd(a, b);
 }
-
 
 template <IsRatio R1, IsRatio R2>
 struct CombineRatio

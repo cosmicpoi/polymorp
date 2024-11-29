@@ -96,7 +96,7 @@ concept HasDet = requires(T a) {
 };
 
 template <typename T>
-concept DetInvalid = !(requires(T a){
+concept DetInvalid = !(requires(T a) {
     Det(a);
 });
 
@@ -557,6 +557,7 @@ int main()
     // /** -- Run concept tests --  */
 
     // /** -- Run UnitMath tests --  */
+    std::cout << "Running UnitMath tests" << std::endl;
     // unit_sqrt
     {
         Meter_2 v{100};
@@ -564,6 +565,14 @@ int main()
     }
 
     // unit_pow
+
+    // abs
+    // Testing absolute value
+    {
+        Meter val{-5};
+        assert((unit_abs(val) == Meter{5}));
+        assert((unit_abs(Meter{5}) == Meter{5}));
+    }
 
     // ------------------------------------------------------------
     // Run Scalar tests
@@ -995,14 +1004,14 @@ int main()
         assert((Matrix<2, 3, double>{{1, 2, 3}, {4, 5, 6}} * Matrix<3, 3, double>{{0, 0, 0}, {0, 0, 0}, {0, 0, 0}} == Matrix<2, 3, double>{{0, 0, 0}, {0, 0, 0}}));
         assert((Matrix<2, 2, double>{{2, 3}, {4, 5}} * Matrix<2, 2, double>{{2, 3}, {4, 5}} == Matrix<2, 2, double>{{16, 21}, {28, 37}}));
 
-        // Converting from one uint to another
-        using Worldspace = dAtomic<"world">; 
+        // Converting from one unit to another
+        using Worldspace = dAtomic<"world">;
         using Screenspace = dAtomic<"screen">;
         using Screen_per_World = DivideType<Screenspace, Worldspace>;
         Matrix4<Worldspace> mat_ws = Matrix4<Worldspace>::Identity();
-        Matrix4<Screen_per_World> world_screen_convert = Matrix4<Screen_per_World>::Identity(); 
+        Matrix4<Screen_per_World> world_screen_convert = Matrix4<Screen_per_World>::Identity();
         auto res = mat_ws * world_screen_convert;
-        assert(( std::is_same_v<decltype(res), Matrix4<Screenspace>> ));
+        assert((std::is_same_v<decltype(res), Matrix4<Screenspace>>));
     }
 
     std::cout << "Running compound assignment tests" << std::endl;

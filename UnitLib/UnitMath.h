@@ -5,11 +5,24 @@
 #include "Ratio.h"
 #include "Scalar.h"
 
-// Compute sqrt, including on ratio (1000^2 -> 1000)
-// Will not compile if you try to compute sqrt of a ratio that would be irrational (e.g. 1000)
+/**
+ * Square root
+ */
+
+/** @brief HasSquareRoot - tells us if `unit_sqrt` and `SquareRootType` are well-defined for a type */
+template <typename T>
+concept HasSquareRoot = (IsUnit<T> && UnitExpableRatio<T, std::ratio<1, 2>>) || //
+                        (IsPrimitive<T>);
+
+/**
+ * @brief Generalized square root function for scalars (Units or plain types) .
+ * If it's a unit, first compute sqrt of the ratio. So, sqrt(km^2) -> km, i.e. sqrt(10^6) -> 10^3
+ * Otherwise, compute sqrt normally.
+ * Will not compile if you try to compute sqrt of a ratio that would be irrational (e.g. 1000)
+ */
 template <GeneralScalar U>
-    requires(IsUnit<U> && UnitExpableRatio<U, std::ratio<1, 2>>) || (!IsUnit<U>)
-inline ScalarExp<U, std::ratio<1, 2>> unit_sqrt(const U val)
+    requires HasSquareRoot<U>
+inline ScalarExp<U, std::ratio<1, 2>> unit_sqrt(const U &val)
 {
     if constexpr (IsUnit<U>)
     {
@@ -25,10 +38,7 @@ inline ScalarExp<U, std::ratio<1, 2>> unit_sqrt(const U val)
     }
 }
 
-template <typename T>
-concept HasSquareRoot = requires(T a) {
-    { unit_sqrt(a) };
-};
+// Helpers for `SquareRootType`
 
 template <typename>
 struct SquareRootType_
@@ -37,18 +47,29 @@ struct SquareRootType_
 };
 
 template <HasSquareRoot T>
-    requires GeneralScalar<T>
 struct SquareRootType_<T>
 {
     using type = ScalarExp<T, std::ratio<1, 2>>;
 };
 
+/**
+ * @brief SquareRootType<T> is the return type of `unit_sqrt(T val)`.
+ * Defaults to `UniversalFalse` if square root is not well-defined.
+ */
 template <typename T>
 using SquareRootType = typename SquareRootType_<T>::type;
 
-// Maintain ratio while computing pow
+/**
+ * Rational power
+ */
+
+// TODO implement HasPow/HasExp and PowType/ExpType
+
+/**
+ * @brief Compute `val` to the power of rational exponent `Exp`.
+ */
 template <IsRatio Exp, GeneralScalar U>
-inline ScalarExp<U, Exp> unit_pow(const U val)
+inline ScalarExp<U, Exp> unit_pow(const U &val)
 {
     if constexpr (IsUnit<U>)
     {
@@ -63,4 +84,17 @@ inline ScalarExp<U, Exp> unit_pow(const U val)
     {
         return std::pow(val, RatioAsDouble<Exp>());
     }
+}
+
+/**
+ * Absolute value
+ */
+template <typename Type>
+    requires requires(Type a) {
+        { a > Type{0} } -> std::convertible_to<bool>;
+        { -a } -> std::constructible_from<Type>;
+    }
+inline Type unit_abs(const Type &val)
+{
+    return (val > Type{0}) ? (val) : -val;
 }
