@@ -42,17 +42,18 @@ public:
 
 int main()
 {
-    Matrix<3, 3, double> mat = {{1, 0, 0}, {0, 1, 0}, {0, 0, 1}};
-    _Det<3>(mat, std::make_index_sequence<3>{}, std::make_index_sequence<3>{});
+    Matrix<3, 3, double> mat = {{1, 7, 3}, {-1, 2, 4}, {2, 2, 1}};
+    auto v = _Det<3>(mat, std::make_index_sequence<3>{}, std::make_index_sequence<3>{});
+    std::cout << v << std::endl;
 
-
+    using Removed = typename RemoveAtIndex_<2, std::make_index_sequence<5>>::type;
     
-    // remove_index<2>(std::make_index_sequence<4>{});
-    using filtered = typename FilterValue<2, std::index_sequence<1, 2, 3>>::type;
-    
-    std::cout << GetSequenceElement<1, filtered>::idx  << std::endl;
-    printIdxSequence(filtered{});
-    printIdxSequence(std::index_sequence<1,2, 3>{});
+    // // remove_index<2>(std::make_index_sequence<4>{});
+    // using filtered = typename FilterValue<2, std::index_sequence<1, 2, 3>>::type;
+    // j
+    // std::cout << get_sequence_element(1, filtered>::idx  << std::endl;
+    printIdxSequence(Removed{});
+    // printIdxSequence(std::index_sequence<1,2, 3>{});
     // Matrix<2, 3, double> m1{1, 2, 3, 4, 5, 6};
     // std::cout << m1 << std::endl;
     // std::cout << m1.Transpose() << std::endl;

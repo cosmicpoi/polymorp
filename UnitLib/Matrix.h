@@ -414,7 +414,6 @@ inline Matrix<M, P, MultiplyType<LHS_MatType, RHS_MatType>> operator*(const Matr
 // Determinant
 //--------------------------------------------------------------------------------
 
-
 /** Helper for Det */
 
 // N - the size of the square (N x N) matrix
@@ -426,22 +425,30 @@ template <size_t IterSize, typename Type, size_t N, size_t... Rows, size_t... Co
              (sizeof...(Rows) == sizeof...(Cols)) && //
              (sizeof...(Rows) == IterSize) &&        //
              (IterSize <= N)
-inline Type _Det(Matrix<N, N, Type> &mat, std::index_sequence<Rows...> rows, std::index_sequence<Cols...> cols)
+constexpr inline Type _Det(Matrix<N, N, Type> &mat, std::index_sequence<Rows...> rows, std::index_sequence<Cols...> cols)
 {
-    // if constexpr(IterSize == 2)
-    // {
-    //     std::get<0>(std::tuple<Rows...>({}));
-    // }
+    using Rows_t = std::index_sequence<Rows...>;
+    using Cols_t = std::index_sequence<Cols...>;
 
-    return 0;
-    // else
-    // {
-
-    // }
-    // auto get
-
-    //     return ([&]<size_t... Idxs>(std::index_sequence<Idxs...>) -> Type
-    //             { return })(rows, cols);
+    if constexpr (IterSize == 2)
+    {
+        constexpr size_t r0 = GetSequenceElement<0, Rows_t>::idx;
+        constexpr size_t r1 = GetSequenceElement<1, Rows_t>::idx;
+        constexpr size_t c0 = GetSequenceElement<0, Cols_t>::idx;
+        constexpr size_t c1 = GetSequenceElement<1, Cols_t>::idx;
+        return (mat[r0][c0] * mat[r1][c1]) - (mat[r0][c1] * mat[r1][c0]);
+    }
+    else
+    {
+        return ([&]<size_t... I>(std::index_sequence<I...>) constexpr
+         {
+            return ((
+             (I % 2 == 0 ? 1 : -1)                                                             //
+                 * mat[GetSequenceElement<0, Rows_t>::idx][GetSequenceElement<I, Cols_t>::idx] //
+                 * _Det<2>(mat, RemoveAtIndex<0, Rows_t>{}, RemoveAtIndex<I, Cols_t>{})            //
+            ) + ...);
+         })(std::make_index_sequence<IterSize>{});
+    }
 }
 
 /**

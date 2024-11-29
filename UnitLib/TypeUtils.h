@@ -91,30 +91,54 @@ using MergeSequences = typename MergeSequences_<A, B>::type;
 // Get the ith
 
 // Filter out a value from a sequence
-template <size_t Val, typename T>
-struct FilterValue
+// template <size_t Val, typename T>
+// struct FilterValue_
+// {
+// };
+
+// template <size_t Val, size_t... Idxs>
+// struct FilterValue_<Val, std::index_sequence<Val, Idxs...>>
+// {
+//     using type = typename FilterValue_<Val, std::index_sequence<Idxs...>>::type;
+// };
+
+// template <size_t Val, size_t A, size_t... Idxs>
+//     requires(Val != A)
+// struct FilterValue_<Val, std::index_sequence<A, Idxs...>>
+// {
+//     using type = MergeSequences<std::index_sequence<A>, typename FilterValue_<Val, std::index_sequence<Idxs...>>::type>;
+// };
+
+// template <size_t Val, size_t... Idxs>
+//     requires(sizeof...(Idxs) == 0)
+// struct FilterValue_<Val, std::index_sequence<Idxs...>>
+// {
+//     using type = std::index_sequence<Idxs...>;
+// };
+
+// template <size_t Val, typename T>
+// using FilterValue = typename FilterValue_<Val, T>::type;
+
+// Remove the ith value of a sequence
+template <size_t Idx, typename A>
+struct RemoveAtIndex_
 {
 };
 
-template <size_t Val, size_t... Idxs>
-struct FilterValue<Val, std::index_sequence<Val, Idxs...>>
+template <size_t Idx, size_t H, size_t... Rest> requires (Idx != 0)
+struct RemoveAtIndex_<Idx, std::index_sequence<H, Rest...>>
 {
-    using type = typename FilterValue<Val, std::index_sequence<Idxs...>>::type;
+    using type = MergeSequences<std::index_sequence<H>, typename RemoveAtIndex_<Idx - 1, std::index_sequence<Rest...>>::type>;
 };
 
-template <size_t Val, size_t A, size_t... Idxs>
-    requires(Val != A)
-struct FilterValue<Val, std::index_sequence<A, Idxs...>>
+template <size_t H, size_t... Rest>
+struct RemoveAtIndex_<0, std::index_sequence<H, Rest...>>
 {
-    using type = MergeSequences<std::index_sequence<A>, typename FilterValue<Val, std::index_sequence<Idxs...>>::type>;
+    using type = std::index_sequence<Rest...>;
 };
 
-template <size_t Val, size_t... Idxs>
-    requires(sizeof...(Idxs) == 0)
-struct FilterValue<Val, std::index_sequence<Idxs...>>
-{
-    using type = std::index_sequence<Idxs...>;
-};
+template <size_t Idx, typename A>
+using RemoveAtIndex = typename RemoveAtIndex_<Idx, A>::type;
 
 // Get a particular element from an index sequence
 
@@ -136,13 +160,13 @@ struct GetSequenceElement<0, std::index_sequence<H, Rest...>>
     static constexpr size_t idx = H;
 };
 
-template <size_t... Indices>
-void printIdxSequence(std::index_sequence<Indices...>)
-{
-    // Use fold expression (C++17) to print the elements
-    ((std::cout << Indices << " "), ...);
-    std::cout << std::endl;
-}
+// template <size_t... Indices>
+// void printIdxSequence(std::index_sequence<Indices...>)
+// {
+//     // Use fold expression (C++17) to print the elements
+//     ((std::cout << Indices << " "), ...);
+//     std::cout << std::endl;
+// }
 
 // Helpers concepts initializer casts and constructibility
 
