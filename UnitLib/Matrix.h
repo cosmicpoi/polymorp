@@ -74,9 +74,40 @@ public:
     }
 
     /**
-     * Static members
+     * Special accessors
      */
-    // static Matrix<
+    static inline constexpr MatrixMN<Type> Zero()
+    {
+        return MatrixMN<Type>{};
+    }
+
+    inline constexpr bool IsZero() const
+        requires(requires(Type a) { {a == 0} -> std::convertible_to<bool>; }) //
+                || (requires(Type a) { {a.IsZero() } -> std::convertible_to<bool>; })
+    {
+        return ([&]<size_t... Idxs>(std::index_sequence<Idxs...>) constexpr
+                {
+                    if constexpr(requires(Type a) { a.IsZero(); })
+                    {
+                        return ((_v[get_row<M, N>(Idxs)][get_col<M, N>(Idxs)].IsZero()) && ...); // Fold expression
+                    }
+                    else
+                    {
+                        return ((_v[get_row<M, N>(Idxs)][get_col<M, N>(Idxs)] == 0) && ...); // Fold expression
+                    } })(std::make_index_sequence<M * N>{});
+    }
+
+    static inline constexpr MatrixMN<Type> Identity()
+        requires(M == N)
+    {
+        return ([&]<size_t... Idxs>(std::index_sequence<Idxs...>) constexpr
+                {
+                    return MatrixMN<Type>{
+                        ((get_col<N, N>(Idxs) == get_row<N, N>(Idxs)) ? 1 : 0)...}; //
+                })(std::make_index_sequence<N * N>{});
+    }
+
+    // IsZero
 
     /**
      * Constructors
@@ -126,7 +157,7 @@ public:
         }
     }
 
-    /** @brief Construct from compatible array */
+    /** @brief Construct from compatible matrix */
     template <typename OtherType>
         requires(requires(Type a, OtherType b) { a = b; })
     inline constexpr Matrix(const MatrixMN<OtherType> &rhs)

@@ -203,7 +203,6 @@ public:
                     }
                     else
                     {
-                        static_assert(requires(Type a){ a==0; });
                         return ((_v[Is] == 0) && ...); // Fold expression
                     } })(std::make_index_sequence<N>{});
     }
