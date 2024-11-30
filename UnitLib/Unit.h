@@ -462,8 +462,6 @@ template <typename U, typename Exp>
 concept UnitExpableRatio = requires {
     requires IsUnit<U>;
     requires IsRatio<Exp>;
-    typename U::ratio;
-    requires IsRatio<typename U::ratio>;
     requires RatioCanExp<typename U::ratio, Exp>;
 };
 

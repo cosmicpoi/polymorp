@@ -122,7 +122,20 @@ Although the latter is debatably more readable, the issue is that concepts have 
 
 It is technically possible to use the former syntax for `Unit` member functions and then use the latter syntax for nonmember functions, but this divergence in syntax is not preferred. Consistency is better.
 
-There are some cases where it's unavoidable or whereusing it would make the code severely more readable. In those cases it's fine, but in general we should prefer to be explicit.
+There are some cases where it's unavoidable or whereusing it would make the code severely more readable. In those cases it's fine, but in general we should prefer to be explicit. One example is here:
+```
+template <IsUnit U, IsRatio Ratio>
+using UnitMultRatio = Unit<
+    typename U::type,
+    typename U::uid,
+    std::ratio_multiply<Ratio, typename U::ratio>>;
+```
+
+The reason is that this helper is used to define things like `Kilometer` from `Meter` and is used like this:
+```
+using Kilometer = UnitMultRatio<Meter, std::ratio<1000>>;
+```
+In this case, this is preferred over having users of the library type `UnitMultRatio<double, "meter", std::ratio<1>, std::ratio<1000>>`.
 
 Similar things apply for the `IsVector` and `IsMatrix` concepts.
 

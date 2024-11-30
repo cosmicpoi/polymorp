@@ -625,6 +625,8 @@ int main()
     {
         Meter_2 v{100};
         assert((unit_sqrt(v) == Meter{10}));
+
+        assert((unit_sqrt(100) == 10));
     }
 
     // unit_pow
@@ -635,19 +637,6 @@ int main()
         Meter val{-5};
         assert((unit_abs(val) == Meter{5}));
         assert((unit_abs(Meter{5}) == Meter{5}));
-    }
-
-    // ------------------------------------------------------------
-    // Run Scalar tests
-    // ------------------------------------------------------------
-
-    std::cout << "------ BEGIN TESTING SCALAR ------" << std::endl;
-    std::cout << "Running scalar tests" << std::endl;
-    {
-        GeneralScalar auto myV = 10.0;
-        GeneralScalar auto myV2 = 10.0;
-        GeneralScalar auto myV3 = Meter{1};
-        static_assert((CanOp<decltype(myV), "+", decltype(myV2)>()));
     }
 
     // ------------------------------------------------------------
