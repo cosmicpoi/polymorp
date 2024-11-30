@@ -98,12 +98,15 @@ public:
     }
 
     static inline constexpr MatrixMN<Type> Identity()
-        requires(M == N)
+        requires requires(Type a) {
+            Type{1};
+            Type{0};
+        } && (M == N)
     {
         return ([&]<size_t... Idxs>(std::index_sequence<Idxs...>) constexpr
                 {
                     return MatrixMN<Type>{
-                        ((get_col<N, N>(Idxs) == get_row<N, N>(Idxs)) ? 1 : 0)...}; //
+                        ((get_col<N, N>(Idxs) == get_row<N, N>(Idxs)) ? Type{1} : Type{0})...}; //
                 })(std::make_index_sequence<N * N>{});
     }
 
@@ -157,8 +160,8 @@ public:
         }
     }
 
-    /** 
-     * @brief Construct from compatible matrix 
+    /**
+     * @brief Construct from compatible matrix
      * Note: need to check !is_same_v to avoid overriding copy constructor
      */
     template <typename OtherType>

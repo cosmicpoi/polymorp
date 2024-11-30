@@ -96,6 +96,12 @@ concept HasDet = IsMatrix<T> && requires(T a) {
     { Det(a) };
 };
 
+/** @brief Helper concept to check if identity is defined for a matrix */
+template <typename T>
+concept HasIdentity = IsMatrix<T> && requires(T a) {
+    { T::Identity() };
+};
+
 int main()
 {
     // ------------------------------------------------------------
@@ -1055,7 +1061,7 @@ int main()
         assert((m5 == Matrix<2, 2, double>{{16, 21}, {28, 37}}));
     }
 
-    // // Division assignment
+    // Division assignment
     {
         Matrix2<double> m1{0, 1, 2, 3};
         m1 /= 2;
@@ -1074,8 +1080,25 @@ int main()
     }
 
     std::cout << "Running zero and identity tests" << std::endl;
+    // Zero tests
     {
+        assert((Matrix<2, 3, double>::Zero().IsZero()));
+        assert((Matrix<2, 3, double>{}.IsZero()));
+        assert((HasIsZero<Matrix<2, 3, Meter>>));
+        assert((!HasIsZero<Matrix<2, 3, std::string>>));
+        assert((Matrix3<double>{{1, 2, 3}, {4, 5, 6}, {7, 8, 9}} * Matrix3<double>::Zero() == Matrix3<double>::Zero()));
+    }
+    // Identity tests
+    {
+        struct MyType
+        {
+        };
+        assert((HasIdentity<Matrix<3, 3, double>>));
+        assert((HasIdentity<Matrix<3, 3, std::string>>));
+        assert((!HasIdentity<Matrix<3, 3, MyType>>));
+        assert((!HasIdentity<Matrix<2, 3, double>>));
 
+        assert((Matrix3<double>{{1, 2, 3}, {4, 5, 6}, {7, 8, 9}} * Matrix3<double>::Identity() == Matrix3<double>{{1, 2, 3}, {4, 5, 6}, {7, 8, 9}}));
     }
 
     std::cout << "Running determinant tests" << std::endl;
@@ -1133,9 +1156,8 @@ int main()
         assert((Det(Matrix<3, 3, double>{{6, 0, 0}, {7, 5, 0}, {8, 9, 4}}) == 120));
     }
 
-    std::cout << "Running inversion tests" << std::endl; 
+    std::cout << "Running inversion tests" << std::endl;
     {
-
     }
 
     return 0;
