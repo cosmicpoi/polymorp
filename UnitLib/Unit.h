@@ -31,14 +31,6 @@ concept UnitSameRatio_ = requires {
     requires std::is_same_v<typename A::ratio, typename B::ratio>;
 };
 
-template <typename From, typename To>
-concept UnitIsConvertible_ = requires {
-    requires UnitLike<From>;
-    requires UnitLike<To>;
-    requires SameUid_<From, To>;
-    requires std::is_convertible_v<typename From::type, typename To::type>;
-};
-
 /**
  * Helpers for difficult ratio math
  */
@@ -272,17 +264,17 @@ public:
      */
 
     // Helper types
-    template <UnitLike RHS>
-    using UnitMultBy_ = Unit<
-        std::common_type_t<Type, typename RHS::type>,
-        UIMult<UID, typename RHS::uid>,
-        std::ratio_multiply<Ratio, typename RHS::ratio>>;
+    template <typename RHS_Type, UnitIdentifier RHS_UID, IsRatio RHS_Ratio>
+    using MultiplyThisUnitBy_ = Unit<
+        std::common_type_t<Type, RHS_Type>,
+        UIMult<UID, RHS_UID>,
+        std::ratio_multiply<Ratio, RHS_Ratio>>;
 
-    template <UnitLike RHS>
-    using UnitDivBy_ = Unit<
-        std::common_type_t<Type, typename RHS::type>,
-        UIDivide<UID, typename RHS::uid>,
-        std::ratio_divide<Ratio, typename RHS::ratio>>;
+    template <typename RHS_Type, UnitIdentifier RHS_UID, IsRatio RHS_Ratio>
+    using DivideThisUnitBy__ = Unit<
+        std::common_type_t<Type, RHS_Type>,
+        UIDivide<UID, RHS_UID>,
+        std::ratio_divide<Ratio, RHS_Ratio>>;
 
     template <typename RHS>
     using UseWithScalar_ = Unit<std::common_type_t<Type, RHS>, UID, Ratio>;
@@ -290,9 +282,9 @@ public:
     /** @brief Multiply with another unit. Follow default language promotion rules */
     template <typename RHS_Type, UnitIdentifier RHS_UID, IsRatio RHS_Ratio>
         requires CanMultiply<Type, RHS_Type>
-    inline UnitMultBy_<Unit<RHS_Type, RHS_UID, RHS_Ratio>> operator*(const Unit<RHS_Type, RHS_UID, RHS_Ratio> &rhs) const
+    inline MultiplyThisUnitBy_<RHS_Type, RHS_UID, RHS_Ratio> operator*(const Unit<RHS_Type, RHS_UID, RHS_Ratio> &rhs) const
     {
-        return UnitMultBy_<Unit<RHS_Type, RHS_UID, RHS_Ratio>>{value * rhs.GetValue()};
+        return MultiplyThisUnitBy_<RHS_Type, RHS_UID, RHS_Ratio>{value * rhs.GetValue()};
     }
 
     /** @brief Multiply with unitless scalar. */
@@ -306,9 +298,9 @@ public:
     /** @brief Divide by another unit. Follow default language promotion rules */
     template <typename RHS_Type, UnitIdentifier RHS_UID, IsRatio RHS_Ratio>
         requires CanDivide<Type, RHS_Type>
-    inline UnitDivBy_<Unit<RHS_Type, RHS_UID, RHS_Ratio>> operator/(const Unit<RHS_Type, RHS_UID, RHS_Ratio> &rhs) const
+    inline DivideThisUnitBy__<RHS_Type, RHS_UID, RHS_Ratio> operator/(const Unit<RHS_Type, RHS_UID, RHS_Ratio> &rhs) const
     {
-        return UnitDivBy_<Unit<RHS_Type, RHS_UID, RHS_Ratio>>{value / rhs.GetValue()};
+        return DivideThisUnitBy__<RHS_Type, RHS_UID, RHS_Ratio>{value / rhs.GetValue()};
     }
 
     /** @brief Divide by unitless scalar. */
@@ -482,9 +474,6 @@ concept SameUid = IsUnit<A> && IsUnit<B> && SameUid_<A, B>;
 
 template <typename A, typename B>
 concept UnitSameRatio = IsUnit<A> && IsUnit<B> && UnitSameRatio_<A, B>;
-
-template <typename From, typename To>
-concept UnitIsConvertible = IsUnit<From> && IsUnit<To> && UnitIsConvertible_<From, To>;
 
 // Check if unit U can actually be exponentiated by ratio Exp
 template <typename U, typename Exp>
