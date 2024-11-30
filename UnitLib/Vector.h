@@ -137,17 +137,17 @@ public:
         return _v[index];
     }
 
-    /** Default constructors */
+    /**
+     * Constructors
+     */
 
+    /** @brief Default constructor - use default constructor of underlying type */
     explicit inline Vector()
         : _v(create_default_array<Type, N>())
     {
     }
 
-    /**
-     *  @brief Construct from convertible/constructible values
-     */
-
+    /** @brief Construct list of from convertible/constructible values */
     template <typename... Args>
         requires(
             (sizeof...(Args) <= N) &&
@@ -157,12 +157,43 @@ public:
     {
     }
 
+    /** @brief Construct from list of assignable values */
+    template <typename... Args>
+        requires(
+            (sizeof...(Args) <= N) &&
+            (!ConvertibleOrConstructible<Type, Args...>) &&
+            AssignableTo<Type, Args...>)
+    inline Vector(const Args &...initList)
+    {
+        ([&]<size_t... Is>(std::index_sequence<Is...>) constexpr
+         {
+             ((_v[Is] = initList), ...); //
+         })(std::make_index_sequence<N>{});
+    }
+
+    /**
+     * @brief Construct from vector of convertible/constructible type
+     * Note: need to check !is_same_v to avoid overriding copy constructor
+     */
+    template <typename OtherType>
+        requires ConvertibleOrConstructible<Type, OtherType> &&
+                 (!std::is_same_v<Type, OtherType>)
+    explicit inline Vector(const VectorN<OtherType> &other)
+    {
+        ([&]<size_t... Is>(std::index_sequence<Is...>) constexpr
+         {
+             ((_v[Is] = ConvertOrConstruct<Type, OtherType>(other[Is])), ...); //
+         })(std::make_index_sequence<N>{});
+    }
+
     /**
      * @brief Construct from vector of assignable type
      * Note: need to check !is_same_v to avoid overriding copy constructor
      */
     template <typename OtherType>
-        requires AssignableTo<Type, OtherType> && (!std::is_same_v<Type, OtherType>)
+        requires((!ConvertibleOrConstructible<Type, OtherType>) &&
+                 AssignableTo<Type, OtherType> &&
+                 (!std::is_same_v<Type, OtherType>))
     explicit inline Vector(const VectorN<OtherType> &other)
     {
         ([&]<size_t... Is>(std::index_sequence<Is...>) constexpr
@@ -171,12 +202,26 @@ public:
          })(std::make_index_sequence<N>{});
     }
 
-    /** @brief Construct from rvalue of convertible type */
+    /** @brief Construct from rvalue of convertible/constructible type */
     template <typename OtherType>
-        requires AssignableTo<Type, OtherType> && (!std::is_same_v<Type, OtherType>)
+        requires ConvertibleOrConstructible<Type, OtherType> &&
+                 (!std::is_same_v<Type, OtherType>)
     explicit inline Vector(const VectorN<OtherType> &&other) : Vector(other)
     {
     }
+
+    /** @brief Construct from rvalue of assignable type */
+    template <typename OtherType>
+        requires((!ConvertibleOrConstructible<Type, OtherType>) &&
+                 AssignableTo<Type, OtherType> &&
+                 (!std::is_same_v<Type, OtherType>))
+    explicit inline Vector(const VectorN<OtherType> &&other) : Vector(other)
+    {
+    }
+
+    /**
+     * Assignment
+     */
 
     /** @brief Assign between compatible types */
     template <typename OtherType>

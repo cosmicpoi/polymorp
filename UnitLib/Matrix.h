@@ -157,9 +157,12 @@ public:
         }
     }
 
-    /** @brief Construct from compatible matrix */
+    /** 
+     * @brief Construct from compatible matrix 
+     * Note: need to check !is_same_v to avoid overriding copy constructor
+     */
     template <typename OtherType>
-        requires(requires(Type a, OtherType b) { a = b; })
+        requires AssignableTo<Type, OtherType> && (!std::is_same_v<Type, OtherType>)
     inline constexpr Matrix(const MatrixMN<OtherType> &rhs)
     {
         ([&]<size_t... Idxs>(std::index_sequence<Idxs...>) constexpr
@@ -556,10 +559,8 @@ inline Matrix<N, N, InvertType<Type>> Inv(const Matrix<N, N, Type> &mat)
     else
     {
         return ([&]<size_t... Idxs>(std::index_sequence<Idxs...>) constexpr
-                {
-                    return (Matrix<N, N, InvertType<Type>>{
-                                (GetCofactor<get_col<N, N>(Idxs), get_row<N, N>(Idxs)>(mat) / d)... //
-                            });
-                })(std::make_index_sequence<N * N>{});
+                { return (Matrix<N, N, InvertType<Type>>{
+                      (GetCofactor<get_col<N, N>(Idxs), get_row<N, N>(Idxs)>(mat) / d)... //
+                  }); })(std::make_index_sequence<N * N>{});
     }
 }
