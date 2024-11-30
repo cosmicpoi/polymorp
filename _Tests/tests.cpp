@@ -723,8 +723,11 @@ int main()
         assert(!dVec.IsZero());
         assert((Vector3<double>{}).IsZero());
 
-        static_assert((!HasIsZero<Vector2<std::string>>));
+        struct MyType{};
+        // Weirdly enough, since `std::string{0}` is well-defined, IsZero is OK
+        static_assert((HasIsZero<Vector2<std::string>>));
         static_assert((HasIsZero<Vector2<double>>));
+        static_assert((!HasIsZero<Vector2<MyType>>));
     };
     std::cout << "Running arithmetic tests" << std::endl;
     // Componentwise Addition
@@ -1100,8 +1103,11 @@ int main()
     {
         assert((Matrix<2, 3, double>::Zero().IsZero()));
         assert((Matrix<2, 3, double>{}.IsZero()));
+
+        struct MyType{};
         assert((HasIsZero<Matrix<2, 3, Meter>>));
-        assert((!HasIsZero<Matrix<2, 3, std::string>>));
+        assert((HasIsZero<Matrix<2, 3, std::string>>));
+        assert((!HasIsZero<Matrix<2, 3, MyType>>));
         assert((Matrix3<double>{{1, 2, 3}, {4, 5, 6}, {7, 8, 9}} * Matrix3<double>::Zero() == Matrix3<double>::Zero()));
     }
     // Identity tests

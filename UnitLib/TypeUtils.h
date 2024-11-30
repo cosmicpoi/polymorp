@@ -18,18 +18,6 @@ template <typename T>
 using ExtractParameterPack = typename ExtractParameterPack_<T>::type;
 
 /**
- * Check if a type is primitive
- */
-template <typename T>
-concept IsPrimitive =
-    std::is_floating_point_v<T> ||
-    std::is_integral_v<T> ||
-    std::is_same_v<T, void> ||
-    std::is_convertible_v<T, float> ||
-    std::is_convertible_v<T, double> ||
-    std::is_convertible_v<T, int>;
-
-/**
  * Array, folding, pack expansion
  */
 

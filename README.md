@@ -32,8 +32,8 @@ The design goals and implementation of the four basic types are described below.
 ## Some Keywords
 - **Unit** - referring specifically to any instance of the Unit class
 - **EmptyUnit** - referring to the unitless Unit class representing a dimensionless constant
-- **plain type** - a non-unit value
-- **scalar** - any non-vector value (units)
+- **plain type** - a non-unit scalar, such as `double`, `int`, etc. However, user-defined types that follow the correct arithmetic properties should also be useable as plain scalars
+- **scalar** - any non-vector type (unit or non-unit)
   - **plain scalar** - a non-vector that's a plain type
   - **unit scalar** - a non-vector of type unit
 - **GeneralScalar** - a specific `concept` that matches both plain arithmetic types (i.e. `std::is_arithmetic`) and Units
@@ -51,6 +51,7 @@ Kilo - empty unit with ratio 1000
 In addition to the general goals of units as listed above, we also have the following design pillars:
 
 - Separability of `Unit`, `Vector`, and `Matrix`
+- Follow built-in language rules; e.g. `Unit<int...> + Unit<double...>` resolves to `Unit<std::common_type_t<int, double>>`, rather than coercing to one type or the other
 - Full interoperability between primary types of scalars, Unit, Vector, and Matrix in "mathematician's expected" ways, using natural syntax
   - e.g. `Mat4 * Vec4 = Vec4`
 - Zero overhead in both space and performance relative to primitive types
@@ -83,8 +84,19 @@ One instance of a situation where these principles help to guide our design is i
 
 Another example of design principles at play: We choose to define the typical `NormSq()` and `Norm()` functions as non-members. The reason is that `Norm()` needs to use square root, and we need to provide a generalized square root that's compatible with units (so that we can support `sqrt(m^1) -> m^1/2`). If `Norm()` was a member of `Vector`, then `Vector` would need to be aware of the details of `Unit`, which goes against our philosophy.
 
+# Design in-depth
+Here we dive more specifically into some of our design philosophies, in addition to ones not mentioned above, and how they are implemented
 
-# Other random notes
+**Follow built-in language patterns**
+- Use default constructors instead of zero constructors
+- Use natural common types instead of type coercion.
+  - But, don't use `std::common_type`, since it only is well-defined for builtin types. Instead, prefer patterns like `decltype(a * b)`
+
+**Plain scalars** - We should avoid defining plain scalars only in terms of built-in C++ types like `double` and `int`. Users should be able to provide their own type wrappers that are compatible witht he unit system. Therefore, using checks like `std::is_arithmetic`, which uses builtin types under the hood, is insufficient.
+
+Instead, we should define our own concepts checking that types have the necessary properties, such as addition and subtraction.
+
+**Don't over-specialize.** Don't assume, for instance, that scalars must be addable, dividable, and multipliable in order to be valid units; or don't assume that matrices can only be comprised of types that have a well-defined zero value. Instead, allow for wrappers (`Unit` or `Vector`/`Matrix` containers) to define partial functionality based on what the underlying types support. For instance, `Vector<std::string>::IsZero()` is not well-defined, but `Vector<int>::IsZero()` is.
 
 **Prefer parameter packs to `std::initializer_list` when possible**
 - Why? Because one of our primary aims is to have total equivalency between Empty Units and floats. With `initializer_list`, we can't do this (since it enforces homogeneous typing):

@@ -4,14 +4,19 @@
 #include "Unit.h"
 #include "Ratio.h"
 
-/** 
- * Concepts for matching scalars
+/**
+ * Concepts for plain scalars and 
  */
 
 template <typename T>
 concept PlainScalar = !IsUnit<T> && std::is_arithmetic_v<T>;
+
 template <typename T>
 concept GeneralScalar = IsUnit<T> || PlainScalar<T>; //
+
+/**
+ * ScalarExp type helpers
+ */
 
 
 template <GeneralScalar T, IsRatio Exp>
@@ -36,7 +41,6 @@ struct ScalarExp_<T, Exp>
 template <GeneralScalar T, IsRatio Exp>
 using ScalarExp = typename ScalarExp_<T, Exp>::type;
 
-
 /**
  * Square root
  */
@@ -44,7 +48,7 @@ using ScalarExp = typename ScalarExp_<T, Exp>::type;
 /** @brief HasSquareRoot - tells us if `unit_sqrt` and `SquareRootType` are well-defined for a type */
 template <typename T>
 concept HasSquareRoot = (IsUnit<T> && UnitExpableRatio<T, std::ratio<1, 2>>) || //
-                        (IsPrimitive<T>);
+                        (PlainScalar<T>);
 
 /**
  * @brief Generalized square root function for scalars (Units or plain types) .

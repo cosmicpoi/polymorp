@@ -252,7 +252,7 @@ public:
         std::ratio_divide<Ratio, RHS_Ratio>>;
 
     template <typename RHS>
-    using UseWithScalar_ = Unit<std::common_type_t<Type, RHS>, UID, Ratio>;
+    using UseWithPlaintype_ = Unit<std::common_type_t<Type, RHS>, UID, Ratio>;
 
     /** @brief Multiply with another unit. Follow default language promotion rules */
     template <typename RHS_Type, UnitIdentifier RHS_UID, IsRatio RHS_Ratio>
@@ -265,9 +265,9 @@ public:
     /** @brief Multiply with unitless scalar. */
     template <std::convertible_to<Type> RHS>
         requires CanMultiply<Type, RHS>
-    inline UseWithScalar_<RHS> operator*(const RHS &rhs) const
+    inline UseWithPlaintype_<RHS> operator*(const RHS &rhs) const
     {
-        return UseWithScalar_<RHS>{value * rhs};
+        return UseWithPlaintype_<RHS>{value * rhs};
     }
 
     /** @brief Divide by another unit. Follow default language promotion rules */
@@ -281,9 +281,9 @@ public:
     /** @brief Divide by unitless scalar. */
     template <std::convertible_to<Type> RHS>
         requires CanDivide<Type, RHS>
-    inline UseWithScalar_<RHS> operator/(const RHS &rhs) const
+    inline UseWithPlaintype_<RHS> operator/(const RHS &rhs) const
     {
-        return UseWithScalar_<RHS>{value / rhs};
+        return UseWithPlaintype_<RHS>{value / rhs};
     }
 
     /**
@@ -325,19 +325,19 @@ public:
     /** @brief Add with a unitless scalar, if we are empty */
     template <std::convertible_to<Type> RHS>
         requires CanAdd<Type, RHS> && IsEmptyUid<UID>
-    inline UseWithScalar_<RHS> operator+(const RHS &rhs) const
+    inline UseWithPlaintype_<RHS> operator+(const RHS &rhs) const
     {
         // TODO fix with ratios
-        return UseWithScalar_<RHS>{
+        return UseWithPlaintype_<RHS>{
             ratio_value_add<Type, Ratio, RHS, std::ratio<1>>(value, rhs)};
     }
 
     /** @brief Subtract with a unitless scalar, if we are empty */
     template <std::convertible_to<Type> RHS>
         requires CanSubtract<Type, RHS> && IsEmptyUid<UID>
-    inline UseWithScalar_<RHS> operator-(const RHS &rhs) const
+    inline UseWithPlaintype_<RHS> operator-(const RHS &rhs) const
     {
-        return UseWithScalar_<RHS>{
+        return UseWithPlaintype_<RHS>{
             ratio_value_add<Type, Ratio, RHS, std::ratio<1>>(value, -rhs)};
     }
 

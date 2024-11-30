@@ -237,7 +237,7 @@ public:
 
     /** Check is zero */
     inline bool IsZero() const
-        requires(requires(Type a) { {a == 0} -> std::convertible_to<bool>; }) //
+        requires(requires(Type a) { {a == Type{0}} -> std::convertible_to<bool>; }) //
                 || (requires(Type a) { {a.IsZero() } -> std::convertible_to<bool>; })
     {
         return ([&]<size_t... Is>(std::index_sequence<Is...>) constexpr
