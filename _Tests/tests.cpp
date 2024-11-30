@@ -309,7 +309,7 @@ int main()
         assert((!CanOp<typename Meter::type, "=", Meter>()));
     }
 
-    // Conversion between empty units and plain scalars (right side only)
+    // Assignment between empty units and plain scalars (right side)
     {
         dUEmpty val{1.2};
         assert((val = 100.7) == dUEmpty{100.7});
@@ -321,6 +321,12 @@ int main()
 
         assert((CanOp<EmptyUnit<double>, "==", float>()));
         assert((CanOp<int, "==", EmptyUnit<float>>()));
+    }
+    // Left-side assignment with plain scalars for empty units
+    {
+        double x = dUEmpty{1.0};
+        assert((x == 1.0));
+        assert((x = dUKilo{1.0}) == 1000);
     }
 
     /** -- Run arithmetic tests --  */
@@ -512,6 +518,49 @@ int main()
         assert((CanOp<Meter, "/=", dUKilo>()));
         assert((!CanOp<Meter, "/=", Meter>()));
         assert((!CanOp<Meter, "/=", Second>()));
+    }
+
+    // Left-side compound assignment with empty units and plain types
+    std::cout << "Running plaintype/EmptyUnit compound assignment tests" << std::endl;
+    // Multiplication assignment
+    {
+        double x = 1.0;
+        x *= 2.0;
+        assert(x == 2.0);
+        assert((x *= dUKilo{0.001}) == 2.0);
+
+        assert((CanOp<double, "*=", dUEmpty>()));
+        assert((CanOp<double, "*=", dUKilo>()));
+    }
+    // Division assignment
+    {
+        double x = 1.0;
+        x /= 2.0;
+        assert(x == 0.5);
+        assert((x /= dUKilo{0.001}) == 0.5);
+
+        assert((CanOp<double, "/=", dUEmpty>()));
+        assert((CanOp<double, "/=", dUKilo>()));
+    }
+    // Addition assignment
+    {
+        double x = 1.0;
+        x += 2.0;
+        assert(x == 3.0);
+        assert((x += dUKilo{0.997}) == 1000);
+
+        assert((CanOp<double, "+=", dUEmpty>()));
+        assert((CanOp<double, "+=", dUKilo>()));
+    }
+    // Subtraction assignment
+    {
+        double x = 1.0;
+        x -= 2.0;
+        assert(x == -1.0);
+        assert((x -= dUKilo{0.999}) == -1000);
+
+        assert((CanOp<double, "-=", dUEmpty>()));
+        assert((CanOp<double, "-=", dUKilo>()));
     }
 
     // /** -- Run comparison tests --  */
@@ -723,7 +772,9 @@ int main()
         assert(!dVec.IsZero());
         assert((Vector3<double>{}).IsZero());
 
-        struct MyType{};
+        struct MyType
+        {
+        };
         // Weirdly enough, since `std::string{0}` is well-defined, IsZero is OK
         static_assert((HasIsZero<Vector2<std::string>>));
         static_assert((HasIsZero<Vector2<double>>));
@@ -852,7 +903,6 @@ int main()
         Vector2<Meter> v2{1, 2};
         assert(((v2 /= Vector2<dUKilo>{1, 2}) == Vector2<Meter>{0.001, 0.001}));
     }
-
     std::cout << "Running norm tests" << std::endl;
     // NormSquared
     {
@@ -1104,7 +1154,9 @@ int main()
         assert((Matrix<2, 3, double>::Zero().IsZero()));
         assert((Matrix<2, 3, double>{}.IsZero()));
 
-        struct MyType{};
+        struct MyType
+        {
+        };
         assert((HasIsZero<Matrix<2, 3, Meter>>));
         assert((HasIsZero<Matrix<2, 3, std::string>>));
         assert((!HasIsZero<Matrix<2, 3, MyType>>));

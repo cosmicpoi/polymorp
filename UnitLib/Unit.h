@@ -327,7 +327,6 @@ public:
         requires CanAdd<Type, RHS> && IsEmptyUid<UID>
     inline UseWithPlaintype_<RHS> operator+(const RHS &rhs) const
     {
-        // TODO fix with ratios
         return UseWithPlaintype_<RHS>{
             ratio_value_add<Type, Ratio, RHS, std::ratio<1>>(value, rhs)};
     }
@@ -348,8 +347,10 @@ public:
     }
 
     /**
-     * Proxy compute-and-assign operators: +=, -=, *=, /=
+     * Proxy compound assignment operators: +=, -=, *=, /=
      */
+
+    /** @brief Multiplication assignment */
     template <typename T>
         requires requires(ThisType a, T b) { a = a * b; }
     inline ThisType &operator*=(const T &rhs)
@@ -358,6 +359,7 @@ public:
         return *this;
     }
 
+    /** @brief Division assignment */
     template <typename T>
         requires requires(ThisType a, T b) { a = a / b; }
     inline ThisType &operator/=(const T &rhs)
@@ -366,6 +368,7 @@ public:
         return *this;
     }
 
+    /** @brief Addition assignment */
     template <typename T>
         requires requires(ThisType a, T b) { a = a + b; }
     inline ThisType &operator+=(const T &rhs)
@@ -374,6 +377,7 @@ public:
         return *this;
     }
 
+    /** @brief Subtraction assignment */
     template <typename T>
         requires requires(ThisType a, T b) { a = a - b; }
     inline ThisType &operator-=(const T &rhs)
@@ -421,6 +425,15 @@ public:
     inline bool operator==(const T &rhs) const
     {
         return typed_ratio_equality<Type, Ratio, T, std::ratio<1>>(value, rhs);
+    }
+
+    /**
+     * Conversion operators
+     */
+
+    operator Type() const requires IsEmptyUid<UID>
+    {
+        return GetRealValue();
     }
 
 private:
@@ -488,7 +501,11 @@ template <typename T>
     requires std::is_arithmetic_v<T>
 using EmptyUnit = Unit<T, EmptyUid>;
 
-/** @breif Left-compare with plain type for EmptyUnits */
+/**
+ * Left side plaintype assignment and comparison
+ */
+
+/** @brief Left-compare with plain type for EmptyUnits */
 template <typename LHS, IsUnit Unit_RHS>
     requires requires(Unit_RHS a, LHS b) {
         requires IsEmptyUid<typename Unit_RHS::uid>;
@@ -500,7 +517,11 @@ inline bool operator==(const LHS &lhs, const Unit_RHS &rhs)
     return rhs.operator==(lhs);
 }
 
-/** @brief Left-multiply by scalar */
+/**
+ * Left side plaintype arithmetic
+ */
+
+/** @brief Left-multiply by plain type */
 template <typename LHS, IsUnit Unit_RHS>
     requires CanOpMultiply<Unit_RHS, LHS>
 inline OpMultiplyType<Unit_RHS, LHS> operator*(const LHS &lhs, const Unit_RHS &rhs)
@@ -508,7 +529,7 @@ inline OpMultiplyType<Unit_RHS, LHS> operator*(const LHS &lhs, const Unit_RHS &r
     return rhs.operator*(lhs);
 }
 
-/** @brief Left-divide with scalar */
+/** @brief Left-divide with plain type */
 template <typename LHS, IsUnit Unit_RHS>
     requires requires(LHS a, UnitExpI<Unit_RHS, -1> b) { b.operator*(a); }
 inline auto operator/(const LHS &lhs, const Unit_RHS &rhs)
@@ -517,17 +538,18 @@ inline auto operator/(const LHS &lhs, const Unit_RHS &rhs)
     return rhs_inv.operator*(lhs);
 }
 
-/** @brief Left-add with scalar */
+/** @brief Left-add with plain type */
 template <typename LHS, IsUnit Unit_RHS>
     requires CanOpAdd<Unit_RHS, LHS>
-OpAddType<Unit_RHS, LHS> operator+(LHS lhs, Unit_RHS rhs)
+inline OpAddType<Unit_RHS, LHS> operator+(LHS lhs, Unit_RHS rhs)
 {
     return rhs.operator+(lhs);
 }
 
+/** @brief Left-subtract with plain type */
 template <typename LHS, IsUnit Unit_RHS>
     requires CanOpAdd<Unit_RHS, LHS>
-OpAddType<Unit_RHS, LHS> operator-(LHS lhs, Unit_RHS rhs)
+inline OpAddType<Unit_RHS, LHS> operator-(LHS lhs, Unit_RHS rhs)
 {
     return (-1 * rhs).operator+(lhs);
 }

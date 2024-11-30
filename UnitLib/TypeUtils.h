@@ -293,6 +293,14 @@ using OpAddType = decltype(std::declval<A>().operator+(std::declval<B>()));
 template <typename A, typename B>
 concept CanOpAdd = requires(A a, B b) { { a.operator+(b) } -> std::same_as<OpAddType<A, B>>; };
 
+// Binary operator+(A, B) version
+template <typename A, typename B>
+    requires requires(A a, B b) { { operator+(a, b) }; }
+using BinOpAddType = decltype(operator+(std::declval<A>(), std::declval<B>()));
+
+template <typename A, typename B>
+concept CanBinOpAdd = requires(A a, B b) { { operator+(a, b) } -> std::same_as<BinOpAddType<A, B>>; };
+
 /** Subtract */
 template <typename, typename>
 struct SubtractType_

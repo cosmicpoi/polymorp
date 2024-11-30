@@ -98,6 +98,30 @@ Instead, we should define our own concepts checking that types have the necessar
 
 **Don't over-specialize.** Don't assume, for instance, that scalars must be addable, dividable, and multipliable in order to be valid units; or don't assume that matrices can only be comprised of types that have a well-defined zero value. Instead, allow for wrappers (`Unit` or `Vector`/`Matrix` containers) to define partial functionality based on what the underlying types support. For instance, `Vector<std::string>::IsZero()` is not well-defined, but `Vector<int>::IsZero()` is.
 
+**When possible, prefer explicit template specialization over concepts when defining functions**
+
+```
+// Prefer this syntax
+template <typename LHS, typename RHS_Type, UnitIdentifier RHS_UID, IsRatio RHS_Ratio>
+inline auto DoThing(const LHS &lhs, const Unit<RHS_Type, RHS_UID, RHS_Ratio> &rhs)
+{
+    ...
+}
+
+// ...Over this syntax
+template <typename LHS, IsUnit RHS>
+inline auto DoThing(const LHS &lhs, const RHS &rhs)
+{
+    ...
+}
+```
+
+Although the latter is debatably more readable, the issue is that concepts have to be valid for any type and cannot have partial constraints, and therefore cannot be defined inside of function or class scopes. This also means that the `IsUnit` concept cannot possibly be available within the `Unit` class itself, making the former syntax a necessity. 
+
+It is technically possible to use the former syntax for `Unit` member functions and then use the latter syntax for nonmember functions, but this divergence in syntax is not preferred. Consistency is better.
+
+Similar things apply for the `IsVector` and `IsMatrix` concepts.
+
 **Prefer parameter packs to `std::initializer_list` when possible**
 - Why? Because one of our primary aims is to have total equivalency between Empty Units and floats. With `initializer_list`, we can't do this (since it enforces homogeneous typing):
 ```
