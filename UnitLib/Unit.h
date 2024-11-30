@@ -60,7 +60,7 @@ struct RatioEqualityHelper
 
 // Used for equality
 template <typename Type, IsRatio Ratio, typename RHS_Type, IsRatio RHS_Ratio>
-    requires(RHS_Ratio::num > 0 && Ratio::num > 0 )
+    requires(RHS_Ratio::num > 0 && Ratio::num > 0)
 constexpr bool typed_ratio_equality(Type value, RHS_Type rhs)
 {
     // It might be tempting to add a check for if constexpr (std::is_same_v<Ratio, RHS_Ratio>), but
@@ -104,14 +104,57 @@ public:
     explicit inline Unit(T val)
         : value(val){};
 
-    /** @brief Constructor for converting from like units */
-    template <UnitIsConvertible_<ThisType> UnitT>
-    explicit inline Unit(const UnitT &val)
-        : value(DivideByRatio<Ratio, Type>(val.GetRealValue())){};
+    /**
+     * @brief Constructor from convertible unit with same UID
+     * Note: need to check that either type or ratio does not match to avoid overriding copy constructor
+     */
+    template <typename Other_Type, UnitIdentifier Other_UID, IsRatio Other_Ratio>
+        requires(std::is_same_v<UID, Other_UID> &&
+                 ConvertibleOrConstructible<Type, Other_Type> &&
+                 (!std::is_same_v<ThisType, Unit<Other_Type, Other_UID, Other_Ratio>>))
+    explicit inline Unit(const Unit<Other_Type, Other_UID, Other_Ratio> &val)
+        : value(DivideByRatio<Ratio, Type>(ConvertOrConstruct<Type, Other_Type>(val.GetRealValue()))){};
 
-    /** @brief Construct from rvalue of like unit */
-    template <UnitIsConvertible_<ThisType> UnitT>
-    explicit inline Unit(const UnitT &&val) : Unit(val) {}
+    /**
+     * @brief Constructor from assignable unit with same UID
+     * Note: need to check that either type or ratio does not match to avoid overriding copy constructor
+     */
+    template <typename Other_Type, UnitIdentifier Other_UID, IsRatio Other_Ratio>
+        requires(std::is_same_v<UID, Other_UID> &&
+                 (!ConvertibleOrConstructible<Type, Other_Type>) &&
+                 AssignableTo<Type, Other_Type> &&
+                 (!std::is_same_v<ThisType, Unit<Other_Type, Other_UID, Other_Ratio>>))
+    explicit inline Unit(const Unit<Other_Type, Other_UID, Other_Ratio> &val)
+    {
+        value = DivideByRatio<Ratio, Type>(val.GetRealValue());
+    }
+
+    /**
+     * @brief Constructor from constructible or convertible rvalue
+     * Note: need to check that ratio does not match to avoid overriding copy constructor
+     */
+    template <typename Other_Type, UnitIdentifier Other_UID, IsRatio Other_Ratio>
+        requires(std::is_same_v<UID, Other_UID> &&
+                 ConvertibleOrConstructible<Type, Other_Type> &&
+                 (!std::is_same_v<Type, Other_Type>))
+    explicit inline Unit(const Unit<Other_Type, Other_UID, Other_Ratio> &&val)
+        : Unit(val)
+    {
+    }
+
+    /**
+     * @brief Constructor froma ssignable or convertible rvalue
+     * Note: need to check that ratio does not match to avoid overriding copy constructor
+     */
+    template <typename Other_Type, UnitIdentifier Other_UID, IsRatio Other_Ratio>
+        requires(std::is_same_v<UID, Other_UID> &&
+                 (!ConvertibleOrConstructible<Type, Other_Type>) &&
+                 AssignableTo<Type, Other_Type> &&
+                 (!std::is_same_v<Type, Other_Type>))
+    explicit inline Unit(const Unit<Other_Type, Other_UID, Other_Ratio> &&val)
+        : Unit(val)
+    {
+    }
 
     // Check is zero
     inline bool IsZero() const
@@ -137,11 +180,41 @@ public:
     /**
      * Assignment operators
      */
-    template <UnitIsConvertible_<ThisType> RHS>
-        requires(!std::is_same_v<ThisType, RHS>)
-    inline ThisType &operator=(const RHS &rhs)
+
+    /**
+     * @brief Assign from unit with convertible or constructible underlying type
+     * Note: either ratio or type has to be different, so that we don't override copy constructor
+     */
+    template <typename RHS_Type, UnitIdentifier RHS_UID, IsRatio RHS_Ratio>
+        requires(std::is_same_v<UID, RHS_UID> &&
+                 ConvertibleOrConstructible<Type, RHS_Type> &&
+                 (!std::is_same_v<ThisType, Unit<RHS_Type, RHS_UID, RHS_Ratio>>))
+    inline ThisType &operator=(const Unit<RHS_Type, RHS_UID, RHS_Ratio> &rhs)
     {
-        if constexpr (UnitSameRatio_<ThisType, RHS>)
+        if constexpr (std::is_same_v<Ratio, RHS_Ratio>)
+        {
+            value = ConvertOrConstruct<Type, RHS_Type>(rhs.GetValue());
+            return *this;
+        }
+        else
+        {
+            value = ConvertOrConstruct<Type, RHS_Type>(DivideByRatio<Ratio, Type>(rhs.GetRealValue()));
+            return *this;
+        }
+    }
+
+    /**
+     * @brief Assign from unit with assignable underlying type unit
+     * Note: either ratio or type has to be different, so that we don't override copy constructor
+     */
+    template <typename RHS_Type, UnitIdentifier RHS_UID, IsRatio RHS_Ratio>
+        requires(std::is_same_v<UID, RHS_UID> &&
+                 !ConvertibleOrConstructible<Type, RHS_Type> &&
+                 AssignableTo<Type, RHS_Type> &&
+                 (!std::is_same_v<ThisType, Unit<RHS_Type, RHS_UID, RHS_Ratio>>))
+    inline ThisType &operator=(const Unit<RHS_Type, RHS_UID, RHS_Ratio> &rhs)
+    {
+        if constexpr (std::is_same_v<Ratio, RHS_Ratio>)
         {
             value = rhs.GetValue();
             return *this;
@@ -153,11 +226,44 @@ public:
         }
     }
 
-    template <typename T>
-        requires IsEmptyUid<UID> && std::is_arithmetic_v<T> && std::is_convertible_v<T, Type>
-    inline ThisType &operator=(const T &rhs)
+    /** @brief For empty units, assign from a convertible or constructible plain scalar */
+    template <typename RHS_Type>
+        requires IsEmptyUid<UID> &&
+                 std::is_arithmetic_v<RHS_Type> &&
+                 ConvertibleOrConstructible<Type, RHS_Type>
+    inline ThisType &operator=(const RHS_Type &rhs)
     {
-        value = DivideByRatio<Ratio, Type>(rhs);
+        if constexpr (std::is_same_v<Ratio, std::ratio<1>>)
+        {
+            value = ConvertOrConstruct<Type, RHS_Type>(rhs);
+            return *this;
+        }
+        else
+        {
+            value = ConvertOrConstruct<Type, RHS_Type>(DivideByRatio<Ratio, Type>(rhs));
+            return *this;
+        }
+        return *this;
+    }
+
+    /** @brief For empty units, assign from an assignable plain scalar */
+    template <typename RHS_Type>
+        requires IsEmptyUid<UID> &&
+                 std::is_arithmetic_v<RHS_Type> &&
+                 (!ConvertibleOrConstructible<Type, RHS_Type>) &&
+                 AssignableTo<Type, RHS_Type>
+    inline ThisType &operator=(const RHS_Type &rhs)
+    {
+        if constexpr (std::is_same_v<Ratio, std::ratio<1>>)
+        {
+            value = rhs;
+            return *this;
+        }
+        else
+        {
+            value = DivideByRatio<Ratio, Type>(rhs);
+            return *this;
+        }
         return *this;
     }
 
