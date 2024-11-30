@@ -96,10 +96,22 @@ concept HasDet = IsMatrix<T> && requires(T a) {
     { Det(a) };
 };
 
+/** @brief Helper concept to check if inverse is defined for a matrix */
+template <typename T>
+concept HasInverse = IsMatrix<T> && requires(T a) {
+    { Inv(a) };
+};
+
 /** @brief Helper concept to check if identity is defined for a matrix */
 template <typename T>
 concept HasIdentity = IsMatrix<T> && requires(T a) {
     { T::Identity() };
+};
+
+/** @brief Helper concept to check if multiplication is defined for two types */
+template <typename A, typename B>
+concept IsMultDefined = requires(A a, B b) {
+    { a *b };
 };
 
 int main()
@@ -1014,6 +1026,10 @@ int main()
         Matrix4<Screen_per_World> world_screen_convert = Matrix4<Screen_per_World>::Identity();
         auto res = mat_ws * world_screen_convert;
         assert((std::is_same_v<decltype(res), Matrix4<Screenspace>>));
+
+        // Dimension checks
+        assert((IsMultDefined<Matrix<2, 3, double>, Matrix<3, 2, double>>));
+        assert((!IsMultDefined<Matrix<2, 3, double>, Matrix<4, 2, double>>));
     }
 
     std::cout << "Running compound assignment tests" << std::endl;
@@ -1158,6 +1174,23 @@ int main()
 
     std::cout << "Running inversion tests" << std::endl;
     {
+        assert((HasInverse<Matrix<3, 3, double>>));
+        assert((!HasInverse<Matrix<2, 3, double>>));
+        assert((HasInverse<Matrix<3, 3, Meter>>));
+        assert((!HasInverse<Matrix<3, 3, std::string>>));
+
+        assert((Inv(Matrix<3, 3, double>{{1, 0, 0}, {0, 1, 0}, {0, 0, 1}}) == Matrix<3, 3, double>{{1, 0, 0}, {0, 1, 0}, {0, 0, 1}}));
+        assert((Inv(Matrix<3, 3, double>{{1, 0, 0}, {0, 1, 0}, {0, 0, 0}}) == Matrix<3, 3, double>::Zero()));
+
+        assert((Inv(Matrix<3, 3, double>{{4, 7, 2}, {3, 6, 1}, {2, 5, 1}}) ==
+                Matrix<3, 3, double>{{1.0 / 3.0, 1.0, -5.0 / 3.0}, {-1.0 / 3.0, 0.0, 2.0 / 3.0}, {1.0, -2.0, 1.0}}));
+        assert((Inv(Matrix<3, 3, double>{{1, 2, 3}, {4, 5, 6}, {7, 8, 9}}) == Matrix<3, 3, double>::Zero()));
+        assert((Inv(Matrix<3, 3, double>{{2, 4, 6}, {1, 3, 5}, {0, 0, 0}}) == Matrix<3, 3, double>::Zero()));
+        assert((Inv(Matrix<2, 2, double>{{1.5, 2.5}, {3.5, 4.5}}) ==
+                Matrix<2, 2, double>{{-2.25, 1.25}, {1.75, -0.75}}));
+
+        assert((Inv(Matrix<4, 4, double>{{1, 0, 0, 0}, {0, 2, -3, 0}, {0, 0, 1, 0}, {0, 0, 0, 1}}) ==
+                Matrix<4, 4, double>{{1., 0., 0., 0.}, {0., 0.5, 1.5, 0.}, {0., 0., 1., 0.}, {0., 0., 0., 1.}}));
     }
 
     return 0;

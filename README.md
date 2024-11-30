@@ -91,3 +91,10 @@ Another example of design principles at play: We choose to define the typical `N
 ```
 Matrix2<Meter> m2 = {{1, 2}, {(double)3, EmptyUnit{4}}};
 ```
+
+This can actually be quite annoying in some cases. For instance:
+```
+assert(( Inv(Matrix<3, 3, double>{{4, 7, 2}, {3, 6, 1}, {2, 5, 1}}) ==  Matrix<3, 3, double>{{1.0/3.0, 1, -5.0/3.0}, {-1.0/3.0, 0, 2.0/3.0}, {1.0, -2.0, 1}} ));
+```
+
+This won't compile since `1.0/3.0` is type double and `1` is type integer.
