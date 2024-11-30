@@ -105,6 +105,7 @@ Instead, we should define our own concepts checking that types have the necessar
 template <typename LHS, typename RHS_Type, UnitIdentifier RHS_UID, IsRatio RHS_Ratio>
 inline auto DoThing(const LHS &lhs, const Unit<RHS_Type, RHS_UID, RHS_Ratio> &rhs)
 {
+    RHS_Type x; // do something with the type
     ...
 }
 
@@ -112,6 +113,7 @@ inline auto DoThing(const LHS &lhs, const Unit<RHS_Type, RHS_UID, RHS_Ratio> &rh
 template <typename LHS, IsUnit RHS>
 inline auto DoThing(const LHS &lhs, const RHS &rhs)
 {
+    typename RHS::type x; // do something with the type
     ...
 }
 ```
@@ -119,6 +121,8 @@ inline auto DoThing(const LHS &lhs, const RHS &rhs)
 Although the latter is debatably more readable, the issue is that concepts have to be valid for any type and cannot have partial constraints, and therefore cannot be defined inside of function or class scopes. This also means that the `IsUnit` concept cannot possibly be available within the `Unit` class itself, making the former syntax a necessity. 
 
 It is technically possible to use the former syntax for `Unit` member functions and then use the latter syntax for nonmember functions, but this divergence in syntax is not preferred. Consistency is better.
+
+There are some cases where it's unavoidable or whereusing it would make the code severely more readable. In those cases it's fine, but in general we should prefer to be explicit.
 
 Similar things apply for the `IsVector` and `IsMatrix` concepts.
 

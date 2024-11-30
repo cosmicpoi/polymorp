@@ -431,7 +431,8 @@ public:
      * Conversion operators
      */
 
-    operator Type() const requires IsEmptyUid<UID>
+    operator Type() const
+        requires IsEmptyUid<UID>
     {
         return GetRealValue();
     }
@@ -502,17 +503,16 @@ template <typename T>
 using EmptyUnit = Unit<T, EmptyUid>;
 
 /**
- * Left side plaintype assignment and comparison
+ * Left side comparison
  */
 
 /** @brief Left-compare with plain type for EmptyUnits */
-template <typename LHS, IsUnit Unit_RHS>
-    requires requires(Unit_RHS a, LHS b) {
-        requires IsEmptyUid<typename Unit_RHS::uid>;
-        requires std::is_arithmetic_v<LHS>;
+template <typename LHS, typename RHS_Type, UnitIdentifier RHS_UID, IsRatio RHS_Ratio>
+    requires requires(Unit<RHS_Type, RHS_UID, RHS_Ratio> a, LHS b) {
+        requires IsEmptyUid<RHS_UID>;
         { a.operator==(b) } -> std::convertible_to<bool>;
     }
-inline bool operator==(const LHS &lhs, const Unit_RHS &rhs)
+inline bool operator==(const LHS &lhs, const Unit<RHS_Type, RHS_UID, RHS_Ratio> &rhs)
 {
     return rhs.operator==(lhs);
 }
@@ -522,34 +522,34 @@ inline bool operator==(const LHS &lhs, const Unit_RHS &rhs)
  */
 
 /** @brief Left-multiply by plain type */
-template <typename LHS, IsUnit Unit_RHS>
-    requires CanOpMultiply<Unit_RHS, LHS>
-inline OpMultiplyType<Unit_RHS, LHS> operator*(const LHS &lhs, const Unit_RHS &rhs)
+template <typename LHS, typename RHS_Type, UnitIdentifier RHS_UID, IsRatio RHS_Ratio>
+    requires CanOpMultiply<Unit<RHS_Type, RHS_UID, RHS_Ratio>, LHS>
+inline OpMultiplyType<Unit<RHS_Type, RHS_UID, RHS_Ratio>, LHS> operator*(const LHS &lhs, const Unit<RHS_Type, RHS_UID, RHS_Ratio> &rhs)
 {
     return rhs.operator*(lhs);
 }
 
 /** @brief Left-divide with plain type */
-template <typename LHS, IsUnit Unit_RHS>
-    requires requires(LHS a, UnitExpI<Unit_RHS, -1> b) { b.operator*(a); }
-inline auto operator/(const LHS &lhs, const Unit_RHS &rhs)
+template <typename LHS, typename RHS_Type, UnitIdentifier RHS_UID, IsRatio RHS_Ratio>
+    requires requires(LHS a, UnitExpI<Unit<RHS_Type, RHS_UID, RHS_Ratio>, -1> b) { b.operator*(a); }
+inline OpMultiplyType<UnitExpI<Unit<RHS_Type, RHS_UID, RHS_Ratio>, -1>, LHS> operator/(const LHS &lhs, const Unit<RHS_Type, RHS_UID, RHS_Ratio> &rhs)
 {
-    UnitExpI<Unit_RHS, -1> rhs_inv{1 / rhs.GetValue()};
+    UnitExpI<Unit<RHS_Type, RHS_UID, RHS_Ratio>, -1> rhs_inv{1 / rhs.GetValue()};
     return rhs_inv.operator*(lhs);
 }
 
 /** @brief Left-add with plain type */
-template <typename LHS, IsUnit Unit_RHS>
-    requires CanOpAdd<Unit_RHS, LHS>
-inline OpAddType<Unit_RHS, LHS> operator+(LHS lhs, Unit_RHS rhs)
+template <typename LHS, typename RHS_Type, UnitIdentifier RHS_UID, IsRatio RHS_Ratio>
+    requires CanOpAdd<Unit<RHS_Type, RHS_UID, RHS_Ratio>, LHS>
+inline OpAddType<Unit<RHS_Type, RHS_UID, RHS_Ratio>, LHS> operator+(const LHS &lhs, const Unit<RHS_Type, RHS_UID, RHS_Ratio> &rhs)
 {
     return rhs.operator+(lhs);
 }
 
 /** @brief Left-subtract with plain type */
-template <typename LHS, IsUnit Unit_RHS>
-    requires CanOpAdd<Unit_RHS, LHS>
-inline OpAddType<Unit_RHS, LHS> operator-(LHS lhs, Unit_RHS rhs)
+template <typename LHS, typename RHS_Type, UnitIdentifier RHS_UID, IsRatio RHS_Ratio>
+    requires CanOpAdd<Unit<RHS_Type, RHS_UID, RHS_Ratio>, LHS>
+inline OpAddType<Unit<RHS_Type, RHS_UID, RHS_Ratio>, LHS> operator-(LHS lhs, const Unit<RHS_Type, RHS_UID, RHS_Ratio> rhs)
 {
     return (-1 * rhs).operator+(lhs);
 }
