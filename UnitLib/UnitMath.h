@@ -3,7 +3,39 @@
 #include <cmath>
 #include "Unit.h"
 #include "Ratio.h"
-#include "Scalar.h"
+
+/** 
+ * Concepts for matching scalars
+ */
+
+template <typename T>
+concept PlainScalar = !IsUnit<T> && std::is_arithmetic_v<T>;
+template <typename T>
+concept GeneralScalar = IsUnit<T> || PlainScalar<T>; //
+
+
+template <GeneralScalar T, IsRatio Exp>
+struct ScalarExp_
+{
+};
+
+/* ScalarExp helper */
+
+template <IsUnit U, IsRatio Exp>
+struct ScalarExp_<U, Exp>
+{
+    using type = UnitExp<U, Exp>;
+};
+
+template <PlainScalar T, IsRatio Exp>
+struct ScalarExp_<T, Exp>
+{
+    using type = T;
+};
+
+template <GeneralScalar T, IsRatio Exp>
+using ScalarExp = typename ScalarExp_<T, Exp>::type;
+
 
 /**
  * Square root

@@ -90,15 +90,11 @@ concept HasIsZero = requires(T t) {
     { t.IsZero() };
 };
 
+/** @brief Helper concept to check if determinant is defined for a matrix */
 template <typename T>
-concept HasDet = requires(T a) {
-    { Det(a) } -> std::same_as<double>;
+concept HasDet = IsMatrix<T> && requires(T a) {
+    { Det(a) };
 };
-
-template <typename T>
-concept DetInvalid = !(requires(T a) {
-    Det(a);
-});
 
 int main()
 {
@@ -1077,12 +1073,69 @@ int main()
         assert((Matrix<1, 5, int>{10, 20, 30, 40, 50}.Transpose() == Matrix<5, 1, int>{{10}, {20}, {30}, {40}, {50}}));
     }
 
+    std::cout << "Running zero and identity tests" << std::endl;
+    {
+
+    }
+
     std::cout << "Running determinant tests" << std::endl;
     {
+        // Basic test
         Matrix<3, 3, double> mat = {{1, 7, 3}, {-1, 2, 4}, {2, 2, 1}};
         assert((Det(mat) == 39));
+
+        // Test validity on dimensions
         static_assert((HasDet<Matrix<3, 3, double>>));
-        static_assert((DetInvalid<Matrix<2, 3, double>>));
+        static_assert((!HasDet<Matrix<2, 3, double>>));
+
+        static_assert((HasDet<Matrix<3, 3, Meter>>));
+        static_assert((!HasDet<Matrix<2, 3, Meter>>));
+
+        // Test types
+        Matrix<3, 3, Meter> mat2 = {{1, 7, 3}, {-1, 2, 4}, {2, 2, 1}};
+        assert((Det(mat2) == UnitExpI<Meter, 3>{39}));
+
+        // Test for a simple identity matrix
+        assert((Det(Matrix<2, 2, double>{{1, 0}, {0, 1}}) == 1));
+        assert((Det(Matrix<3, 3, double>{{1, 0, 0}, {0, 1, 0}, {0, 0, 1}}) == 1));
+
+        // Test for a matrix with all zeros (determinant should be 0)
+        assert((Det(Matrix<2, 2, double>{{0, 0}, {0, 0}}) == 0));
+        assert((Det(Matrix<3, 3, double>{{0, 0, 0}, {0, 0, 0}, {0, 0, 0}}) == 0));
+
+        // Test for a 2x2 matrix
+        assert((Det(Matrix<2, 2, double>{{1, 2}, {3, 4}}) == -2));
+        assert((Det(Matrix<2, 2, double>{{5, 6}, {7, 8}}) == -2));
+
+        // Test for a 3x3 matrix
+        assert((Det(Matrix<3, 3, double>{{2, 3, 1}, {4, 5, 6}, {7, 8, 9}}) == 9));
+        assert((Det(Matrix<3, 3, double>{{1, 2, 3}, {4, 5, 6}, {7, 8, 9}}) == 0)); // Singular matrix
+
+        // Test for a matrix with negative numbers
+        assert((Det(Matrix<3, 3, double>{{-1, -2, -3}, {-4, -5, -6}, {-7, -8, -9}}) == 0));
+        assert((Det(Matrix<2, 2, double>{{-1, 2}, {3, -4}}) == -2));
+
+        // Test for larger values
+        assert((Det(Matrix<3, 3, double>{{10, 20, 30}, {40, 50, 60}, {70, 80, 90}}) == 0)); // Singular matrix
+        assert((Det(Matrix<3, 3, double>{{5, 7, 2}, {3, 1, 8}, {4, 9, 6}}) == -186));
+
+        // Test for fractional values
+        assert((std::abs(Det(Matrix<2, 2, double>{{0.5, 1.5}, {1.2, 2.8}}) - -0.4) < 0.00000001));
+
+        // Test for a larger size 4x4 matrix
+        assert((Det(Matrix<4, 4, double>{{1, 0, 0, 0}, {0, 1, 0, 0}, {0, 0, 1, 0}, {0, 0, 0, 1}}) == 1));
+        assert((Det(Matrix<4, 4, double>{{1, 2, 3, 4}, {5, 6, 7, 8}, {9, 10, 11, 12}, {13, 14, 15, 16}}) == 0)); // Singular matrix
+
+        // Test for an upper triangular matrix
+        assert((Det(Matrix<3, 3, double>{{3, 2, 1}, {0, 4, 5}, {0, 0, 6}}) == 72));
+
+        // Test for a lower triangular matrix
+        assert((Det(Matrix<3, 3, double>{{6, 0, 0}, {7, 5, 0}, {8, 9, 4}}) == 120));
+    }
+
+    std::cout << "Running inversion tests" << std::endl; 
+    {
+
     }
 
     return 0;
