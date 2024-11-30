@@ -6,31 +6,6 @@
 #include "UnitIdentifier.h"
 #include "TypeUtils.h"
 
-/** Helper concepts */
-template <typename A>
-concept UnitLike = requires {
-    typename A::uid;
-    typename A::ratio;
-    typename A::type;
-    requires IsRatio<typename A::ratio>;
-    requires UnitIdentifier<typename A::uid>;
-    requires std::is_arithmetic_v<typename A::type>;
-};
-
-template <typename A, typename B>
-concept SameUid_ = requires {
-    requires UnitLike<A>;
-    requires UnitLike<B>;
-    requires std::is_same_v<typename A::uid, typename B::uid>;
-};
-
-template <typename A, typename B>
-concept UnitSameRatio_ = requires {
-    requires UnitLike<A>;
-    requires UnitLike<B>;
-    requires std::is_same_v<typename A::ratio, typename B::ratio>;
-};
-
 /**
  * Helpers for difficult ratio math
  */
@@ -265,13 +240,13 @@ public:
 
     // Helper types
     template <typename RHS_Type, UnitIdentifier RHS_UID, IsRatio RHS_Ratio>
-    using MultiplyThisUnitBy_ = Unit<
+    using ThisUnitMultiply_ = Unit<
         std::common_type_t<Type, RHS_Type>,
         UIMult<UID, RHS_UID>,
         std::ratio_multiply<Ratio, RHS_Ratio>>;
 
     template <typename RHS_Type, UnitIdentifier RHS_UID, IsRatio RHS_Ratio>
-    using DivideThisUnitBy__ = Unit<
+    using ThisUnitDivide__ = Unit<
         std::common_type_t<Type, RHS_Type>,
         UIDivide<UID, RHS_UID>,
         std::ratio_divide<Ratio, RHS_Ratio>>;
@@ -282,9 +257,9 @@ public:
     /** @brief Multiply with another unit. Follow default language promotion rules */
     template <typename RHS_Type, UnitIdentifier RHS_UID, IsRatio RHS_Ratio>
         requires CanMultiply<Type, RHS_Type>
-    inline MultiplyThisUnitBy_<RHS_Type, RHS_UID, RHS_Ratio> operator*(const Unit<RHS_Type, RHS_UID, RHS_Ratio> &rhs) const
+    inline ThisUnitMultiply_<RHS_Type, RHS_UID, RHS_Ratio> operator*(const Unit<RHS_Type, RHS_UID, RHS_Ratio> &rhs) const
     {
-        return MultiplyThisUnitBy_<RHS_Type, RHS_UID, RHS_Ratio>{value * rhs.GetValue()};
+        return ThisUnitMultiply_<RHS_Type, RHS_UID, RHS_Ratio>{value * rhs.GetValue()};
     }
 
     /** @brief Multiply with unitless scalar. */
@@ -298,9 +273,9 @@ public:
     /** @brief Divide by another unit. Follow default language promotion rules */
     template <typename RHS_Type, UnitIdentifier RHS_UID, IsRatio RHS_Ratio>
         requires CanDivide<Type, RHS_Type>
-    inline DivideThisUnitBy__<RHS_Type, RHS_UID, RHS_Ratio> operator/(const Unit<RHS_Type, RHS_UID, RHS_Ratio> &rhs) const
+    inline ThisUnitDivide__<RHS_Type, RHS_UID, RHS_Ratio> operator/(const Unit<RHS_Type, RHS_UID, RHS_Ratio> &rhs) const
     {
-        return DivideThisUnitBy__<RHS_Type, RHS_UID, RHS_Ratio>{value / rhs.GetValue()};
+        return ThisUnitDivide__<RHS_Type, RHS_UID, RHS_Ratio>{value / rhs.GetValue()};
     }
 
     /** @brief Divide by unitless scalar. */
@@ -322,28 +297,28 @@ public:
      */
 
     // Helper for adding OR subtracting
-    template <UnitLike RHS>
-        requires std::is_same_v<UID, typename RHS::uid>
-    using UnitAdd_ = Unit<
-        std::common_type_t<Type, typename RHS::type>,
+    template <typename RHS_Type, UnitIdentifier RHS_UID, IsRatio RHS_Ratio>
+        requires std::is_same_v<UID, RHS_UID>
+    using ThisUnitAdd_ = Unit<
+        std::common_type_t<Type, RHS_Type>,
         UID,
-        typename CombineRatio<Ratio, typename RHS::ratio>::combinedRatio>;
+        typename CombineRatio<Ratio, RHS_Ratio>::combinedRatio>;
 
     /** @brief Add with another unit, only if UIDs match. Follow default language promotion rules */
     template <typename RHS_Type, UnitIdentifier RHS_UID, IsRatio RHS_Ratio>
         requires CanRatioAdd<Type, RHS_Type> && std::is_same_v<UID, RHS_UID>
-    inline UnitAdd_<Unit<RHS_Type, RHS_UID, RHS_Ratio>> operator+(const Unit<RHS_Type, RHS_UID, RHS_Ratio> &rhs) const
+    inline ThisUnitAdd_<RHS_Type, RHS_UID, RHS_Ratio> operator+(const Unit<RHS_Type, RHS_UID, RHS_Ratio> &rhs) const
     {
-        return UnitAdd_<Unit<RHS_Type, RHS_UID, RHS_Ratio>>{
+        return ThisUnitAdd_<RHS_Type, RHS_UID, RHS_Ratio>{
             ratio_value_add<Type, Ratio, RHS_Type, RHS_Ratio>(value, rhs.GetValue())};
     }
 
     /** @brief Subtract with another unit, only if UIDs match. Follow default language promotion rules */
     template <typename RHS_Type, UnitIdentifier RHS_UID, IsRatio RHS_Ratio>
         requires CanRatioSubtract<Type, RHS_Type> && std::is_same_v<UID, RHS_UID>
-    inline UnitAdd_<Unit<RHS_Type, RHS_UID, RHS_Ratio>> operator-(const Unit<RHS_Type, RHS_UID, RHS_Ratio> &rhs) const
+    inline ThisUnitAdd_<RHS_Type, RHS_UID, RHS_Ratio> operator-(const Unit<RHS_Type, RHS_UID, RHS_Ratio> &rhs) const
     {
-        return UnitAdd_<Unit<RHS_Type, RHS_UID, RHS_Ratio>>{
+        return ThisUnitAdd_<RHS_Type, RHS_UID, RHS_Ratio>{
             ratio_value_add<Type, Ratio, RHS_Type, RHS_Ratio>(value, -rhs.GetValue())};
     }
 
@@ -467,13 +442,6 @@ struct IsUnitHelper<Unit<Type, UID, Ratio>> : std::true_type
 
 template <typename T>
 concept IsUnit = IsUnitHelper<T>::value;
-
-// Stronger versions of underscored aliases above to check for Unit. We have to do it this way because of declaration order
-template <typename A, typename B>
-concept SameUid = IsUnit<A> && IsUnit<B> && SameUid_<A, B>;
-
-template <typename A, typename B>
-concept UnitSameRatio = IsUnit<A> && IsUnit<B> && UnitSameRatio_<A, B>;
 
 // Check if unit U can actually be exponentiated by ratio Exp
 template <typename U, typename Exp>
