@@ -35,14 +35,14 @@ concept RatioIsZero = IsRatio<T> && RatioIsZero_<T>;
  * intmax_t) and then converted to `OutType`
  */
 template <typename T>
-concept CanRatioMultiply = requires(T t, intmax_t i) {
+concept IsRatioCompatible = requires(T t, intmax_t i) {
     { t / i } -> std::convertible_to<T>;
     { t *i } -> std::convertible_to<T>;
 };
 
 /** Function to multiply out a ratio: Compute val * R */
 template <IsRatio R, typename OutType, typename T>
-    requires CanRatioMultiply<T>
+    requires IsRatioCompatible<T>
 T MultiplyByRatio(const T &val)
 {
     if (R::num == 1 && R::den == 1)
@@ -54,7 +54,7 @@ T MultiplyByRatio(const T &val)
 
 /** Function to divide out a ratio* Compute val / R */
 template <IsRatio R, typename OutType, typename T>
-    requires CanRatioMultiply<T>
+    requires IsRatioCompatible<T>
 OutType DivideByRatio(const T &val)
 {
     return MultiplyByRatio<std::ratio<R::den, R::num>, OutType, T>(val);

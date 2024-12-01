@@ -62,7 +62,7 @@ constexpr bool typed_ratio_equality(Type value, RHS_Type rhs)
 
 template <typename A, typename B>
 concept CanRatioAdd = requires(std::common_type_t<A, B> x, intmax_t r) {
-    CanRatioMultiply<std::common_type_t<A, B>>;
+    IsRatioCompatible<std::common_type_t<A, B>>;
     { x *r } -> std::same_as<std::common_type_t<A, B>>;
     { x / r } -> std::same_as<std::common_type_t<A, B>>;
     { x + x } -> std::same_as<std::common_type_t<A, B>>;
@@ -70,7 +70,7 @@ concept CanRatioAdd = requires(std::common_type_t<A, B> x, intmax_t r) {
 
 template <typename A, typename B>
 concept CanRatioSubtract = requires(std::common_type_t<A, B> x, intmax_t r) {
-    CanRatioMultiply<std::common_type_t<A, B>>;
+    IsRatioCompatible<std::common_type_t<A, B>>;
     { x *r } -> std::same_as<std::common_type_t<A, B>>;
     { x / r } -> std::same_as<std::common_type_t<A, B>>;
     { x - x } -> std::same_as<std::common_type_t<A, B>>;
@@ -113,8 +113,8 @@ std::common_type_t<LHS_Type, RHS_Type> ratio_value_subtract(const LHS_Type &lhs,
  * The behavior for each operator will vary based on these properties.
  */
 template <typename Type, UnitIdentifier UID = EmptyUid, IsRatio Ratio = std::ratio<1>>
-    requires((CanRatioMultiply<Type> && Ratio::num > 0) ||
-             (!CanRatioMultiply<Type> && std::is_same_v<Ratio, std::ratio<1>>))
+    requires((IsRatioCompatible<Type> && Ratio::num > 0) ||
+             (!IsRatioCompatible<Type> && std::is_same_v<Ratio, std::ratio<1>>))
 struct Unit
 {
 public:
