@@ -5,67 +5,24 @@
 #include "Ratio.h"
 
 /**
- * Helpers for checking if types have exponents and getting results of exponentiating types
- */
-
-template <typename, typename>
-struct RatioExpType_
-{
-    using type = UniversalFalse;
-};
-
-template <IsUnit T, IsRatio Exp>
-    requires RatioCanExp<typename T::ratio, Exp>
-struct RatioExpType_<T, Exp>
-{
-    using type = UnitExp<T, Exp>;
-};
-
-template <typename T, IsRatio Exp>
-    requires std::is_arithmetic_v<T>
-struct RatioExpType_<T, Exp>
-{
-    using type = T;
-};
-
-/**
- * @brief ExpType<T> is the return type of `unit_pow(T val)`.
- * Defaults to `UniversalFalse` if exponent is not well-defined.
- */
-template <typename T, IsRatio Exp>
-using RatioExpType = typename RatioExpType_<T, Exp>::type;
-
-/**
- * @brief SquareRootType<T> is the return type of `unit_sqrt(T val)`.
- * Defaults to `UniversalFalse` if square root is not well-defined.
- */
-template <typename T>
-using SquareRootType = RatioExpType<T, std::ratio<1, 2>>;
-
-/**
- * Square root
- */
-
-/** @brief HasSquareRoot - tells us if `unit_sqrt` and `SquareRootType` are well-defined for a type */
-template <typename T>
-concept HasSquareRoot = (IsUnit<T> && RatioCanExp<typename T::ratio, std::ratio<1, 2>>) || //
-                        std::is_arithmetic_v<T>;
-
-/**
- * @brief Generalized square root function for scalars (Units or plain types) .
+ * Generalized square root function for scalars (Units or plain types) .
  * If it's a unit, first compute sqrt of the ratio. So, sqrt(km^2) -> km, i.e. sqrt(10^6) -> 10^3
  * Otherwise, compute sqrt normally.
  * Will not compile if you try to compute sqrt of a ratio that would be irrational (e.g. 1000)
  * Only supports Units and `is_arithmetic` by default.
  */
+
+/** @brief Square root for unit types. Will not compile if `sqrt(Unit_Ratio)` is not rational (e.g. for kilometers) */
 template <typename Type, UnitIdentifier UID, IsRatio Ratio>
     requires RatioCanExp<Ratio, std::ratio<1, 2>>
 inline UnitExp<Unit<Type, UID, Ratio>, std::ratio<1, 2>> unit_sqrt(const Unit<Type, UID, Ratio> &val)
 {
     using ResRatio = typename UnitExp<Unit<Type, UID, Ratio>, std::ratio<1, 2>>::ratio;
-    return UnitExp<Unit<Type, UID, Ratio>, std::ratio<1, 2>>{DivideByRatio<ResRatio, Type>(std::sqrt(val.GetRealValue()))};
+    return UnitExp<Unit<Type, UID, Ratio>, std::ratio<1, 2>>{
+        DivideByRatio<ResRatio, Type>(std::sqrt(val.GetRealValue()))};
 }
 
+/** @brief Square root for `std::is_arithmetic` types */
 template <typename T>
     requires std::is_arithmetic_v<T>
 inline T unit_sqrt(const T &val)
@@ -73,36 +30,60 @@ inline T unit_sqrt(const T &val)
     return std::sqrt(val);
 }
 
+/** @brief Concept to check if `unit_sqrt` is defined for a type */
+template <typename T>
+concept HasSquareRoot = requires(T a) {
+    { unit_sqrt(a) };
+};
+
+/** @brief SquareRootType<T> is the return type of `unit_sqrt(T val)`. */
+template <typename T>
+    requires HasSquareRoot<T>
+using SquareRootType = decltype(unit_sqrt(std::declval<T>()));
+
 /**
- * Rational power
+ * Generalized rational power function for scalars (Units or plain types) .
+ * If it's a unit, first compute power of the ratio. So, sqrt(km^2/3) -> 10^2, (i.e. 10^6^2/3->10^2)
+ * Otherwise, compute pow normally
+ * Will not compile if you try to compute pow of a ratio that would be irrational (e.g. 1000^1/2)
+ * Only supports Units and `is_arithmetic` by default.
  */
 
-// TODO implement HasPow/HasExp and PowType/ExpType
+/** @brief Rational pow for unit types. Will not compile if `Unit_Ratio^(Exp)` is not rational (e.g. Km^1/2) */
+template <IsRatio Exp, typename Type, UnitIdentifier UID, IsRatio Ratio>
+    requires RatioCanExp<Ratio, Exp>
+inline UnitExp<Unit<Type, UID, Ratio>, Exp> unit_ratio_pow(const Unit<Type, UID, Ratio> &val)
+{
+    using ResRatio = typename UnitExp<Unit<Type, UID, Ratio>, Exp>::ratio;
+    return UnitExp<Unit<Type, UID, Ratio>, Exp>{
+        DivideByRatio<ResRatio, Type>(std::pow(val.GetRealValue()), RatioAsDouble<Exp>())};
+}
 
-/**
- * @brief Compute `val` to the power of rational exponent `Exp`.
- */
-// template <IsRatio Exp, GeneralScalar U>
-// inline ScalarExp<U, Exp> unit_pow(const U &val)
-// {
-//     if constexpr (IsUnit<U>)
-//     {
-//         using Type = typename U::type;
-//         using Ratio = typename U::ratio;
+/** @brief Rational pow for `std::is_arithmetic` types */
+template <IsRatio Exp, typename T>
+    requires std::is_arithmetic_v<T>
+inline T unit_ratio_pow(const T &val)
+{
+    return std::pow(val, RatioAsDouble<Exp>());
+}
 
-//         Type actual_val = MultiplyByRatio<Ratio, Type>(val.GetValue());
+/** @brief Concept to check if `unit_ratio_pow` is defined for a type */
+template <typename Exp, typename T>
+concept HasRatioPow = requires(T a) {
+    requires IsRatio<Exp>;
+    { unit_ratio_pow<Exp>(a) };
+};
 
-//         return DivideByRatio<Ratio, Type>(std::pow(actual_val, RatioAsDouble<Exp>()));
-//     }
-//     else
-//     {
-//         return std::pow(val, RatioAsDouble<Exp>());
-//     }
-// }
+/** @brief RatioPowType<Exp, T> is the return type of `unit_ratio_pow<Exp>(T val)`. */
+template <IsRatio Exp, typename T>
+    requires HasRatioPow<Exp, T>
+using RatioPowType = decltype(unit_ratio_pow<Exp>(std::declval<T>()));
 
 /**
  * Absolute value
  */
+
+/** @brief Concept-based general absolute value function */
 template <typename Type>
     requires requires(Type a) {
         { a > Type{0} } -> std::convertible_to<bool>;
