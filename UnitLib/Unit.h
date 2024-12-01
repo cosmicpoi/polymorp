@@ -18,7 +18,7 @@ struct RatioEqualityHelper
 };
 
 template <typename LHS_Type, IsRatio LHS_Ratio, typename RHS_Type, IsRatio RHS_Ratio>
-    requires std::is_arithmetic_v<LHS_Type> && std::is_arithmetic_v<RHS_Type>
+    requires IsArithmetic<LHS_Type> && IsArithmetic<RHS_Type>
 struct RatioEqualityHelper<LHS_Type, LHS_Ratio, RHS_Type, RHS_Ratio>
 {
     static constexpr intmax_t fac1 = LHS_Ratio::num * RHS_Ratio::den;
@@ -34,11 +34,11 @@ struct RatioEqualityHelper<LHS_Type, LHS_Ratio, RHS_Type, RHS_Ratio>
 };
 
 /**
- * Epsilon-based equality for `std::is_arithmetic` types.
+ * Epsilon-based equality for IsArithmetic types.
  */
 template <typename Type, IsRatio Ratio, typename RHS_Type, IsRatio RHS_Ratio>
-    requires(std::is_arithmetic_v<Type> &&
-             std::is_arithmetic_v<RHS_Type> &&
+    requires(IsArithmetic<Type> &&
+             IsArithmetic<RHS_Type> &&
              (RHS_Ratio::num > 0 && Ratio::num > 0))
 constexpr bool typed_ratio_equality(Type value, RHS_Type rhs)
 {
@@ -104,17 +104,30 @@ std::common_type_t<LHS_Type, RHS_Type> ratio_value_subtract(const LHS_Type &lhs,
 // Unit class definition
 //------------------------------------------------------------------------------
 
+template <typename Type, UnitIdentifier UID, IsRatio Ratio>
+struct IsValidUnit
+{
+    static constexpr bool value = false;
+};
+
+template <typename Type, UnitIdentifier UID, IsRatio Ratio>
+    requires(IsRatioCompatible<Type> && Ratio::num > 0) ||
+            (!IsRatioCompatible<Type> && std::is_same_v<Ratio, std::ratio<1>>)
+struct IsValidUnit<Type, UID, Ratio>
+{
+    static constexpr bool value = true;
+};
+
 /**
  * @brief Unit definition
  * For each unit, we need to consider a few things:
  * - Is this an empty unit
- * - Is the underlying type a `std::is_arithmetic` type?
+ * - Is the underlying type a `IsArithmetic` type?
  * - Are ratios well-defined on this type? (Mult and div by intmax_t)
  * The behavior for each operator will vary based on these properties.
  */
 template <typename Type, UnitIdentifier UID = EmptyUid, IsRatio Ratio = std::ratio<1>>
-    requires((IsRatioCompatible<Type> && Ratio::num > 0) ||
-             (!IsRatioCompatible<Type> && std::is_same_v<Ratio, std::ratio<1>>))
+    requires(IsValidUnit<Type, UID, Ratio>::value)
 struct Unit
 {
 public:
@@ -475,22 +488,30 @@ public:
     }
 
     /**
-     * Equality operators. These are trickier than they look. Generally, we need to
-     * check for a few things:
-     * - Is this type ratio-compatible? (mult and div for intmax_t well-defined)
-     *    - If not, is the ratio 1 or 
-     * - Does this type have builtin epsilon? (std::is_arithmetic only)
+     * Equality operators. These are trickier than they look. In order for two
+     * units A and B to be comparable:
+     * - Their UIDs must match, or one is a plaintype and the other is an empty unit
+     * And also, one of:
+     * Builtin types:
+     *   - Both types are ratio compatible, and epsilon is well-defined (builtin only)
+     *   - Both types are ratio compatible, and are integral (builtin only)
+     * User-defined types:
+     *   - Underlying equality A == B must be defined
+     * - Both sides are ratio-compatible (and ratios can be anything)
+     * - Or, only one side is ratio-compatible (and it can have any ratio, but
+     *   the other side must be 1/1)
+     * - Or, neither side is ratio-compatible, and both have ratio 1/1
      */
 
     /**
      * @brief Compare with another unit of the same UID using `typed_ratio_equality`,
-     * if both types are `std::is_arithmetic` types. Looks for a common epsilon under
+     * if both types are `IsArithmetic` types. Looks for a common epsilon under
      * the hood and multiplies the uncertainty by ratios.
      * - UIDs must match.
      * - Ratios must be well
      */
     template <typename RHS_Type, UnitIdentifier RHS_UID, IsRatio RHS_Ratio>
-        requires((std::is_arithmetic_v<RHS_Type> && std::is_arithmetic_v<Type>) &&
+        requires((IsArithmetic<RHS_Type> && IsArithmetic<Type>) &&
                  requires(RHS_Type a, Type b) {
                      requires std::is_same_v<UID, RHS_UID>;
                      { a == b } -> std::convertible_to<bool>;
@@ -502,7 +523,7 @@ public:
 
     /** @brief Comparison for std::is_arithmetic types for empty units */
     template <typename T>
-        requires((std::is_arithmetic_v<T> && std::is_arithmetic_v<Type>) &&
+        requires((IsArithmetic<T> && IsArithmetic<Type>) &&
                  requires(Type a, T b) {
                      requires IsEmptyUid<UID>;
                      { a == b } -> std::convertible_to<bool>;
@@ -557,7 +578,7 @@ struct IsUnitHelper : std::false_type
 };
 
 template <typename Type, UnitIdentifier UID, IsRatio Ratio>
-    requires std::is_arithmetic_v<Type>
+    requires IsValidUnit<Type, UID, Ratio>::value
 struct IsUnitHelper<Unit<Type, UID, Ratio>> : std::true_type
 {
 };

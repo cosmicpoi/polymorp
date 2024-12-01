@@ -3,6 +3,29 @@
 #include <concepts>
 #include <iostream>
 
+/**
+ * Proxies for builtins like `std::is_arithmetic` and qstd::common_type`.
+ * We generally try to avoid using the std type utils, so putting them in 
+ * a single place makes it easier to search the codebase for exceptions.
+ */
+
+/** @brief Proxy for common type */
+template <typename A, typename B>
+using CommonType = std::common_type_t<A, B>;
+
+/** @brief Proxy for arithmetic */
+template <typename A>
+concept IsArithmetic = std::is_arithmetic_v<A>;
+
+/** @brief Proxy for integral */
+template <typename A>
+concept IsIntegral = std::is_integral_v<A>;
+
+
+/**
+ * Extract parameter pack
+ */
+
 template <typename T>
 struct ExtractParameterPack_
 {
