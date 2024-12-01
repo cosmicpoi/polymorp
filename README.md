@@ -89,12 +89,16 @@ Here we dive more specifically into some of our design philosophies, in addition
 
 **Follow built-in language patterns**
 - Use default constructors instead of zero constructors
-- Use natural common types instead of type coercion.
-  - But, don't use `std::common_type`, since it only is well-defined for builtin types. Instead, prefer patterns like `decltype(a * b)`
+- Use decltypes and concepts instead of type coercion/casting
+  - But, don't use `std::common_type`, since it only is well-defined for builtin types. Prefer patterns like `decltype(a * b)`
 
 **Plain scalars** - We should avoid defining plain scalars only in terms of built-in C++ types like `double` and `int`. Users should be able to provide their own type wrappers that are compatible witht he unit system. Therefore, using checks like `std::is_arithmetic`, which uses builtin types under the hood, is insufficient.
 
 Instead, we should define our own concepts checking that types have the necessary properties, such as addition and subtraction.
+
+**In general, avoid using standard library type utils** like `common_type` (in addition to `is_arithmetic`, as mentioned). These are often only well-defined for builtin types and a first-class goal of the library is to support user-defined types.
+
+One exception to this is division, because to define it formally we need a notion of multiplicative inverse and identity, and these notions don't really exist in plain C++. We can proxy them somewhat with constructions like `Type{0}` and `Type{1}`, but these can be weird because, for instance, `std::string{0}` -> `"0"`. Because of this, the builtin division is only fully-specified for `std::is_arithmetic` types. It is not difficult for users to add additional overrides for their own types, thanks to the way C++20 concepts work.
 
 **Don't over-specialize.** Don't assume, for instance, that scalars must be addable, dividable, and multipliable in order to be valid units; or don't assume that matrices can only be comprised of types that have a well-defined zero value. Instead, allow for wrappers (`Unit` or `Vector`/`Matrix` containers) to define partial functionality based on what the underlying types support. For instance, `Vector<std::string>::IsZero()` is not well-defined, but `Vector<int>::IsZero()` is.
 

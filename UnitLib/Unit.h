@@ -286,17 +286,23 @@ public:
         return UseWithPlaintype_<RHS>{value / rhs};
     }
 
+    /** @brief Unary negation */
+    inline ThisType operator-() const
+    {
+        return -1 * (*this);
+    }
+
     /**
      * Addition and subtraction
      *
-     *    These can be surprisingly tricky because we need to properly handle ratios.
-     *    The overall method is to preserve as much info as possible in the ratio even
-     *    if it becomes nonsensical, and rely on copy assignment to coerce the ratio
-     *    into the one the user actually wants. For instance:
+     *    These can be surprisingly tricky because we need to properly handle
+     *    ratios. The overall method is to preserve as much info as possible in
+     *    the ratio and rely on copy assignment to coerce the ratio into the one
+     *    the user actually wants. For instance:
      *      Kilometer v = Kilometer{1} + Meter{1}; // expect 1.001km, not 1001m
      */
 
-    // Helper for adding OR subtracting
+    /** Helper for adding or subtracting */
     template <typename RHS_Type, UnitIdentifier RHS_UID, IsRatio RHS_Ratio>
         requires std::is_same_v<UID, RHS_UID>
     using ThisUnitAdd_ = Unit<
@@ -340,14 +346,8 @@ public:
             ratio_value_add<Type, Ratio, RHS, std::ratio<1>>(value, -rhs)};
     }
 
-    /** @brief Unary negation */
-    inline ThisType operator-() const
-    {
-        return -1 * (*this);
-    }
-
     /**
-     * Proxy compound assignment operators: +=, -=, *=, /=
+     * Compound assignment operators: +=, -=, *=, /=
      */
 
     /** @brief Multiplication assignment */
@@ -386,7 +386,9 @@ public:
         return *this;
     }
 
-    /** Comparison */
+    /**
+     * Comparison
+     */
 
     template <typename RHS_Type, UnitIdentifier RHS_UID, IsRatio RHS_Ratio>
         requires requires(RHS_Type A, Type B) {
@@ -431,6 +433,7 @@ public:
      * Conversion operators
      */
 
+    /** @brief Allow conversion of this operator to its underlying type, if it's empty */
     operator Type() const
         requires IsEmptyUid<UID>
     {
@@ -527,9 +530,21 @@ inline OpMultiplyType<Unit<RHS_Type, RHS_UID, RHS_Ratio>, LHS> operator*(const L
     return rhs.operator*(lhs);
 }
 
-/** @brief Left-divide with plain type */
+/**
+ * @brief Left-divide with plain type.
+ * This is tricky because in order to define this properly we need a notion of
+ * multiplicative inverse. Because of this, we choose to implement this only for
+ * `std::is_arithmetic` types by default.
+ */
 template <typename LHS, typename RHS_Type, UnitIdentifier RHS_UID, IsRatio RHS_Ratio>
-    requires requires(LHS a, UnitExpI<Unit<RHS_Type, RHS_UID, RHS_Ratio>, -1> b) { b.operator*(a); }
+    requires requires(LHS a, RHS_Type b) {
+        // Only definable on is_arithmetic types
+        requires std::is_arithmetic_v<LHS>;
+        // Right-multiply is defineable for the inverse
+        requires CanOpMultiply<UnitExpI<Unit<RHS_Type, RHS_UID, RHS_Ratio>, -1>, LHS>;
+        // Reciprocals are well-defined on the underlying type
+        { 1 / b } -> std::convertible_to<RHS_Type>;
+    }
 inline OpMultiplyType<UnitExpI<Unit<RHS_Type, RHS_UID, RHS_Ratio>, -1>, LHS> operator/(const LHS &lhs, const Unit<RHS_Type, RHS_UID, RHS_Ratio> &rhs)
 {
     UnitExpI<Unit<RHS_Type, RHS_UID, RHS_Ratio>, -1> rhs_inv{1 / rhs.GetValue()};

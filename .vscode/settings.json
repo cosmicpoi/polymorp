@@ -65,5 +65,15 @@
         "algorithm": "cpp",
         "__memory": "cpp",
         "iomanip": "cpp"
-    }
+    },
+    "editor.rulers": [
+        {
+            "column": 80, // spacing of 1st column from left
+            "color": "#333" // orange, Go Vols!
+        },
+        {
+            "column": 100, // third ruler
+            "color": "#333" // purple, go Pirates! 
+        },
+    ],
 }
