@@ -392,17 +392,3 @@ concept Negatable = requires(A a) {
     { -1 * a } -> std::constructible_from<A>;
     { 1 * a } -> std::constructible_from<A>;
 };
-
-// ------------------------------------------------------
-
-template <typename A, typename B>
-concept CanRatioAdd = requires(std::common_type_t<A, B> x, intmax_t r) {
-    { x / r } -> std::same_as<std::common_type_t<A, B>>;
-    { x + x } -> std::same_as<std::common_type_t<A, B>>;
-};
-
-template <typename A, typename B>
-concept CanRatioSubtract = requires(std::common_type_t<A, B> x, intmax_t r) {
-    { x / r } -> std::same_as<std::common_type_t<A, B>>;
-    { x - x } -> std::same_as<std::common_type_t<A, B>>;
-};

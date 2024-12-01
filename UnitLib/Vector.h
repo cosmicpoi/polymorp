@@ -465,9 +465,9 @@ struct IsVectorHelper<Vector<N, T>> : std::true_type
 template <typename T>
 concept IsVector = IsVectorHelper<T>::value;
 
-//--------------------------------------------------------------------------------
+//------------------------------------------------------------------------------
 // Operator overloads
-//--------------------------------------------------------------------------------
+//------------------------------------------------------------------------------
 
 /** @brief Right-multiply by scalar */
 template <typename LHS_VecType, size_t N, typename RHS_Type>

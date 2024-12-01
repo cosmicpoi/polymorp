@@ -46,9 +46,10 @@ int main()
 {
     // Matrix<2, 2, Meter> mat2{1, 2, 3, 4};
     // std::cout << Inv(mat2) << std::endl;
+    std::cout << (Kilometer{1} + Meter{1}) << std::endl;
 
-    double x = dUEmpty{1.0};
-    x *= dUEmpty{2.0};
-    std::cout << x << std::endl;
+    // double x = dUEmpty{1.0};
+    // x *= dUEmpty{2.0};
+    // std::cout << x << std::endl;
     // std::cout << std::string{1} << std::endl;
 }

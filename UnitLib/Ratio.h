@@ -30,27 +30,34 @@ concept RatioIsZero_ = requires {
 template <typename T>
 concept RatioIsZero = IsRatio<T> && RatioIsZero_<T>;
 
+/** Check if the given type can be used with non-trivial (i.e. 1/1) ratios
+ * Check if a type with type `T` can be multiplied by a ratio (i.e. * and / with
+ * intmax_t) and then converted to `OutType`
+ */
+template <typename T>
+concept CanRatioMultiply = requires(T t, intmax_t i) {
+    { t / i } -> std::convertible_to<T>;
+    { t *i } -> std::convertible_to<T>;
+};
+
 /** Function to multiply out a ratio: Compute val * R */
-template <IsRatio R, typename T>
-T MultiplyByRatio(T val)
+template <IsRatio R, typename OutType, typename T>
+    requires CanRatioMultiply<T>
+T MultiplyByRatio(const T &val)
 {
     if (R::num == 1 && R::den == 1)
     {
         return val;
     }
-    return static_cast<T>(val * (R::num) / (R::den));
+    return static_cast<OutType>(val * (static_cast<OutType>(R::num)) / static_cast<OutType>(R::den));
 }
 
 /** Function to divide out a ratio* Compute val / R */
 template <IsRatio R, typename OutType, typename T>
-OutType DivideByRatio(T val)
+    requires CanRatioMultiply<T>
+OutType DivideByRatio(const T &val)
 {
-    if (R::num == 1 && R::den == 1)
-    {
-        return val;
-    }
-
-    return static_cast<OutType>(val * (static_cast<OutType>(R::den) / static_cast<OutType>(R::num)));
+    return MultiplyByRatio<std::ratio<R::den, R::num>, OutType, T>(val);
 };
 
 /** Convert ratio to double */
