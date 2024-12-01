@@ -37,8 +37,7 @@ struct RatioEqualityHelper<LHS_Type, LHS_Ratio, RHS_Type, RHS_Ratio>
  * Epsilon-based equality for IsArithmetic types.
  */
 template <typename Type, IsRatio Ratio, typename RHS_Type, IsRatio RHS_Ratio>
-    requires(IsArithmetic<Type> &&
-             IsArithmetic<RHS_Type> &&
+    requires(IsArithmetic<Type, RHS_Type> &&
              (RHS_Ratio::num > 0 && Ratio::num > 0))
 constexpr bool typed_ratio_equality(Type value, RHS_Type rhs)
 {
@@ -46,7 +45,7 @@ constexpr bool typed_ratio_equality(Type value, RHS_Type rhs)
     // we want to override the default eps tolerance even for plain types (since they may have converted from Kilo)
     using Helper = RatioEqualityHelper<Type, Ratio, RHS_Type, RHS_Ratio>;
     using CommonType = typename Helper::CommonType;
-    if constexpr (std::is_integral_v<Type> && std::is_integral_v<RHS_Type>)
+    if constexpr (IsIntegral<Type, RHS_Type>)
     {
         return static_cast<CommonType>(value * Helper::fac1) == static_cast<CommonType>(rhs * Helper::fac2);
     }
@@ -105,7 +104,7 @@ std::common_type_t<LHS_Type, RHS_Type> ratio_value_subtract(const LHS_Type &lhs,
 //------------------------------------------------------------------------------
 
 template <typename Type, UnitIdentifier UID, IsRatio Ratio>
-struct IsValidUnit
+struct IsValidUnit_
 {
     static constexpr bool value = false;
 };
@@ -113,10 +112,14 @@ struct IsValidUnit
 template <typename Type, UnitIdentifier UID, IsRatio Ratio>
     requires(IsRatioCompatible<Type> && Ratio::num > 0) ||
             (!IsRatioCompatible<Type> && std::is_same_v<Ratio, std::ratio<1>>)
-struct IsValidUnit<Type, UID, Ratio>
+struct IsValidUnit_<Type, UID, Ratio>
 {
     static constexpr bool value = true;
 };
+
+template <typename Type, typename UID, typename Ratio>
+concept IsValidUnit = UnitIdentifier<UID> && IsRatio<Ratio> &&
+                      IsValidUnit_<Type, UID, Ratio>::value;
 
 /**
  * @brief Unit definition
@@ -127,7 +130,7 @@ struct IsValidUnit<Type, UID, Ratio>
  * The behavior for each operator will vary based on these properties.
  */
 template <typename Type, UnitIdentifier UID = EmptyUid, IsRatio Ratio = std::ratio<1>>
-    requires(IsValidUnit<Type, UID, Ratio>::value)
+    requires(IsValidUnit<Type, UID, Ratio>)
 struct Unit
 {
 public:
@@ -496,62 +499,33 @@ public:
      *   - Both types are ratio compatible, and epsilon is well-defined (builtin only)
      *   - Both types are ratio compatible, and are integral (builtin only)
      * User-defined types:
-     *   - Underlying equality A == B must be defined
-     * - Both sides are ratio-compatible (and ratios can be anything)
-     * - Or, only one side is ratio-compatible (and it can have any ratio, but
-     *   the other side must be 1/1)
-     * - Or, neither side is ratio-compatible, and both have ratio 1/1
+     * - Underlying equality A == B must be defined. In addition, either:
+     *   - Both sides are ratio-compatible (and ratios can be anything)
+     *   - Or, only one side is ratio-compatible (and it can have any ratio, but
+     *     the other side must be 1/1)
+     *   - Or, neither side is ratio-compatible, and both have ratio 1/1
      */
 
-    /**
-     * @brief Compare with another unit of the same UID using `typed_ratio_equality`,
-     * if both types are `IsArithmetic` types. Looks for a common epsilon under
-     * the hood and multiplies the uncertainty by ratios.
-     * - UIDs must match.
-     * - Ratios must be well
-     */
+    /** @brief Comparison for builtin IsArithmetic types (integral and non-integral) */
     template <typename RHS_Type, UnitIdentifier RHS_UID, IsRatio RHS_Ratio>
-        requires((IsArithmetic<RHS_Type> && IsArithmetic<Type>) &&
-                 requires(RHS_Type a, Type b) {
-                     requires std::is_same_v<UID, RHS_UID>;
-                     { a == b } -> std::convertible_to<bool>;
-                 })
+        requires(std::is_same_v<UID, RHS_UID> &&
+                 IsArithmetic<Type, RHS_Type> &&
+                 IsRatioCompatible<Type, RHS_Type> &&
+                 IsEqualityComparable<Type, RHS_Type>)
     inline bool operator==(const Unit<RHS_Type, RHS_UID, RHS_Ratio> &rhs) const
     {
         return typed_ratio_equality<Type, Ratio, RHS_Type, RHS_Ratio>(value, rhs.GetValue());
     }
 
-    /** @brief Comparison for std::is_arithmetic types for empty units */
+    /** @brief Comparison for builtin IsArithmetic types for empty units (integral and non-integral)*/
     template <typename T>
-        requires((IsArithmetic<T> && IsArithmetic<Type>) &&
-                 requires(Type a, T b) {
-                     requires IsEmptyUid<UID>;
-                     { a == b } -> std::convertible_to<bool>;
-                 })
+        requires(IsEmptyUid<UID> &&
+                 IsArithmetic<Type, T> &&
+                 IsEqualityComparable<Type, T>)
     inline bool operator==(const T &rhs) const
     {
         return typed_ratio_equality<Type, Ratio, T, std::ratio<1>>(value, rhs);
     }
-
-    /**
-     * @brief Comparison between non-`std::arithmetic` types of the same UID and type,
-     * provided that `==` is defined between them, and provided ratios are well-defined.
-     * Use underlying `==`.
-     */
-
-    // // Compare with empty unit
-    // template <typename T>
-    //     requires((!std::is_arithmetic_v<T> || !std::is_arithmetic_v<T>) &&
-    //              requires(Type a, T b) {
-    //                  requires IsEmptyUid<UID>;
-    //                  { a == b } -> std::convertible_to<bool>;
-    //              })
-    // inline bool operator==(const T &rhs) const
-    // {
-    //     return typed_ratio_equality<Type, Ratio, T, std::ratio<1>>(value, rhs);
-    // }
-
-    /** @brief Comparison between non-`std::arithmetic` types for empty units */
 
     /**
      * Conversion operators
@@ -578,7 +552,7 @@ struct IsUnitHelper : std::false_type
 };
 
 template <typename Type, UnitIdentifier UID, IsRatio Ratio>
-    requires IsValidUnit<Type, UID, Ratio>::value
+    requires IsValidUnit<Type, UID, Ratio>
 struct IsUnitHelper<Unit<Type, UID, Ratio>> : std::true_type
 {
 };
@@ -616,8 +590,8 @@ using UnitMultRatio = Unit<
 
 /** @brief Shorthand for empty unit */
 template <typename T>
-    requires std::is_arithmetic_v<T>
-using EmptyUnit = Unit<T, EmptyUid>;
+    requires IsValidUnit<T, EmptyUid, std::ratio<1>>
+using EmptyUnit = Unit<T, EmptyUid, std::ratio<1>>;
 
 //------------------------------------------------------------------------------
 // Left side plaintype operations
@@ -646,12 +620,12 @@ inline OpMultiplyType<Unit<RHS_Type, RHS_UID, RHS_Ratio>, LHS> operator*(const L
  * @brief Left-divide with plain type.
  * This is tricky because in order to define this properly we need a notion of
  * multiplicative inverse. Because of this, we choose to implement this only for
- * `std::is_arithmetic` types by default.
+ * IsArithmetic types by default.
  */
 template <typename LHS, typename RHS_Type, UnitIdentifier RHS_UID, IsRatio RHS_Ratio>
     requires requires(LHS a, RHS_Type b) {
         // Only definable on is_arithmetic types
-        requires std::is_arithmetic_v<LHS>;
+        requires IsArithmetic<LHS>;
         // Right-multiply is defineable for the inverse
         requires CanOpMultiply<UnitExpI<Unit<RHS_Type, RHS_UID, RHS_Ratio>, -1>, LHS>;
         // Reciprocals are well-defined on the underlying type

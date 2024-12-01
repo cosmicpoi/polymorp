@@ -35,10 +35,13 @@ concept RatioIsZero = IsRatio<T> && RatioIsZero_<T>;
  * intmax_t) and then converted to `OutType`
  */
 template <typename T>
-concept IsRatioCompatible = requires(T t, intmax_t i) {
+concept IsRatioCompatible_ = requires(T t, intmax_t i) {
     { t / i } -> std::convertible_to<T>;
     { t *i } -> std::convertible_to<T>;
 };
+
+template <typename... Ts>
+concept IsRatioCompatible = ((IsRatioCompatible_<Ts> && ...));
 
 /** Function to multiply out a ratio: Compute val * R */
 template <IsRatio R, typename OutType, typename T>

@@ -22,9 +22,9 @@ inline UnitExp<Unit<Type, UID, Ratio>, std::ratio<1, 2>> unit_sqrt(const Unit<Ty
         DivideByRatio<ResRatio, Type>(std::sqrt(val.GetRealValue()))};
 }
 
-/** @brief Square root for `std::is_arithmetic` types */
+/** @brief Square root for IsArithmetic types */
 template <typename T>
-    requires std::is_arithmetic_v<T>
+    requires IsArithmetic<T>
 inline T unit_sqrt(const T &val)
 {
     return std::sqrt(val);
@@ -59,9 +59,9 @@ inline UnitExp<Unit<Type, UID, Ratio>, Exp> unit_ratio_pow(const Unit<Type, UID,
         DivideByRatio<ResRatio, Type>(std::pow(val.GetRealValue()), RatioAsDouble<Exp>())};
 }
 
-/** @brief Rational pow for `std::is_arithmetic` types */
+/** @brief Rational pow for IsArithmetic types */
 template <IsRatio Exp, typename T>
-    requires std::is_arithmetic_v<T>
+    requires IsArithmetic<T>
 inline T unit_ratio_pow(const T &val)
 {
     return std::pow(val, RatioAsDouble<Exp>());

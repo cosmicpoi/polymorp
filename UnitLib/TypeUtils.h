@@ -5,7 +5,7 @@
 
 /**
  * Proxies for builtins like `std::is_arithmetic` and qstd::common_type`.
- * We generally try to avoid using the std type utils, so putting them in 
+ * We generally try to avoid using the std type utils, so putting them in
  * a single place makes it easier to search the codebase for exceptions.
  */
 
@@ -13,14 +13,33 @@
 template <typename A, typename B>
 using CommonType = std::common_type_t<A, B>;
 
-/** @brief Proxy for arithmetic */
-template <typename A>
-concept IsArithmetic = std::is_arithmetic_v<A>;
+/** Proxy for arithmetic */
 
-/** @brief Proxy for integral */
 template <typename A>
-concept IsIntegral = std::is_integral_v<A>;
+concept IsArithmetic_ = std::is_arithmetic_v<A> && requires {
+    { std::numeric_limits<A>::epsilon() };
+};
 
+/** @brief Check if a list of typenames are arithmetic */
+template <typename... As>
+concept IsArithmetic = ((IsArithmetic_<As> && ...));
+
+/** Proxy for integral */
+
+template <typename A>
+concept IsIntegral_ = std::is_integral_v<A>;
+
+/** @brief Check if a list of typenames are integral */
+template <typename... As>
+concept IsIntegral = ((IsIntegral_<As> && ...));
+
+/**
+ * Check if two types are equality comparable
+ */
+template <typename A, typename B>
+concept IsEqualityComparable = requires(A a, B b) {
+    { a == b } -> std::convertible_to<bool>;
+};
 
 /**
  * Extract parameter pack
