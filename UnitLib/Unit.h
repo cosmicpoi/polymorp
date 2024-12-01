@@ -126,8 +126,8 @@ concept IsValidUnit = UnitIdentifier<UID> && IsRatio<Ratio> &&
 /**
  * @brief Unit definition
  * For each unit, we need to consider a few things:
- * - Is this an empty unit
- * - Is the underlying type a `IsArithmetic` type?
+ * - Is this an empty unit? (Checked by IsEmptyUid<UID>)
+ * - Is the underlying type a builtin type? (Checked by `IsArithmetic<Type>`)
  * - Are ratios well-defined on this type? (Mult and div by intmax_t)
  * The behavior for each operator will vary based on these properties.
  */
@@ -576,7 +576,7 @@ public:
     // IsValidUnit<...> - Don't need to explicitly check this since it should be enforced by the unit class template
     inline bool operator==(const Unit<RHS_Type, RHS_UID, RHS_Ratio> &rhs) const
     {
-        return value.GetRealValue() == rhs.GetRealValue();
+        return GetRealValue() == rhs.GetRealValue();
     }
 
     /** @brief Comparison for user-defined types where at least one side is ratio-incompatible (Empty Unit version)*/
@@ -588,7 +588,7 @@ public:
     // IsValidUnit<...> - Don't need to explicitly check this since it should be enforced by the unit class template
     inline bool operator==(const T &rhs) const
     {
-        return value.GetRealValue() == rhs.GetRealValue();
+        return GetRealValue() == rhs;
     }
 
     /**
@@ -724,7 +724,6 @@ inline OpAddType<Unit<RHS_Type, RHS_UID, RHS_Ratio>, LHS> operator-(LHS lhs, con
 //------------------------------------------------------------------------------
 
 template <typename T, StringLiteral Symbol>
-    requires std::is_arithmetic_v<T>
 using TypeAtomic = Unit<T, MakeUnitIdentifier<UnitAtomic<Symbol>>>;
 
 template <StringLiteral Symbol>

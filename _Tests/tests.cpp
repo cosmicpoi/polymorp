@@ -246,18 +246,33 @@ int main()
 
     // Test equality
     {
-        assert(Meter{1000} == Kilometer{1});
-        assert(Meter{1} == Kilometer{0.001});
+        // Basic comparisons
         assert(Meter{1} == Meter{1});
 
-        assert((CanOp<Meter, "==", Meter>()));
-        assert((CanOp<Meter, "==", iMeter>()));
-
+        // Basic incompatibility checks
         assert((!CanOp<Meter, "==", Second>()));
         assert((!CanOp<Meter, "==", typename Meter::type>()));
         assert((!CanOp<Meter, "==", float>()));
         assert((!CanOp<Meter, "==", double>()));
-        assert((!CanOp<Meter, "==", float>()));
+
+        // Comparing units of different ratios
+        assert(Meter{1000} == Kilometer{1});
+        assert(Meter{1} == Kilometer{0.001});
+
+        // Comparing units of different underlying types
+        assert((CanOp<Meter, "==", iMeter>()));
+        assert((Meter{1.0} == iMeter{1}));
+
+        // Comparing non-arithmetic types
+        assert((TypeAtomic<std::string, "meter">{"hi"} == TypeAtomic<std::string, "meter">{"hi"}));
+
+        // Comparing empty units and plaintypes
+        assert(dUEmpty{1.0} == 1.0);
+        assert(1.0 == dUEmpty{1.0});
+
+        // Comparing empty units and plain non-arithmetics
+        assert(EmptyUnit<std::string>{"hi"} == "hi");
+        assert("hi" == EmptyUnit<std::string>{"hi"});
     }
 
     // Comparison between empty units and plain scalars (left and right)
