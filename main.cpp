@@ -37,19 +37,104 @@ concept CanSqrt = requires(A a) {
     { std::sqrt(a) };
 };
 
-// Example class that supports add and subtract but not divide/mult
+template <uint P>
+constexpr uint PositiveMod(const intmax_t &val)
+{
+    uint rem = (val % P);
+    return rem < 0 ? (rem + P) : rem;
+}
+
+// Example class that supports add and subtract and ALSO ratio
+template <uint P>
+class PrimeField
+{
+public:
+    static constexpr uint p = P;
+    inline PrimeField(uint val) : value(val % P) {};
+
+    // Add/subtract operations
+    inline PrimeField<P> operator+(const PrimeField<P> &other) const
+    {
+        return PrimeField(PositiveMod<P>(value + other.value));
+    }
+
+    inline PrimeField<P> operator-(const PrimeField<P> &other) const
+    {
+        return PrimeField(PositiveMod<P>(value - other.value));
+    }
+    // Mult/divide
+    inline PrimeField<P> operator*(const PrimeField<P> &other) const
+    {
+        return PrimeField(PositiveMod<P>(value * other.value));
+    }
+
+    inline PrimeField<P> MultInv() const
+    {
+        // Use fermat's little theorem
+        // x = a^(P-2), so need to multiply P-3 times
+        uint res = value;
+        for (uint i = 0; i <= P - 3; i++)
+        {
+            res = (res * res) % P;
+        }
+
+        return res;
+    }
+
+    inline PrimeField<P> operator/(const PrimeField<P> &other) const
+    {
+        if (other.value == 0)
+        {
+            throw std::runtime_error("Divide by zero");
+        }
+        return (*this) * other.MultInv();
+    }
+
+    // Ratio operations
+    inline PrimeField<P> operator*(const intmax_t &other) const
+    {
+        return PrimeField(PositiveMod<P>(value * other));
+    }
+
+    inline PrimeField<P> operator/(const intmax_t &other) const
+    {
+        if (other % P == 0)
+        {
+            throw std::runtime_error("Divide by zero");
+        }
+        return (*this) * PrimeField<P>{PositiveMod<P>(other)}.MultInv();
+    }
+
+    inline bool operator==(const PrimeField<P> &other) const
+    {
+        return value == other.value;
+    }
+
+    // Value holder
+    uint value;
+};
+
+template <uint P>
+std::ostream &operator<<(std::ostream &os, const PrimeField<P> &val)
+{
+    return os << val.value; // Forward to the underlying std::string
+}
+
+using Z7 = PrimeField<7>;
+
+// Example class that supports add and subtract but NOT ratio
 class AdditiveString
 {
 public:
-    AdditiveString(const std::string &val) : value(val) {};
-    AdditiveString(const char *val) : value(val) {};
+    inline AdditiveString(const std::string &val) : value(val) {};
+    inline AdditiveString(const char *val) : value(val) {};
     // concats strings
-    AdditiveString operator+(const AdditiveString &other) const
+    inline AdditiveString operator+(const AdditiveString &other) const
     {
         return AdditiveString(value + other.value);
     }
     // removes the given string only if it at the end - for instance, "hibye" - "bye" == "hi"
-    AdditiveString operator-(const AdditiveString &suffix) const
+    inline AdditiveString operator-(const AdditiveString &suffix) const
     {
         if (value.size() >= suffix.value.size() &&
             value.compare(value.size() - suffix.value.size(), suffix.value.size(), suffix.value) == 0)
@@ -59,6 +144,12 @@ public:
         }
         // If the suffix is not at the end, return the original string
         return *this;
+    }
+
+    // comparison
+    inline bool operator==(const AdditiveString &other) const
+    {
+        return value == other.value;
     }
 
     std::string value;
@@ -80,7 +171,14 @@ int main()
     // std::cout << ( 2.5 / Meter{2} ) << std::endl;
 
     using StrUnit = TypeAtomic<AdditiveString, "string">;
+    // Doesn't compile:
+    // using StrDouble = UnitMultRatio<StrUnit, std::ratio<2>>;
     std::cout << (StrUnit{"hellobye"} + StrUnit{"bye"}) << std::endl;
+
+    using Z7Unit = TypeAtomic<Z7, "z7">;
+    using Z7Unit_Double = UnitMultRatio<Z7Unit, std::ratio<2>>;
+    using Z7Unit_Half = UnitMultRatio<Z7Unit, std::ratio<1, 2>>;
+    // std::cout << ((Z7{1} / Z7{2}).value == 4) << std::endl;
 
     // std::cout << (EmptyUnit<AdditiveString>{"hellobye"} + EmptyUnit<AdditiveString>{"bye"}) << std::endl;
     // std::cout << (EmptyUnit<AdditiveString>{"hellobye"} + AdditiveString{"bye"}) << std::endl;
@@ -89,13 +187,21 @@ int main()
     // std::cout << (EmptyUnit<AdditiveString>{"hellobye"} - AdditiveString{"bye"}) << std::endl;
     // std::cout << (2.5 + dUEmpty{2}) << std::endl;
 
-    std::cout << (dUEmpty{2} + 2.5) << std::endl;
-    std::cout << (2.5 + dUEmpty{2}) << std::endl;
-
-    std::cout << (dUEmpty{2} - 2.5) << std::endl;
-    std::cout << (2.5 - dUEmpty{2}) << std::endl;
     // std::cout << ( Meter{2} - 2.5 ) << std::endl;
     // std::cout << ( 2.5 - Meter{2} ) << std::endl;
+
+    /** Comparison with empty units */
+    // Builtin
+    std::cout << (dUEmpty{2} == 2) << std::endl;
+    std::cout << (2 == dUEmpty{2}) << std::endl;
+
+    // User-defined with ratio
+    std::cout << (EmptyUnit<Z7>{1} == Z7{1}) << std::endl;
+    std::cout << (Z7{1} == EmptyUnit<Z7>{1}) << std::endl;
+
+    // User-defined without ratio
+    std::cout << (EmptyUnit<AdditiveString>{"hellobye"} == AdditiveString{"hellobye"}) << std::endl;
+    std::cout << (AdditiveString{"hellobye"} == EmptyUnit<AdditiveString>{"hellobye"}) << std::endl;
 
     // std::cout << unit_ratio_pow<std::ratio<2, 4>>(v) << std::endl;
 
