@@ -42,9 +42,13 @@ int main()
     // Matrix<2, 2, Meter> mat2{1, 2, 3, 4};
     // std::cout << Inv(mat2) << std::endl;
     // std::cout << (HasSquareRoot<std::string>) << std::endl;
+    std::cout << ( Meter{2} * 2.5 ) << std::endl;
+    std::cout << ( 2.5 * Meter{2} ) << std::endl;
+    std::cout << ( Meter{2} / 2.5 ) << std::endl;
+    std::cout << ( 2.5 / Meter{2} ) << std::endl;
 
     Kilometer v{1};
-    std::cout << unit_ratio_pow<std::ratio<2, 4>>(v) << std::endl;
+    // std::cout << unit_ratio_pow<std::ratio<2, 4>>(v) << std::endl;
 
     // double x = dUEmpty{1.0};
     // x *= dUEmpty{2.0};

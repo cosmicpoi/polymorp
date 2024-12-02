@@ -350,7 +350,7 @@ public:
         UIDivide<UID, RHS_UID>,
         std::ratio_divide<Ratio, RHS_Ratio>>;
 
-    /** @brief Multiply with another unit. Follow default language promotion rules */
+    /** @brief Multiply with another unit. */
     template <typename RHS_Type, UnitIdentifier RHS_UID, IsRatio RHS_Ratio>
         requires CanMultiply<Type, RHS_Type>
     inline ThisUnitMultiply_<RHS_Type, RHS_UID, RHS_Ratio> operator*(const Unit<RHS_Type, RHS_UID, RHS_Ratio> &rhs) const
@@ -358,28 +358,12 @@ public:
         return ThisUnitMultiply_<RHS_Type, RHS_UID, RHS_Ratio>{value * rhs.GetValue()};
     }
 
-    /** @brief Multiply with unitless scalar. */
-    template <std::convertible_to<Type> RHS>
-        requires CanMultiply<Type, RHS>
-    inline Unit<MultiplyType<Type, RHS>, UID, Ratio> operator*(const RHS &rhs) const
-    {
-        return Unit<MultiplyType<Type, RHS>, UID, Ratio>{value * rhs};
-    }
-
-    /** @brief Divide by another unit. Follow default language promotion rules */
+    /** @brief Divide by another unit.  */
     template <typename RHS_Type, UnitIdentifier RHS_UID, IsRatio RHS_Ratio>
         requires CanDivide<Type, RHS_Type>
     inline ThisUnitDivide_<RHS_Type, RHS_UID, RHS_Ratio> operator/(const Unit<RHS_Type, RHS_UID, RHS_Ratio> &rhs) const
     {
         return ThisUnitDivide_<RHS_Type, RHS_UID, RHS_Ratio>{value / rhs.GetValue()};
-    }
-
-    /** @brief Divide by unitless scalar. */
-    template <std::convertible_to<Type> RHS>
-        requires CanDivide<Type, RHS>
-    inline Unit<DivideType<Type, RHS>, UID, Ratio> operator/(const RHS &rhs) const
-    {
-        return Unit<DivideType<Type, RHS>, UID, Ratio>{value / rhs};
     }
 
     /** @brief Unary negation */
@@ -699,7 +683,51 @@ using EmptyUnit = Unit<T, EmptyUid, std::ratio<1>>;
  */
 
 /**
- * Right-side plaintype operator overloads
+ * Right-side multiplication and division
+ */
+
+/** @brief Multiply with unitless scalar. */
+template <typename Type, UnitIdentifier UID, IsRatio Ratio, typename RHS>
+    requires((!IsUnit<RHS>) &&
+             CanMultiply<Type, RHS>)
+inline Unit<MultiplyType<Type, RHS>, UID, Ratio> operator*(const Unit<Type, UID, Ratio> &lhs_unit, const RHS &rhs)
+{
+    return Unit<MultiplyType<Type, RHS>, UID, Ratio>{lhs_unit.GetValue() * rhs};
+}
+
+/** @brief Divide by unitless scalar. */
+template <typename Type, UnitIdentifier UID, IsRatio Ratio, typename RHS>
+    requires((!IsUnit<RHS>) &&
+             CanDivide<Type, RHS>)
+inline Unit<DivideType<Type, RHS>, UID, Ratio> operator/(const Unit<Type, UID, Ratio> &lhs_unit, const RHS &rhs)
+{
+    return Unit<DivideType<Type, RHS>, UID, Ratio>{lhs_unit.GetValue() / rhs};
+}
+
+/**
+ * Left-side multiplication and division
+ */
+
+/** @brief Left-multiply by plain type */
+template <typename LHS, typename RHS_Type, UnitIdentifier RHS_UID, IsRatio RHS_Ratio>
+    requires((!IsUnit<LHS>) &&
+             CanMultiply<LHS, RHS_Type>)
+inline Unit<MultiplyType<LHS, RHS_Type>, RHS_UID, RHS_Ratio> operator*(const LHS &lhs, const Unit<RHS_Type, RHS_UID, RHS_Ratio> &rhs_unit)
+{
+    return Unit<MultiplyType<LHS, RHS_Type>, RHS_UID, RHS_Ratio>{lhs * rhs_unit.GetValue()};
+}
+
+/** @brief Left-divide with plain type. */
+template <typename LHS, typename RHS_Type, UnitIdentifier RHS_UID, IsRatio RHS_Ratio>
+    requires((!IsUnit<LHS>) &&
+             CanDivide<LHS, RHS_Type>)
+inline Unit<DivideType<LHS, RHS_Type>, UIInvert<RHS_UID>, RatioInvert<RHS_Ratio>> operator/(const LHS &lhs, const Unit<RHS_Type, RHS_UID, RHS_Ratio> &rhs_unit)
+{
+    return Unit<DivideType<LHS, RHS_Type>, UIInvert<RHS_UID>, RatioInvert<RHS_Ratio>>{lhs / rhs_unit.GetValue()};
+}
+
+/**
+ * Right-side and left-side addition and subtraction
  */
 
 /** @brief Add with another type, if resultant type is ratio-compatible */
@@ -745,7 +773,7 @@ inline Unit<SubtractType<Type, RHS>, UID, std::ratio<1>> operator-(const Unit<Ty
 }
 
 /**
- * Left-side plaintype operations
+ * Left-side comparison
  */
 
 /** @brief Left-compare with plain type for EmptyUnits */
@@ -757,53 +785,6 @@ template <typename LHS, typename RHS_Type, UnitIdentifier RHS_UID, IsRatio RHS_R
 inline bool operator==(const LHS &lhs, const Unit<RHS_Type, RHS_UID, RHS_Ratio> &rhs)
 {
     return rhs.operator==(lhs);
-}
-
-/** @brief Left-multiply by plain type */
-template <typename LHS, typename RHS_Type, UnitIdentifier RHS_UID, IsRatio RHS_Ratio>
-    requires CanOpMultiply<Unit<RHS_Type, RHS_UID, RHS_Ratio>, LHS>
-inline OpMultiplyType<Unit<RHS_Type, RHS_UID, RHS_Ratio>, LHS> operator*(const LHS &lhs, const Unit<RHS_Type, RHS_UID, RHS_Ratio> &rhs)
-{
-    return rhs.operator*(lhs);
-}
-
-/**
- * @brief Left-divide with plain type.
- * This is tricky because in order to define this properly we need a notion of
- * multiplicative inverse. Because of this, we choose to implement this only for
- * IsArithmetic types by default.
- */
-template <typename LHS, typename RHS_Type, UnitIdentifier RHS_UID, IsRatio RHS_Ratio>
-    requires requires(LHS a, RHS_Type b) {
-        // Only definable on is_arithmetic types
-        requires IsArithmetic<LHS>;
-        // Right-multiply is defineable for the inverse
-        requires CanOpMultiply<UnitExpI<Unit<RHS_Type, RHS_UID, RHS_Ratio>, -1>, LHS>;
-        // Reciprocals are well-defined on the underlying type
-        { 1 / b } -> std::convertible_to<RHS_Type>;
-    }
-inline OpMultiplyType<UnitExpI<Unit<RHS_Type, RHS_UID, RHS_Ratio>, -1>, LHS> operator/(const LHS &lhs, const Unit<RHS_Type, RHS_UID, RHS_Ratio> &rhs)
-{
-    UnitExpI<Unit<RHS_Type, RHS_UID, RHS_Ratio>, -1> rhs_inv{1 / rhs.GetValue()};
-    return rhs_inv.operator*(lhs);
-}
-
-/** @brief Left-add with plain type */
-template <typename LHS, typename RHS_Type, UnitIdentifier RHS_UID, IsRatio RHS_Ratio>
-    requires CanOpAdd<Unit<RHS_Type, RHS_UID, RHS_Ratio>, LHS>
-inline OpAddType<Unit<RHS_Type, RHS_UID, RHS_Ratio>, LHS> operator+(const LHS &lhs, const Unit<RHS_Type, RHS_UID, RHS_Ratio> &rhs)
-{
-    return rhs.operator+(lhs);
-}
-
-/** @brief Left-subtract with plain type */
-template <typename LHS, typename RHS_Type, UnitIdentifier RHS_UID, IsRatio RHS_Ratio>
-    requires requires(RHS_Type a) {
-        { -1 * a };
-    } && CanOpAdd<Unit<RHS_Type, RHS_UID, RHS_Ratio>, LHS>
-inline OpAddType<Unit<RHS_Type, RHS_UID, RHS_Ratio>, LHS> operator-(LHS lhs, const Unit<RHS_Type, RHS_UID, RHS_Ratio> rhs)
-{
-    return (-1 * rhs).operator+(lhs);
 }
 
 //------------------------------------------------------------------------------
