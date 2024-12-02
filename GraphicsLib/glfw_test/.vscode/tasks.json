@@ -4,18 +4,18 @@
 			{
 					"type": "cppbuild",
 					"label": "C/C++: clang build active file",
-					"command": "/usr/bin/clang",
+					"command": "/usr/bin/clang++",
 					"args": [
 							"-std=c++17",
 							"-fcolor-diagnostics",
 							"-fansi-escape-codes",
 							"-Wall",
 							"-g",
-							"-I/opt/homebrew/opt/glfw/include", // Updated include path
-							"-L/opt/homebrew/opt/glfw/lib",      // Updated library path
-							"-lglfw",                            // Link GLFW library
-							"-lc++",                             // Link with the C++ standard library
-							"${workspaceFolder}/window.cpp",          // Source files
+							"-I${workspaceFolder}/dependencies/include", //includes
+							"-L${workspaceFolder}/dependencies/library", //lib
+							"${workspaceFolder}/dependencies/library/libglfw.3.4.dylib", //lib
+							"${workspaceFolder}/window.cpp", 
+							"${workspaceFolder}/glad.c", 
 							"-o",
 							"${workspaceFolder}/window",            // Output executable
 							"-framework",
@@ -40,7 +40,7 @@
 							"kind": "build",
 							"isDefault": true
 					},
-					"detail": "compiler: /usr/bin/clang"
+					"detail": "compiler: /usr/bin/clang++"
 			}
 	]
 }
