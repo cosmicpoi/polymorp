@@ -258,6 +258,7 @@ int main()
         // Comparing units of different ratios
         assert(Meter{1000} == Kilometer{1});
         assert(Meter{1} == Kilometer{0.001});
+        assert((dUEmpty{1000} == dUKilo{1}));
 
         // Comparing units of different underlying types
         assert((CanOp<Meter, "==", iMeter>()));
@@ -380,6 +381,7 @@ int main()
         assert((Meter{1} * Meter{2.2}) == Meter_2{2.2});
         assert((Meter{1} * Kilometer{1}) == Kilometer_2{0.001});
         assert((Meter{1} * Kilometer{1}) == Meter_2{1000});
+        assert((dUEmpty{1} * dUKilo{1} == (double) 1000));
 
         assert((CanOp<Meter, "*", Meter>()));
         assert((CanOp<Meter, "*", Kilometer>()));
@@ -427,6 +429,8 @@ int main()
         assert((Meter{1} / Second{2} / Second{2}) == MeterPerSecond_2{0.25});
         assert((dUEmpty{1} / Meter{2}) == (Meter__1{0.5}));
 
+        assert((dUEmpty{1} / dUKilo{1} == 0.001));
+
         static_assert((CanOp<Meter, "/", Second>()));
         static_assert((CanOp<Meter, "/", Kilometer>()));
         static_assert((CanOp<Meter, "/", dUEmpty>()));
@@ -459,6 +463,8 @@ int main()
         assert((dUEmpty{2.0} - ((double)1.0) == 1.0));
         assert((((double)2.0) - dUEmpty{1.0} == 1.0));
         assert((dUKilo{1.0} - ((double)1.0) == 999));
+
+        assert((dUEmpty{1} + dUKilo{1} == 1001));
     }
 
     // // Test +=, -=, *=, /=
@@ -587,6 +593,8 @@ int main()
         assert(Meter{999} < Kilometer{1});
         assert(Kilometer{0.999} < Meter{1000});
         assert(Meter{999} < iMeter{1000});
+
+        assert(int(1) < dUEmpty{2});
 
         assert((CanOp<Meter, "<", Meter>()));
         assert((CanOp<Meter, "<", Kilometer>()));
