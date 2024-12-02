@@ -481,7 +481,8 @@ inline Vector<N, MultiplyType<LHS_VecType, RHS_Type>> operator*(const Vector<N, 
 
 /** @brief Left-multiply by scalar */
 template <typename RHS_VecType, size_t N, typename LHS_Type>
-    requires(!IsVector<LHS_Type>) && CanMultiply<RHS_VecType, LHS_Type>
+    requires((!IsVector<LHS_Type>) &&
+             CanMultiply<RHS_VecType, LHS_Type>)
 inline Vector<N, MultiplyType<LHS_Type, RHS_VecType>> operator*(const LHS_Type &lhs, const Vector<N, RHS_VecType> &rhs_v)
 {
     return ([&]<size_t... Is>(std::index_sequence<Is...>) constexpr

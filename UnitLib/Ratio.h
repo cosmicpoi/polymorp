@@ -63,13 +63,18 @@ template <IsRatio R, typename OutType, typename T>
              (IsRatioCompatible<T> || std::is_same_v<R, std::ratio<1>>)
 OutType MultiplyByRatio(const T &val)
 {
-    if constexpr (IsRatioCompatible<T> || std::is_same_v<R, std::ratio<1>>)
+    if constexpr (!IsRatioCompatible<T>)
     {
+        static_assert(std::is_same_v<R, std::ratio<1>>);
         return val;
+    }
+    else if constexpr (std::is_same_v<R, std::ratio<1>>)
+    {
+        return ConvertOrConstruct<OutType>(val);
     }
     else
     {
-        return static_cast<OutType>(val * (ConvertOrConstruct<OutType>(R::num)) / ConvertOrConstruct<OutType>(R::den));
+        return ConvertOrConstruct<OutType>(val * (ConvertOrConstruct<OutType>(R::num)) / ConvertOrConstruct<OutType>(R::den));
     }
 }
 
@@ -79,14 +84,7 @@ template <IsRatio R, typename OutType, typename T>
              (IsRatioCompatible<T> || std::is_same_v<R, std::ratio<1>>)
 OutType DivideByRatio(const T &val)
 {
-    if constexpr (IsRatioCompatible<T> || std::is_same_v<R, std::ratio<1>>)
-    {
-        return val;
-    }
-    else
-    {
-        return static_cast<OutType>(val * (ConvertOrConstruct<OutType>(R::den)) / ConvertOrConstruct<OutType>(R::num));
-    }
+    return MultiplyByRatio<RatioInvert<R>>(val);
 };
 
 /** Convert ratio to double */
@@ -127,6 +125,24 @@ struct RatioAddHelper
     // using lhsFac = std::ratio<1, R1::den * R2::num>;
     using lhsFac = std::ratio_divide<R1, combinedRatio>;
     using rhsFac = std::ratio_divide<R2, combinedRatio>;
+};
+
+template <typename SharedType, typename Ratio, typename RHS_Ratio>
+struct TypedRatioAddHelper
+{
+};
+
+template <typename SharedType, typename Ratio, typename RHS_Ratio>
+    requires IsRatioCompatible<SharedType>
+struct TypedRatioAddHelper<SharedType, Ratio, RHS_Ratio> : RatioAddHelper<Ratio, RHS_Ratio>
+{
+};
+
+template <typename SharedType, typename Ratio, typename RHS_Ratio>
+    requires(!IsRatioCompatible<SharedType>)
+struct TypedRatioAddHelper<SharedType, Ratio, RHS_Ratio>
+{
+    using combinedRatio = std::ratio<1>;
 };
 
 /** Helper for exponentiating ratios: compute Ratio ^ Exp (when possible) */

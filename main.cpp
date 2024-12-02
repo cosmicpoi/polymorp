@@ -50,7 +50,7 @@ class PrimeField
 {
 public:
     static constexpr uint p = P;
-    inline PrimeField(uint val) : value(val % P) {};
+    inline PrimeField(intmax_t val) : value(PositiveMod<P>(val)) {};
 
     // Add/subtract operations
     inline PrimeField<P> operator+(const PrimeField<P> &other) const
@@ -173,7 +173,7 @@ int main()
     using StrUnit = TypeAtomic<AdditiveString, "string">;
     // Doesn't compile:
     // using StrDouble = UnitMultRatio<StrUnit, std::ratio<2>>;
-    std::cout << (StrUnit{"hellobye"} + StrUnit{"bye"}) << std::endl;
+    // std::cout << (StrUnit{"hellobye"} + StrUnit{"bye"}) << std::endl;
 
     using Z7Unit = TypeAtomic<Z7, "z7">;
     using Z7Unit_Double = UnitMultRatio<Z7Unit, std::ratio<2>>;
@@ -190,7 +190,54 @@ int main()
     // std::cout << ( Meter{2} - 2.5 ) << std::endl;
     // std::cout << ( 2.5 - Meter{2} ) << std::endl;
 
-    /** Comparison with empty units */
+    /**
+     * Addition
+     */
+
+    // Builtin
+    std::cout << (Meter{1} + Kilometer{1}) << std::endl;
+    std::cout << (Kilometer{1} + Meter{1}) << std::endl;
+    // std::cout << (StrUnit{"hellobye"} + StrUnit{"bye"}) << std::endl;
+
+    // User-defined ratio-compatible
+    std::cout << (Z7Unit{1} + Z7Unit_Double{2}) << std::endl;
+    std::cout << (Z7Unit_Double{2} + Z7Unit{1}) << std::endl;
+
+    // User-defined ratio-incompatible
+    // std::cout << StrUnit{"hibye"} << std::endl;
+    std::cout << (StrUnit{"hibye"} + StrUnit{"bye"}) << std::endl;
+    // std::cout << (StrUnit{"bye"} + StrUnit{"hibye"}) << std::endl;
+
+    /**
+     * Addition with empty units
+     */
+
+    // Builtin types
+    std::cout << (dUEmpty{1} + 1.5) << std::endl;
+    std::cout << (1.5 + dUEmpty{1}) << std::endl;
+
+    std::cout << (dUEmpty{1} - 1.5) << std::endl;
+    std::cout << (1.5 - dUEmpty{1}) << std::endl;
+
+    // User-defined ratio-compatible
+    std::cout << (EmptyUnit<Z7>{1} + Z7{2}) << std::endl;
+    std::cout << (Z7{2} + EmptyUnit<Z7>{1}) << std::endl;
+
+    std::cout << (EmptyUnit<Z7>{1} - Z7{2}) << std::endl;
+    std::cout << (Z7{2} - EmptyUnit<Z7>{1}) << std::endl;
+
+    // User-defined ratio-incompatible
+
+    std::cout << (EmptyUnit<AdditiveString>{"hibye"} + AdditiveString{"bye"}) << std::endl;
+    std::cout << (AdditiveString{"hibye"} + EmptyUnit<AdditiveString>{"bye"}) << std::endl;
+
+    std::cout << (EmptyUnit<AdditiveString>{"hibye"} - AdditiveString{"bye"}) << std::endl;
+    std::cout << (AdditiveString{"hibye"} - EmptyUnit<AdditiveString>{"bye"}) << std::endl;
+
+    /**
+     * Comparison with empty units
+     */
+
     // Builtin
     std::cout << (dUEmpty{2} == 2) << std::endl;
     std::cout << (2 == dUEmpty{2}) << std::endl;
