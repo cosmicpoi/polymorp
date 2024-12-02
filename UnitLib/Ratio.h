@@ -2,6 +2,7 @@
 
 #include <concepts>
 #include <ratio>
+#include "TypeUtils.h"
 
 /** Concept to match ratio */
 
@@ -57,14 +58,15 @@ concept IsRatioCompatible = ((IsRatioCompatible_<Ts> && ...));
 
 /** Function to multiply out a ratio: Compute val * R */
 template <IsRatio R, typename OutType, typename T>
-    requires IsRatioCompatible<T>
+    requires IsRatioCompatible<T> &&
+             ConvertibleOrConstructible<OutType, T>
 OutType MultiplyByRatio(const T &val)
 {
     if constexpr (std::is_same_v<R, std::ratio<1>>)
     {
         return val;
     }
-    return static_cast<OutType>(val * (static_cast<OutType>(R::num)) / static_cast<OutType>(R::den));
+    return static_cast<OutType>(val * (ConvertOrConstruct<OutType>(R::num)) / ConvertOrConstruct<OutType>(R::den));
 }
 
 /** Function to divide out a ratio* Compute val / R */
@@ -118,7 +120,6 @@ struct RatioAddHelper
     using lhsFac = std::ratio_divide<R1, combinedRatio>;
     using rhsFac = std::ratio_divide<R2, combinedRatio>;
 };
-
 
 /** Helper for exponentiating ratios: compute Ratio ^ Exp (when possible) */
 // Reference: https://stackoverflow.com/questions/19823216/stdratio-power-of-a-stdratio-at-compile-time

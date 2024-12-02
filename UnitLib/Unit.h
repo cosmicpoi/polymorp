@@ -683,7 +683,7 @@ using EmptyUnit = Unit<T, EmptyUid, std::ratio<1>>;
  */
 
 /**
- * Right-side multiplication and division
+ * Right and left-side multiplication and division
  */
 
 /** @brief Multiply with unitless scalar. */
@@ -703,10 +703,6 @@ inline Unit<DivideType<Type, RHS>, UID, Ratio> operator/(const Unit<Type, UID, R
 {
     return Unit<DivideType<Type, RHS>, UID, Ratio>{lhs_unit.GetValue() / rhs};
 }
-
-/**
- * Left-side multiplication and division
- */
 
 /** @brief Left-multiply by plain type */
 template <typename LHS, typename RHS_Type, UnitIdentifier RHS_UID, IsRatio RHS_Ratio>
@@ -741,6 +737,17 @@ inline Unit<AddType<Type, RHS>, UID, Ratio> operator+(const Unit<Type, UID, Rati
         ratio_value_add<Type, Ratio, RHS, std::ratio<1>>(lhs_unit.GetValue(), rhs)};
 }
 
+/** @brief Left-side ratio-compatible add */
+template <typename LHS, typename RHS_Type, UnitIdentifier RHS_UID, IsRatio RHS_Ratio>
+    requires((IsEmptyUid<RHS_UID> && !IsUnit<LHS>) &&
+             // Checks for CanAdd<A,B> and IsRatioCompatible<AddType<A,B>> under the hood
+             CanRatioAdd<LHS, RHS_Type>)
+inline Unit<AddType<LHS, RHS_Type>, RHS_UID, RHS_Ratio> operator+(const LHS &lhs, const Unit<RHS_Type, RHS_UID, RHS_Ratio> &rhs_unit)
+{
+    return Unit<AddType<LHS, RHS_Type>, RHS_UID, RHS_Ratio>{
+        ratio_value_add<RHS_Type, RHS_Ratio, LHS, std::ratio<1>>(lhs, rhs_unit.GetValue())};
+}
+
 /** @brief Subtract with another type, if resultant type is ratio-compatible */
 template <typename Type, UnitIdentifier UID, IsRatio Ratio, typename RHS>
     requires((IsEmptyUid<UID> && !IsUnit<RHS>) &&
@@ -752,6 +759,17 @@ inline Unit<SubtractType<Type, RHS>, UID, Ratio> operator-(const Unit<Type, UID,
         ratio_value_subtract<Type, Ratio, RHS, std::ratio<1>>(lhs_unit.GetValue(), rhs)};
 }
 
+/** @brief Left-side ratio-compatible subtract */
+template <typename LHS, typename RHS_Type, UnitIdentifier RHS_UID, IsRatio RHS_Ratio>
+    requires((IsEmptyUid<RHS_UID> && !IsUnit<LHS>) &&
+             // Checks for CanAdd<A,B> and IsRatioCompatible<AddType<A,B>> under the hood
+             CanRatioSubtract<LHS, RHS_Type>)
+inline Unit<SubtractType<LHS, RHS_Type>, RHS_UID, RHS_Ratio> operator-(const LHS &lhs, const Unit<RHS_Type, RHS_UID, RHS_Ratio> &rhs_unit)
+{
+    return Unit<SubtractType<LHS, RHS_Type>, RHS_UID, RHS_Ratio>{
+        ratio_value_subtract<RHS_Type, RHS_Ratio, LHS, std::ratio<1>>(lhs, rhs_unit.GetValue())};
+}
+
 /** @brief Add with another unit, if resultant unit is NOT ratio-compatible */
 template <typename Type, UnitIdentifier UID, IsRatio Ratio, typename RHS>
     requires((IsEmptyUid<UID> && !IsUnit<RHS>) &&
@@ -759,7 +777,17 @@ template <typename Type, UnitIdentifier UID, IsRatio Ratio, typename RHS>
              !CanRatioAdd<Type, RHS>)
 inline Unit<AddType<Type, RHS>, UID, std::ratio<1>> operator+(const Unit<Type, UID, Ratio> &lhs_unit, const RHS &rhs)
 {
-    return Unit<AddType<Type, RHS>, UID, std::ratio<1>>{lhs_unit.GetRealValue() + rhs.GetRealValue()};
+    return Unit<AddType<Type, RHS>, UID, std::ratio<1>>{lhs_unit.GetRealValue() + rhs};
+}
+
+/** @brief Left-side ratio-compatible add */
+template <typename LHS, typename RHS_Type, UnitIdentifier RHS_UID, IsRatio RHS_Ratio>
+    requires((IsEmptyUid<RHS_UID> && !IsUnit<LHS>) &&
+             // Checks for CanAdd<A,B> and IsRatioCompatible<AddType<A,B>> under the hood
+             !CanRatioAdd<LHS, RHS_Type>)
+inline Unit<AddType<LHS, RHS_Type>, RHS_UID, RHS_Ratio> operator+(const LHS &lhs, const Unit<RHS_Type, RHS_UID, RHS_Ratio> &rhs_unit)
+{
+    return Unit<AddType<LHS, RHS_Type>, RHS_UID, std::ratio<1>>{lhs + rhs_unit.GetRealValue()};
 }
 
 /** @brief Subtract with another unit, if resultant unit is NOT ratio-compatible */
@@ -769,7 +797,17 @@ template <typename Type, UnitIdentifier UID, IsRatio Ratio, typename RHS>
              !CanRatioAdd<Type, RHS>)
 inline Unit<SubtractType<Type, RHS>, UID, std::ratio<1>> operator-(const Unit<Type, UID, Ratio> &lhs_unit, const RHS &rhs)
 {
-    return Unit<SubtractType<Type, RHS>, UID, std::ratio<1>>{lhs_unit.GetRealValue() - rhs.GetRealValue()};
+    return Unit<SubtractType<Type, RHS>, UID, std::ratio<1>>{lhs_unit.GetRealValue() - rhs};
+}
+
+/** @brief Left-side ratio-compatible add */
+template <typename LHS, typename RHS_Type, UnitIdentifier RHS_UID, IsRatio RHS_Ratio>
+    requires((IsEmptyUid<RHS_UID> && !IsUnit<LHS>) &&
+             // Checks for CanAdd<A,B> and IsRatioCompatible<AddType<A,B>> under the hood
+             !CanRatioSubtract<LHS, RHS_Type>)
+inline Unit<SubtractType<LHS, RHS_Type>, RHS_UID, RHS_Ratio> operator-(const LHS &lhs, const Unit<RHS_Type, RHS_UID, RHS_Ratio> &rhs_unit)
+{
+    return Unit<SubtractType<LHS, RHS_Type>, RHS_UID, std::ratio<1>>{lhs - rhs_unit.GetRealValue()};
 }
 
 /**

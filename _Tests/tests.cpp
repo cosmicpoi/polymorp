@@ -366,6 +366,14 @@ int main()
 
         assert((std::is_same_v<decltype(HalfMeter{1} + ThirdMeter{1})::ratio, std::ratio<1>>));
     }
+    // Addition for nonratio types
+    {
+        // std::cout << (EmptyUnit<AdditiveString>{"hellobye"} + EmptyUnit<AdditiveString>{"bye"}) << std::endl;
+        // std::cout << (EmptyUnit<AdditiveString>{"hellobye"} + AdditiveString{"bye"}) << std::endl;
+
+        // std::cout << (EmptyUnit<AdditiveString>{"hellobye"} - EmptyUnit<AdditiveString>{"bye"}) << std::endl;
+        // std::cout << (EmptyUnit<AdditiveString>{"hellobye"} - AdditiveString{"bye"}) << std::endl;
+    }
     // Test subtraction
     {
         assert((Meter{1} - Meter{2.2}) == Meter{-1.2});
@@ -381,7 +389,7 @@ int main()
         assert((Meter{1} * Meter{2.2}) == Meter_2{2.2});
         assert((Meter{1} * Kilometer{1}) == Kilometer_2{0.001});
         assert((Meter{1} * Kilometer{1}) == Meter_2{1000});
-        assert((dUEmpty{1} * dUKilo{1} == (double) 1000));
+        assert((dUEmpty{1} * dUKilo{1} == (double)1000));
 
         assert((CanOp<Meter, "*", Meter>()));
         assert((CanOp<Meter, "*", Kilometer>()));
