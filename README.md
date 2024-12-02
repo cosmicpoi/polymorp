@@ -166,3 +166,42 @@ assert(( Inv(Matrix<3, 3, double>{{4, 7, 2}, {3, 6, 1}, {2, 5, 1}}) ==  Matrix<3
 ```
 
 This won't compile since `1.0/3.0` is type double and `1` is type integer.
+
+**Prefer to explicitly specify commutative operations**.
+
+This is tempting:
+```
+template <typename LHS, typename RHS_Type, UnitIdentifier RHS_UID, IsRatio RHS_Ratio>
+    requires CanOpAdd<Unit<RHS_Type, RHS_UID, RHS_Ratio>, LHS>
+inline OpAddType<Unit<RHS_Type, RHS_UID, RHS_Ratio>, LHS> operator+(const LHS &lhs, const Unit<RHS_Type, RHS_UID, RHS_Ratio> &rhs)
+{
+    return rhs.operator+(lhs);
+}
+```
+
+However, it often leads to recursion errors, since the right-side operation checks for the left-side operation, and so on.
+
+This is better:
+```
+/** @brief Right-multiply by scalar */
+template <typename LHS_VecType, size_t N, typename RHS_Type>
+    requires(!IsVector<RHS_Type>) && CanMultiply<LHS_VecType, RHS_Type>
+inline Vector<N, MultiplyType<LHS_VecType, RHS_Type>> operator*(const Vector<N, LHS_VecType> &lhs_v, const RHS_Type &rhs)
+{
+    return ([&]<size_t... Is>(std::index_sequence<Is...>) constexpr
+            {
+                return Vector<N, MultiplyType<LHS_VecType, RHS_Type>>{(lhs_v[Is] * rhs)...}; // Expands the expression for each index
+            })(std::make_index_sequence<N>{});
+}
+
+/** @brief Left-multiply by scalar */
+template <typename RHS_VecType, size_t N, typename LHS_Type>
+    requires(!IsVector<LHS_Type>) && CanMultiply<RHS_VecType, LHS_Type>
+inline Vector<N, MultiplyType<LHS_Type, RHS_VecType>> operator*(const LHS_Type &lhs, const Vector<N, RHS_VecType> &rhs_v)
+{
+    return ([&]<size_t... Is>(std::index_sequence<Is...>) constexpr
+            {
+                return Vector<N, MultiplyType<LHS_Type, RHS_VecType>>{(lhs * rhs_v[Is])...}; // Expands the expression for each index
+            })(std::make_index_sequence<N>{});
+}
+```
