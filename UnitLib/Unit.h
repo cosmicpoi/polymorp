@@ -58,11 +58,15 @@ constexpr bool typed_crossmult_equality(const Type &value, const RHS_Type &rhs)
         using Common = typename Helper::Common;
         return static_cast<Common>(value * Helper::fac1) == static_cast<Common>(rhs * Helper::fac2);
     }
-    else
+    else if constexpr (IsRatioCompatible<Type, RHS_Type>)
     {
         // Don't need to check that Type * intmax_t is valid because this is enforced by IsRatioCompatible_
         static_assert((requires(Type a, RHS_Type b, intmax_t c) { {a * c}; {b * c}; }));
         return value * Helper::fac1 == rhs * Helper::fac2;
+    }
+    else
+    {
+        return MultiplyByRatio<Ratio, Type>(value) == MultiplyByRatio<RHS_Ratio, RHS_Type>(rhs);
     }
 }
 
@@ -541,40 +545,11 @@ public:
     /** @brief Comparison for builtin IsArithmetic types (integral and non-integral) */
     template <typename RHS_Type, UnitIdentifier RHS_UID, IsRatio RHS_Ratio>
         requires(std::is_same_v<UID, RHS_UID> &&
-                 IsArithmetic<Type, RHS_Type> &&
-                 IsRatioCompatible<Type, RHS_Type> && // Enforce ratio compatbile for builtins
                  IsEqualityComparable<Type, RHS_Type>)
     inline bool operator==(const Unit<RHS_Type, RHS_UID, RHS_Ratio> &rhs) const
     {
         return typed_crossmult_equality<Type, Ratio, RHS_Type, RHS_Ratio>(value, rhs.GetValue());
     }
-
-    /**
-     * Equality Comparison for user-defined types
-     */
-
-    /** @brief Comparison for ratio-compatible user-defined types */
-    template <typename RHS_Type, UnitIdentifier RHS_UID, IsRatio RHS_Ratio>
-        requires(std::is_same_v<UID, RHS_UID> &&
-                 !IsArithmetic<Type, RHS_Type> &&     // at least one side is not a builtin
-                 IsRatioCompatible<Type, RHS_Type> && // BOTH SIDES ratio compatible
-                 IsEqualityComparable<Type, RHS_Type>)
-    inline bool operator==(const Unit<RHS_Type, RHS_UID, RHS_Ratio> &rhs) const
-    {
-        return typed_crossmult_equality<Type, Ratio, RHS_Type, RHS_Ratio>(value, rhs.GetValue());
-    }
-
-    /** @brief Comparison for user-defined types where at least one side is ratio-incompatible */
-    template <typename RHS_Type, UnitIdentifier RHS_UID, IsRatio RHS_Ratio>
-        requires(std::is_same_v<UID, RHS_UID> &&
-                 !IsArithmetic<Type, RHS_Type> &&      // at least one side is not a builtin
-                 !IsRatioCompatible<Type, RHS_Type> && // AT LEAST ONE side NOT ratio compatible
-                 IsEqualityComparable<Type, RHS_Type>)
-    inline bool operator==(const Unit<RHS_Type, RHS_UID, RHS_Ratio> &rhs) const
-    {
-        return GetRealValue() == rhs.GetRealValue();
-    }
-
     /**
      * Conversion operators
      */
@@ -785,8 +760,6 @@ inline Unit<SubtractType<LHS, RHS_Type>, RHS_UID, RHS_Ratio> operator-(const LHS
 /** @brief Right-side comparison for builtin IsArithmetic types for empty units (integral and non-integral)*/
 template <typename Type, UnitIdentifier UID, IsRatio Ratio, typename RHS>
     requires((IsEmptyUid<UID> && !IsUnit<RHS>) &&
-             IsArithmetic<Type, RHS> &&      // at least one side is not a builtin
-             IsRatioCompatible<Type, RHS> && // AT LEAST ONE side NOT ratio compatible
              IsEqualityComparable<Type, RHS>)
 inline bool operator==(const Unit<Type, UID, Ratio> &lhs_unit, const RHS &rhs)
 {
@@ -796,58 +769,11 @@ inline bool operator==(const Unit<Type, UID, Ratio> &lhs_unit, const RHS &rhs)
 /** @brief Left-side comparison for builtin IsArithmetic types for empty units (integral and non-integral)*/
 template <typename LHS, typename RHS_Type, UnitIdentifier RHS_UID, IsRatio RHS_Ratio>
     requires((IsEmptyUid<RHS_UID> && !IsUnit<LHS>) &&
-             IsArithmetic<LHS, RHS_Type> &&      // at least one side is not a builtin
-             IsRatioCompatible<LHS, RHS_Type> && // AT LEAST ONE side NOT ratio compatible
              IsEqualityComparable<LHS, RHS_Type>)
 inline bool operator==(const LHS &lhs, const Unit<RHS_Type, RHS_UID, RHS_Ratio> &rhs_unit)
 {
     return typed_crossmult_equality<LHS, RHS_Ratio, RHS_Type, std::ratio<1>>(lhs, rhs_unit.GetValue());
 }
-
-/** @brief Right-side comparison for ratio-compatible user-defined types (Empty Units)*/
-template <typename Type, UnitIdentifier UID, IsRatio Ratio, typename RHS>
-    requires((IsEmptyUid<UID> && !IsUnit<RHS>) &&
-             !IsArithmetic<Type, RHS> &&     // at least one side is not a builtin
-             IsRatioCompatible<Type, RHS> && // BOTH SIDES ratio compatible
-             IsEqualityComparable<Type, RHS>)
-inline bool operator==(const Unit<Type, UID, Ratio> &lhs_unit, const RHS &rhs)
-{
-    return typed_crossmult_equality<Type, Ratio, RHS, std::ratio<1>>(lhs_unit.GetValue(), rhs);
-}
-
-/** @brief Left-side comparison for ratio-compatible user-defined types (Empty Units)*/
-template <typename LHS, typename RHS_Type, UnitIdentifier RHS_UID, IsRatio RHS_Ratio>
-    requires((IsEmptyUid<RHS_UID> && !IsUnit<LHS>) &&
-             !IsArithmetic<LHS, RHS_Type> &&     // at least one side is not a builtin
-             IsRatioCompatible<LHS, RHS_Type> && // BOTH SIDES ratio compatible
-             IsEqualityComparable<LHS, RHS_Type>)
-inline bool operator==(const LHS &lhs, const Unit<RHS_Type, RHS_UID, RHS_Ratio> &rhs_unit)
-{
-    return typed_crossmult_equality<LHS, RHS_Ratio, RHS_Type, std::ratio<1>>(lhs, rhs_unit.GetValue());
-}
-
-/** @brief Right-side comparison for user-defined types where at least one side is ratio-incompatible (Empty Unit version)*/
-template <typename Type, UnitIdentifier UID, IsRatio Ratio, typename RHS>
-    requires((IsEmptyUid<UID> && !IsUnit<RHS>) &&
-             !IsArithmetic<Type, RHS> &&      // at least one side is not a builtin
-             !IsRatioCompatible<Type, RHS> && // AT LEAST ONE side NOT ratio compatible
-             IsEqualityComparable<Type, RHS>)
-inline bool operator==(const Unit<Type, UID, Ratio> &lhs_unit, const RHS &rhs)
-{
-    return lhs_unit.GetRealValue() == rhs;
-}
-
-/** @brief Left-side comparison for user-defined types where at least one side is ratio-incompatible (Empty Unit version)*/
-template <typename LHS, typename RHS_Type, UnitIdentifier RHS_UID, IsRatio RHS_Ratio>
-    requires((IsEmptyUid<RHS_UID> && !IsUnit<LHS>) &&
-             !IsArithmetic<LHS, RHS_Type> &&      // at least one side is not a builtin
-             !IsRatioCompatible<LHS, RHS_Type> && // AT LEAST ONE side NOT ratio compatible
-             IsEqualityComparable<LHS, RHS_Type>)
-inline bool operator==(const LHS &lhs, const Unit<RHS_Type, RHS_UID, RHS_Ratio> &rhs_unit)
-{
-    return lhs == rhs_unit.GetRealValue();
-}
-
 
 //------------------------------------------------------------------------------
 // Shorthands for defining units

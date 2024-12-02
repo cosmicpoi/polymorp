@@ -49,6 +49,7 @@ using RatioInvert = std::ratio<R::den, R::num>;
  */
 template <typename T>
 concept IsRatioCompatible_ = requires(T t, intmax_t i) {
+    requires ConvertibleOrConstructible<T, intmax_t>;
     { t / i } -> std::convertible_to<T>;
     { t *i } -> std::convertible_to<T>;
 };
@@ -58,27 +59,34 @@ concept IsRatioCompatible = ((IsRatioCompatible_<Ts> && ...));
 
 /** Function to multiply out a ratio: Compute val * R */
 template <IsRatio R, typename OutType, typename T>
-    requires IsRatioCompatible<T> &&
-             ConvertibleOrConstructible<OutType, T>
+    requires ConvertibleOrConstructible<OutType, T> &&
+             (IsRatioCompatible<T> || std::is_same_v<R, std::ratio<1>>)
 OutType MultiplyByRatio(const T &val)
 {
-    if constexpr (std::is_same_v<R, std::ratio<1>>)
+    if constexpr (IsRatioCompatible<T> || std::is_same_v<R, std::ratio<1>>)
     {
         return val;
     }
-    return static_cast<OutType>(val * (ConvertOrConstruct<OutType>(R::num)) / ConvertOrConstruct<OutType>(R::den));
+    else
+    {
+        return static_cast<OutType>(val * (ConvertOrConstruct<OutType>(R::num)) / ConvertOrConstruct<OutType>(R::den));
+    }
 }
 
 /** Function to divide out a ratio* Compute val / R */
 template <IsRatio R, typename OutType, typename T>
-    requires IsRatioCompatible<T>
+    requires IsRatioCompatible<T> &&
+             (IsRatioCompatible<T> || std::is_same_v<R, std::ratio<1>>)
 OutType DivideByRatio(const T &val)
 {
-    if constexpr (std::is_same_v<R, std::ratio<1>>)
+    if constexpr (IsRatioCompatible<T> || std::is_same_v<R, std::ratio<1>>)
     {
         return val;
     }
-    return MultiplyByRatio<RatioInvert<R>, OutType, T>(val);
+    else
+    {
+        return static_cast<OutType>(val * (ConvertOrConstruct<OutType>(R::den)) / ConvertOrConstruct<OutType>(R::num));
+    }
 };
 
 /** Convert ratio to double */

@@ -426,8 +426,7 @@ public:
     }
 
 private:
-    Array<Type, N>
-        _v;
+    Array<Type, N> _v;
 };
 
 // Some aliases
