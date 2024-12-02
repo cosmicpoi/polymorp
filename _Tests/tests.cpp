@@ -640,14 +640,30 @@ int main()
     {
         Meter_2 v{100};
         assert((unit_sqrt(v) == Meter{10}));
-
         assert((unit_sqrt(100) == 10));
+
+        static_assert((HasSquareRoot<Meter_2>));
+        static_assert((HasSquareRoot<double>));
+        static_assert((!HasSquareRoot<Kilometer>));
+        static_assert((!HasSquareRoot<TypeAtomic<std::string, "str_unit">>));
+        static_assert((!HasSquareRoot<std::string>));
     }
 
-    // unit_pow
+    // unit_ratio_pow
+    {
+        Kilometer v{1};
+        using ResType = Unit<double, MakeUnitIdentifier<UnitBase<"meter", std::ratio<2, 3>>>, std::ratio<100>>;
+        auto res = unit_ratio_pow<std::ratio<2, 3>>(v);
+        assert((std::is_same_v<decltype(res), ResType>));
+        assert((abs(res.GetValue() - 1) < 0.0000001));
 
-    // abs
-    // Testing absolute value
+        static_assert((HasRatioPow<std::ratio<1, 3>, UnitExpI<Meter, 3>>));
+        static_assert((!HasRatioPow<std::ratio<1, 3>, TypeAtomic<std::string, "str_unit">>));
+        static_assert((HasRatioPow<std::ratio<1, 3>, double>));
+        static_assert((!HasRatioPow<std::ratio<1, 3>, std::string>));
+    }
+
+    // unit_bas - absolute value
     {
         Meter val{-5};
         assert((unit_abs(val) == Meter{5}));

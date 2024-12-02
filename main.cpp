@@ -1,6 +1,6 @@
 // Run tests
 #include "UnitLib/Unit.h"
-// #include "UnitLib/UnitMath.h"
+#include "UnitLib/UnitMath.h"
 #include "UnitLib/Vector.h"
 #include "UnitLib/Matrix.h"
 #include "UnitLib/Print.h"
@@ -32,21 +32,19 @@ using Second = dAtomic<"second">;
 using dUEmpty = EmptyUnit<double>;
 using dUKilo = UnitMultRatio<dUEmpty, std::ratio<1000>>;
 
-
-template <typename T>
-struct MyClass
-{
-public:
+template <typename A>
+concept CanSqrt = requires(A a) {
+    { std::sqrt(a) };
 };
-
-
-
 
 int main()
 {
     // Matrix<2, 2, Meter> mat2{1, 2, 3, 4};
     // std::cout << Inv(mat2) << std::endl;
-    std::cout << (Kilometer{1} + Meter{1}) << std::endl;
+    // std::cout << (HasSquareRoot<std::string>) << std::endl;
+
+    Kilometer v{1};
+    std::cout << unit_ratio_pow<std::ratio<2, 4>>(v) << std::endl;
 
     // double x = dUEmpty{1.0};
     // x *= dUEmpty{2.0};
