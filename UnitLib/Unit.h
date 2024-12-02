@@ -39,10 +39,27 @@ struct RatioEqualityHelper<LHS_Type, LHS_Ratio, RHS_Type, RHS_Ratio>
  * Equality helper
  */
 
+/**
+ * Equality Helper. 
+ * 
+ * These is trickeir than it looks. In order for two units A and B to be comparable:
+ * - Their UIDs must match, or one is a plaintype and the other is an empty unit
+ * And also, one of:
+ * Builtin types:
+ *   - Both types are ratio compatible, and epsilon is well-defined (builtin only) -> cross-multiply with epsilon check
+ *   - Both types are ratio compatible, and are integral (builtin only)            -> cross-multiply with direct equality
+ * User-defined types:
+ * - Underlying equality A == B must be defined. In addition, either:
+ *   - Both sides are ratio-compatible (and ratios can be anything)                -> cross-multiply with direct equality
+ *   - Or, only one side is ratio-compatible (and it can have any ratio, but       -> compare real values
+ *     the other side must be 1/1)
+ *   - Or, neither side is ratio-compatible, and both have ratio 1/1
+ */
+
 /** @brief Cross-multiply-based equality for builtin types */
 template <typename Type, IsRatio Ratio, typename RHS_Type, IsRatio RHS_Ratio>
     requires(RHS_Ratio::num > 0 && Ratio::num > 0)
-constexpr bool typed_crossmult_equality(const Type &value, const RHS_Type &rhs)
+constexpr bool typed_ratio_equality(const Type &value, const RHS_Type &rhs)
 {
     // It might be tempting to add a check for if constexpr (std::is_same_v<Ratio, RHS_Ratio>), but
     // we want to override the default eps tolerance even for plain types (since they may have converted from Kilo)
@@ -523,22 +540,6 @@ public:
     }
 
     /**
-     * Equality operators. These are trickier than they look. In order for two
-     * units A and B to be comparable:
-     * - Their UIDs must match, or one is a plaintype and the other is an empty unit
-     * And also, one of:
-     * Builtin types:
-     *   - Both types are ratio compatible, and epsilon is well-defined (builtin only) -> cross-multiply with epsilon check
-     *   - Both types are ratio compatible, and are integral (builtin only)            -> cross-multiply with direct equality
-     * User-defined types:
-     * - Underlying equality A == B must be defined. In addition, either:
-     *   - Both sides are ratio-compatible (and ratios can be anything)                -> cross-multiply with direct equality
-     *   - Or, only one side is ratio-compatible (and it can have any ratio, but       -> compare real values
-     *     the other side must be 1/1)
-     *   - Or, neither side is ratio-compatible, and both have ratio 1/1
-     */
-
-    /**
      * Equality Comparison for builtin types
      */
 
@@ -548,7 +549,7 @@ public:
                  IsEqualityComparable<Type, RHS_Type>)
     inline bool operator==(const Unit<RHS_Type, RHS_UID, RHS_Ratio> &rhs) const
     {
-        return typed_crossmult_equality<Type, Ratio, RHS_Type, RHS_Ratio>(value, rhs.GetValue());
+        return typed_ratio_equality<Type, Ratio, RHS_Type, RHS_Ratio>(value, rhs.GetValue());
     }
     /**
      * Conversion operators
@@ -763,7 +764,7 @@ template <typename Type, UnitIdentifier UID, IsRatio Ratio, typename RHS>
              IsEqualityComparable<Type, RHS>)
 inline bool operator==(const Unit<Type, UID, Ratio> &lhs_unit, const RHS &rhs)
 {
-    return typed_crossmult_equality<Type, Ratio, RHS, std::ratio<1>>(lhs_unit.GetValue(), rhs);
+    return typed_ratio_equality<Type, Ratio, RHS, std::ratio<1>>(lhs_unit.GetValue(), rhs);
 }
 
 /** @brief Left-side comparison for builtin IsArithmetic types for empty units (integral and non-integral)*/
@@ -772,7 +773,7 @@ template <typename LHS, typename RHS_Type, UnitIdentifier RHS_UID, IsRatio RHS_R
              IsEqualityComparable<LHS, RHS_Type>)
 inline bool operator==(const LHS &lhs, const Unit<RHS_Type, RHS_UID, RHS_Ratio> &rhs_unit)
 {
-    return typed_crossmult_equality<LHS, RHS_Ratio, RHS_Type, std::ratio<1>>(lhs, rhs_unit.GetValue());
+    return typed_ratio_equality<LHS, RHS_Ratio, RHS_Type, std::ratio<1>>(lhs, rhs_unit.GetValue());
 }
 
 //------------------------------------------------------------------------------
