@@ -12,7 +12,7 @@
  */
 template <size_t M, size_t N, typename Type>
     requires((M > 0) && (N > 0))
-class Matrix
+class Matrix : public Container
 {
 public:
     static constexpr size_t m = M;

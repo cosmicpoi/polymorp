@@ -191,7 +191,12 @@ int main()
     // std::cout << ( 2.5 - Meter{2} ) << std::endl;
 
     /**
-     * Addition
+     * Multiplication and Division
+     */
+    std::cout << (Meter{1} * 2) << std::endl;
+
+    /**
+     * Addition and Subtraction
      */
 
     // Builtin
@@ -256,4 +261,14 @@ int main()
     // x *= dUEmpty{2.0};
     // std::cout << x << std::endl;
     // std::cout << std::string{1} << std::endl;
+
+    /**
+     * Vectors
+     */
+    // std::cout << CanMultiply<double, Unit<double, UnitLeafVector<UnitLeaf<"meter", std::ratio<1, 1>>>>> << std::endl;
+    Vector2<double> v1{1, 2};
+    std::cout << ((v1 * Meter{2})) << std::endl;
+    // std::cout << ((Meter{2} * v1)) << std::endl;
+    // std::cout << Vector2<Meter>{2, 4} << std::endl;
+    // std::cout << ((Meter{2} * v1) == Vector2<Meter>{2, 4}) << std::endl;
 }

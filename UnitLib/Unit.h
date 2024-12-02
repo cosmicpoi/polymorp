@@ -635,13 +635,29 @@ using EmptyUnit = Unit<T, EmptyUid, std::ratio<1>>;
  * explicitly check !IsUnit, avoiding recursion from e.g. `Empty{1} + KiloEmpty{1} == 1001`
  */
 
+// Kind of hacky, but without these checks the Vector type will be treated like a scalar, so that
+// Unit<Meter> * Vector2<Meter> -> Unit<Vector2<Meter^2>> instead of Vector2<Unit<Meter^2>>.
+// Would like to replace this with a better solution.
+template <typename T>
+concept IsVectorLike = requires {
+    { T::n } -> std::same_as<size_t>;
+};
+
+template <typename T>
+concept IsMatrixLike = requires {
+    { T::m } -> std::same_as<size_t>;
+};
+
+template <typename T>
+concept IsUnitOrContainerLike = IsUnit<T> || IsContainer<T>;
+
 /**
  * Right and left-side multiplication and division
  */
 
 /** @brief Multiply with unitless scalar. */
 template <typename Type, UnitIdentifier UID, IsRatio Ratio, typename RHS>
-    requires((!IsUnit<RHS>) &&
+    requires((!IsUnitOrContainerLike<RHS>) &&
              CanMultiply<Type, RHS>)
 inline Unit<MultiplyType<Type, RHS>, UID, Ratio> operator*(const Unit<Type, UID, Ratio> &lhs_unit, const RHS &rhs)
 {
@@ -650,7 +666,7 @@ inline Unit<MultiplyType<Type, RHS>, UID, Ratio> operator*(const Unit<Type, UID,
 
 /** @brief Divide by unitless scalar. */
 template <typename Type, UnitIdentifier UID, IsRatio Ratio, typename RHS>
-    requires((!IsUnit<RHS>) &&
+    requires((!IsUnitOrContainerLike<RHS>) &&
              CanDivide<Type, RHS>)
 inline Unit<DivideType<Type, RHS>, UID, Ratio> operator/(const Unit<Type, UID, Ratio> &lhs_unit, const RHS &rhs)
 {
@@ -659,7 +675,7 @@ inline Unit<DivideType<Type, RHS>, UID, Ratio> operator/(const Unit<Type, UID, R
 
 /** @brief Left-multiply by plain type */
 template <typename LHS, typename RHS_Type, UnitIdentifier RHS_UID, IsRatio RHS_Ratio>
-    requires((!IsUnit<LHS>) &&
+    requires((!IsUnitOrContainerLike<LHS>) &&
              CanMultiply<LHS, RHS_Type>)
 inline Unit<MultiplyType<LHS, RHS_Type>, RHS_UID, RHS_Ratio> operator*(const LHS &lhs, const Unit<RHS_Type, RHS_UID, RHS_Ratio> &rhs_unit)
 {
@@ -668,7 +684,7 @@ inline Unit<MultiplyType<LHS, RHS_Type>, RHS_UID, RHS_Ratio> operator*(const LHS
 
 /** @brief Left-divide with plain type. */
 template <typename LHS, typename RHS_Type, UnitIdentifier RHS_UID, IsRatio RHS_Ratio>
-    requires((!IsUnit<LHS>) &&
+    requires((!IsUnitOrContainerLike<LHS>) &&
              CanDivide<LHS, RHS_Type>)
 inline Unit<DivideType<LHS, RHS_Type>, UIInvert<RHS_UID>, RatioInvert<RHS_Ratio>> operator/(const LHS &lhs, const Unit<RHS_Type, RHS_UID, RHS_Ratio> &rhs_unit)
 {
@@ -700,7 +716,7 @@ using UnitAddSubtractType = Unit<SharedType, UID, UnitAddRatio<SharedType, Ratio
 
 /** @brief Add with another type, if resultant type is ratio-compatible */
 template <typename Type, UnitIdentifier UID, IsRatio Ratio, typename RHS>
-    requires((IsEmptyUid<UID> && !IsUnit<RHS>) &&
+    requires((IsEmptyUid<UID> && !IsUnitOrContainerLike<RHS>) &&
              CanAdd<Type, RHS>)
 inline UnitAddSubtractType<UID, Ratio, AddType<Type, RHS>> operator+(const Unit<Type, UID, Ratio> &lhs_unit, const RHS &rhs)
 {
@@ -710,7 +726,7 @@ inline UnitAddSubtractType<UID, Ratio, AddType<Type, RHS>> operator+(const Unit<
 
 /** @brief Left-side ratio-compatible add */
 template <typename LHS, typename RHS_Type, UnitIdentifier RHS_UID, IsRatio RHS_Ratio>
-    requires((IsEmptyUid<RHS_UID> && !IsUnit<LHS>) &&
+    requires((IsEmptyUid<RHS_UID> && !IsUnitOrContainerLike<LHS>) &&
              CanAdd<LHS, RHS_Type>)
 inline UnitAddSubtractType<RHS_UID, RHS_Ratio, AddType<LHS, RHS_Type>> operator+(const LHS &lhs, const Unit<RHS_Type, RHS_UID, RHS_Ratio> &rhs_unit)
 {
@@ -720,7 +736,7 @@ inline UnitAddSubtractType<RHS_UID, RHS_Ratio, AddType<LHS, RHS_Type>> operator+
 
 /** @brief Subtract with another type, if resultant type is ratio-compatible */
 template <typename Type, UnitIdentifier UID, IsRatio Ratio, typename RHS>
-    requires((IsEmptyUid<UID> && !IsUnit<RHS>) &&
+    requires((IsEmptyUid<UID> && !IsUnitOrContainerLike<RHS>) &&
              CanSubtract<Type, RHS>)
 inline UnitAddSubtractType<UID, Ratio, SubtractType<Type, RHS>> operator-(const Unit<Type, UID, Ratio> &lhs_unit, const RHS &rhs)
 {
@@ -730,7 +746,7 @@ inline UnitAddSubtractType<UID, Ratio, SubtractType<Type, RHS>> operator-(const 
 
 /** @brief Left-side ratio-compatible subtract */
 template <typename LHS, typename RHS_Type, UnitIdentifier RHS_UID, IsRatio RHS_Ratio>
-    requires((IsEmptyUid<RHS_UID> && !IsUnit<LHS>) &&
+    requires((IsEmptyUid<RHS_UID> && !IsUnitOrContainerLike<LHS>) &&
              CanSubtract<LHS, RHS_Type>)
 inline UnitAddSubtractType<RHS_UID, RHS_Ratio, SubtractType<LHS, RHS_Type>> operator-(const LHS &lhs, const Unit<RHS_Type, RHS_UID, RHS_Ratio> &rhs_unit)
 {
@@ -744,7 +760,7 @@ inline UnitAddSubtractType<RHS_UID, RHS_Ratio, SubtractType<LHS, RHS_Type>> oper
 
 /** @brief Right-side comparison for builtin IsArithmetic types for empty units (integral and non-integral)*/
 template <typename Type, UnitIdentifier UID, IsRatio Ratio, typename RHS>
-    requires((IsEmptyUid<UID> && !IsUnit<RHS>) &&
+    requires((IsEmptyUid<UID> && !IsUnitOrContainerLike<RHS>) &&
              IsEqualityComparable<Type, RHS>)
 inline bool operator==(const Unit<Type, UID, Ratio> &lhs_unit, const RHS &rhs)
 {
@@ -753,7 +769,7 @@ inline bool operator==(const Unit<Type, UID, Ratio> &lhs_unit, const RHS &rhs)
 
 /** @brief Left-side comparison for builtin IsArithmetic types for empty units (integral and non-integral)*/
 template <typename LHS, typename RHS_Type, UnitIdentifier RHS_UID, IsRatio RHS_Ratio>
-    requires((IsEmptyUid<RHS_UID> && !IsUnit<LHS>) &&
+    requires((IsEmptyUid<RHS_UID> && !IsUnitOrContainerLike<LHS>) &&
              IsEqualityComparable<LHS, RHS_Type>)
 inline bool operator==(const LHS &lhs, const Unit<RHS_Type, RHS_UID, RHS_Ratio> &rhs_unit)
 {

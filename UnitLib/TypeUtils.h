@@ -4,6 +4,18 @@
 #include <iostream>
 
 /**
+ * Global "container" class that Vector and Matrix inherit from so that 
+ * unit can have knowledge of them without having to include them
+ */
+class Container{};
+
+template <typename T>
+concept IsContainer = std::is_base_of_v<Container, T>;
+
+
+
+
+/**
  * Proxies for builtins like `std::is_arithmetic` and qstd::common_type`.
  * We generally try to avoid using the std type utils, so putting them in
  * a single place makes it easier to search the codebase for exceptions.
@@ -187,6 +199,10 @@ template <typename ToType, typename... FromArgs>
 concept ConvertibleOrConstructible = ConvertibleToPrimitive<ToType, FromArgs...> || //
                                      ConstructibleFrom<ToType, FromArgs...>;
 
+/** @brief Flipped version for use in concepts */
+template <typename FromType, typename ToType>
+concept ConvertibleOrConstructibleTo = ConvertibleOrConstructible<ToType, FromType>;
+
 /**
  * @brief All-purpose low-overhead converter.
  * - If a type is convertible, convert it
@@ -263,16 +279,8 @@ using MultiplyType = typename MultiplyType_<A, B>::type;
 
 template <typename A, typename B>
 concept CanMultiply = requires(A a, B b) {
-    { a *b } -> std::constructible_from<MultiplyType<A, B>>;
+    { a *b } -> std::convertible_to<MultiplyType<A, B>>;
 };
-
-// Operator* version
-template <typename A, typename B>
-    requires requires(A a, B b) { { a.operator*(b) }; }
-using OpMultiplyType = decltype(std::declval<A>().operator*(std::declval<B>()));
-
-template <typename A, typename B>
-concept CanOpMultiply = requires(A a, B b) { { a.operator*(b) } -> std::same_as<OpMultiplyType<A, B>>; };
 
 /** Divide */
 template <typename, typename>
@@ -293,16 +301,8 @@ using DivideType = typename DivideType_<A, B>::type;
 
 template <typename A, typename B>
 concept CanDivide = requires(A a, B b) {
-    { a / b } -> std::constructible_from<DivideType<A, B>>;
+    { a / b } -> std::convertible_to<DivideType<A, B>>;
 };
-
-// Operator/ version
-template <typename A, typename B>
-    requires requires(A a, B b) { { a.operator/(b) }; }
-using OpDivideType = decltype(std::declval<A>().operator/(std::declval<B>()));
-
-template <typename A, typename B>
-concept CanOpDivide = requires(A a, B b) { { a.operator/(b) } -> std::same_as<OpDivideType<A, B>>; };
 
 // Add
 /** Add */
@@ -324,24 +324,8 @@ using AddType = typename AddType_<A, B>::type;
 
 template <typename A, typename B>
 concept CanAdd = requires(A a, B b) {
-    { a + b } -> std::constructible_from<AddType<A, B>>;
+    { a + b } -> std::convertible_to<AddType<A, B>>;
 };
-
-// Operator+ version
-template <typename A, typename B>
-    requires requires(A a, B b) { { a.operator+(b) }; }
-using OpAddType = decltype(std::declval<A>().operator+(std::declval<B>()));
-
-template <typename A, typename B>
-concept CanOpAdd = requires(A a, B b) { { a.operator+(b) } -> std::same_as<OpAddType<A, B>>; };
-
-// Binary operator+(A, B) version
-template <typename A, typename B>
-    requires requires(A a, B b) { { operator+(a, b) }; }
-using BinOpAddType = decltype(operator+(std::declval<A>(), std::declval<B>()));
-
-template <typename A, typename B>
-concept CanBinOpAdd = requires(A a, B b) { { operator+(a, b) } -> std::same_as<BinOpAddType<A, B>>; };
 
 /** Subtract */
 template <typename, typename>
@@ -362,16 +346,10 @@ using SubtractType = typename SubtractType_<A, B>::type;
 
 template <typename A, typename B>
 concept CanSubtract = requires(A a, B b) {
-    { a - b } -> std::constructible_from<SubtractType<A, B>>;
+    { a - b } -> std::convertible_to<SubtractType<A, B>>;
 };
 
-// Operator- version
-template <typename A, typename B>
-    requires requires(A a, B b) { { a.operator-(b) }; }
-using OpSubtractType = decltype(std::declval<A>().operator-(std::declval<B>()));
-
-template <typename A, typename B>
-concept CanOpSubtract = requires(A a, B b) { { a.operator-(b) } -> std::same_as<OpSubtractType<A, B>>; };
+// Exp helpers
 
 template <size_t N, typename A>
 struct CanExp_

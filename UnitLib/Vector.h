@@ -42,7 +42,7 @@ concept HasCrossProduct = HasDotProduct<L, R> &&
  * @brief Base class for Vector with units. Provides optimized versions for N=2, 3, 4, corresponding to `Vector2`, `Vector3`, and `Vector4`, but any length is actually supported.
  */
 template <size_t N, typename Type>
-class Vector
+class Vector : public Container
 {
 public:
     static constexpr size_t n = N;
@@ -470,7 +470,10 @@ concept IsVector = IsVectorHelper<T>::value;
 
 /** @brief Right-multiply by scalar */
 template <typename LHS_VecType, size_t N, typename RHS_Type>
-    requires(!IsVector<RHS_Type>) && CanMultiply<LHS_VecType, RHS_Type>
+    requires((!IsVector<RHS_Type>) &&
+             CanMultiply<LHS_VecType, RHS_Type>
+            //  !IsVector<MultiplyType<LHS_VecType, RHS_Type>>
+             )
 inline Vector<N, MultiplyType<LHS_VecType, RHS_Type>> operator*(const Vector<N, LHS_VecType> &lhs_v, const RHS_Type &rhs)
 {
     return ([&]<size_t... Is>(std::index_sequence<Is...>) constexpr
@@ -482,7 +485,7 @@ inline Vector<N, MultiplyType<LHS_VecType, RHS_Type>> operator*(const Vector<N, 
 /** @brief Left-multiply by scalar */
 template <typename RHS_VecType, size_t N, typename LHS_Type>
     requires((!IsVector<LHS_Type>) &&
-             CanMultiply<RHS_VecType, LHS_Type>)
+             CanMultiply<LHS_Type, RHS_VecType>)
 inline Vector<N, MultiplyType<LHS_Type, RHS_VecType>> operator*(const LHS_Type &lhs, const Vector<N, RHS_VecType> &rhs_v)
 {
     return ([&]<size_t... Is>(std::index_sequence<Is...>) constexpr
