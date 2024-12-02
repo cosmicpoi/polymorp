@@ -30,9 +30,21 @@ concept RatioIsZero_ = requires {
 template <typename T>
 concept RatioIsZero = IsRatio<T> && RatioIsZero_<T>;
 
-/** Check if the given type can be used with non-trivial (i.e. 1/1) ratios
- * Check if a type with type `T` can be multiplied by a ratio (i.e. * and / with
- * intmax_t) and then converted to `OutType`
+/** Invert a ratio */
+template <IsRatio R>
+using RatioInvert = std::ratio<R::den, R::num>;
+
+/**
+ * Check if the given type can be used with non-trivial (i.e. 1/1) ratios
+ * Essentially, requires closure under multiplication and division by intmax_t.
+ * This is, notably, a stronger requirement than we typically use in most of the
+ * Unit checks, where we'd otherwise split this into e.g. CanRatioMultiply and CanRatioDivide.
+ * The reason is that we do a lot of ratio manipulation logic under the hood for
+ * many operations, e.g. if we assign from ratio<16> to ratio<1> we divide the real
+ * value by 16, so mult and div both need to be defined.
+ *
+ * I have a hard time thinking of a real use-case for a type that can only be
+ * mult by intmax and can't be divided. If one comes up we can try to split this.
  */
 template <typename T>
 concept IsRatioCompatible_ = requires(T t, intmax_t i) {
@@ -46,9 +58,9 @@ concept IsRatioCompatible = ((IsRatioCompatible_<Ts> && ...));
 /** Function to multiply out a ratio: Compute val * R */
 template <IsRatio R, typename OutType, typename T>
     requires IsRatioCompatible<T>
-T MultiplyByRatio(const T &val)
+OutType MultiplyByRatio(const T &val)
 {
-    if (R::num == 1 && R::den == 1)
+    if constexpr (std::is_same_v<R, std::ratio<1>>)
     {
         return val;
     }
@@ -60,7 +72,11 @@ template <IsRatio R, typename OutType, typename T>
     requires IsRatioCompatible<T>
 OutType DivideByRatio(const T &val)
 {
-    return MultiplyByRatio<std::ratio<R::den, R::num>, OutType, T>(val);
+    if constexpr (std::is_same_v<R, std::ratio<1>>)
+    {
+        return val;
+    }
+    return MultiplyByRatio<RatioInvert<R>, OutType, T>(val);
 };
 
 /** Convert ratio to double */
@@ -93,7 +109,7 @@ constexpr intmax_t lcm(intmax_t a, intmax_t b)
 }
 
 template <IsRatio R1, IsRatio R2>
-struct CombineRatio
+struct RatioAddHelper
 {
     static constexpr intmax_t _combinedNum = lcm(R1::num, R2::num);
     static constexpr intmax_t _combinedDen = gcd(R1::den, R2::den);
@@ -103,9 +119,6 @@ struct CombineRatio
     using rhsFac = std::ratio_divide<R2, combinedRatio>;
 };
 
-/** Invert a ratio */
-template <IsRatio R>
-using RatioInvert = std::ratio<R::den, R::num>;
 
 /** Helper for exponentiating ratios: compute Ratio ^ Exp (when possible) */
 // Reference: https://stackoverflow.com/questions/19823216/stdratio-power-of-a-stdratio-at-compile-time

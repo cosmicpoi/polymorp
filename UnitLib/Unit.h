@@ -23,14 +23,14 @@ struct RatioEqualityHelper<LHS_Type, LHS_Ratio, RHS_Type, RHS_Ratio>
 {
     static constexpr intmax_t fac1 = LHS_Ratio::num * RHS_Ratio::den;
     static constexpr intmax_t fac2 = RHS_Ratio::num * LHS_Ratio::den;
-    using CommonType = std::common_type_t<LHS_Type, RHS_Type>;
+    using Common = CommonType<LHS_Type, RHS_Type>;
     static constexpr intmax_t facMax = fac1 > fac2 ? fac1 : fac2;
 
-    static constexpr CommonType eps1 = std::numeric_limits<LHS_Type>::epsilon();
-    static constexpr CommonType eps2 = std::numeric_limits<RHS_Type>::epsilon();
-    static constexpr CommonType eps = eps1 > eps2 ? eps1 : eps2;
+    static constexpr Common eps1 = std::numeric_limits<LHS_Type>::epsilon();
+    static constexpr Common eps2 = std::numeric_limits<RHS_Type>::epsilon();
+    static constexpr Common eps = eps1 > eps2 ? eps1 : eps2;
 
-    static constexpr CommonType epsilon = eps * facMax * EPS_TOLERANCE;
+    static constexpr Common epsilon = eps * facMax * EPS_TOLERANCE;
 };
 
 /**
@@ -45,15 +45,21 @@ constexpr bool typed_crossmult_equality(const Type &value, const RHS_Type &rhs)
     // It might be tempting to add a check for if constexpr (std::is_same_v<Ratio, RHS_Ratio>), but
     // we want to override the default eps tolerance even for plain types (since they may have converted from Kilo)
     using Helper = RatioEqualityHelper<Type, Ratio, RHS_Type, RHS_Ratio>;
-    using CommonType = typename Helper::CommonType;
+    using Common = typename Helper::Common;
     if constexpr (IsArithmetic<Type, RHS_Type>)
     {
-        return std::abs(static_cast<CommonType>(value * Helper::fac1) - static_cast<CommonType>(rhs * Helper::fac2)) < Helper::epsilon;
+        return std::abs(static_cast<Common>(value * Helper::fac1) - static_cast<Common>(rhs * Helper::fac2)) < Helper::epsilon;
     }
     // Fallback for IsIntegral<Type, RHS_Type> builtins AND for user-defined types
+    else if (IsIntegral<Type, RHS_Type>)
+    {
+        return static_cast<Common>(value * Helper::fac1) == static_cast<Common>(rhs * Helper::fac2);
+    }
     else
     {
-        return static_cast<CommonType>(value * Helper::fac1) == static_cast<CommonType>(rhs * Helper::fac2);
+        // Don't need to check that Type * intmax_t is valid because this is enforced by IsRatioCompatible_
+        static_assert((requires(Type a, RHS_Type b, intmax_t c) { {a * c}; {b * c}; }));
+        return value * Helper::fac1 == rhs * Helper::fac2;
     }
 }
 
@@ -61,20 +67,26 @@ constexpr bool typed_crossmult_equality(const Type &value, const RHS_Type &rhs)
  * Ratio addition/subtraction
  */
 
+// Use AddType instead of CommonType
 template <typename A, typename B>
-concept CanRatioAdd = requires(std::common_type_t<A, B> x, intmax_t r) {
-    IsRatioCompatible<std::common_type_t<A, B>>;
-    { x *r } -> std::same_as<std::common_type_t<A, B>>;
-    { x / r } -> std::same_as<std::common_type_t<A, B>>;
-    { x + x } -> std::same_as<std::common_type_t<A, B>>;
+concept CanRatioAdd = requires(AddType<A, B> x, intmax_t r) {
+    requires CanAdd<A, B>;
+    // Checks for closure of * and /
+    requires IsRatioCompatible<AddType<A, B>>;
+    // Check that the promoted type can convert to itself - the logic is that semantics
+    // similar to A+B should return decltype(A+B), not a distinct decltype ((A+B)+(A+B))
+    { x + x } -> std::convertible_to<AddType<A, B>>;
 };
 
+// Use SubtractType instead of CommonType
 template <typename A, typename B>
-concept CanRatioSubtract = requires(std::common_type_t<A, B> x, intmax_t r) {
-    IsRatioCompatible<std::common_type_t<A, B>>;
-    { x *r } -> std::same_as<std::common_type_t<A, B>>;
-    { x / r } -> std::same_as<std::common_type_t<A, B>>;
-    { x - x } -> std::same_as<std::common_type_t<A, B>>;
+concept CanRatioSubtract = requires(SubtractType<A, B> x, intmax_t r) {
+    requires CanSubtract<A, B>;
+    // Checks for closure of * and /
+    requires IsRatioCompatible<SubtractType<A, B>>;
+    // Check that the promoted type can convert to itself - the logic is that semantics
+    // similar to A+B should return decltype(A-B), not a distinct decltype ((A-B)-(A-B))
+    { x - x } -> std::convertible_to<SubtractType<A, B>>;
 };
 
 /**
@@ -83,22 +95,22 @@ concept CanRatioSubtract = requires(std::common_type_t<A, B> x, intmax_t r) {
  */
 template <typename LHS_Type, IsRatio LHS_Ratio, typename RHS_Type, IsRatio RHS_Ratio>
     requires CanRatioAdd<LHS_Type, RHS_Type>
-std::common_type_t<LHS_Type, RHS_Type> ratio_value_add(const LHS_Type &lhs, const RHS_Type &rhs)
+AddType<LHS_Type, RHS_Type> ratio_value_add(const LHS_Type &lhs, const RHS_Type &rhs)
 {
-    using ResType = std::common_type_t<LHS_Type, RHS_Type>;
-    using LhsFac = typename CombineRatio<LHS_Ratio, RHS_Ratio>::lhsFac;
-    using RhsFac = typename CombineRatio<LHS_Ratio, RHS_Ratio>::rhsFac;
-    return MultiplyByRatio<LhsFac, ResType>(lhs) + MultiplyByRatio<RhsFac, ResType>(rhs);
+    using LhsFac = typename RatioAddHelper<LHS_Ratio, RHS_Ratio>::lhsFac;
+    using RhsFac = typename RatioAddHelper<LHS_Ratio, RHS_Ratio>::rhsFac;
+    return MultiplyByRatio<LhsFac, AddType<LHS_Type, RHS_Type>>(lhs) +
+           MultiplyByRatio<RhsFac, AddType<LHS_Type, RHS_Type>>(rhs);
 }
 
 template <typename LHS_Type, IsRatio LHS_Ratio, typename RHS_Type, IsRatio RHS_Ratio>
     requires CanRatioSubtract<LHS_Type, RHS_Type>
-std::common_type_t<LHS_Type, RHS_Type> ratio_value_subtract(const LHS_Type &lhs, const RHS_Type &rhs)
+SubtractType<LHS_Type, RHS_Type> ratio_value_subtract(const LHS_Type &lhs, const RHS_Type &rhs)
 {
-    using ResType = std::common_type_t<LHS_Type, RHS_Type>;
-    using LhsFac = typename CombineRatio<LHS_Ratio, RHS_Ratio>::lhsFac;
-    using RhsFac = typename CombineRatio<LHS_Ratio, RHS_Ratio>::rhsFac;
-    return MultiplyByRatio<LhsFac, ResType>(lhs) - MultiplyByRatio<RhsFac, ResType>(rhs);
+    using LhsFac = typename RatioAddHelper<LHS_Ratio, RHS_Ratio>::lhsFac;
+    using RhsFac = typename RatioAddHelper<LHS_Ratio, RHS_Ratio>::rhsFac;
+    return MultiplyByRatio<LhsFac, SubtractType<LHS_Type, RHS_Type>>(lhs) -
+           MultiplyByRatio<RhsFac, SubtractType<LHS_Type, RHS_Type>>(rhs);
 }
 
 //------------------------------------------------------------------------------
@@ -189,7 +201,7 @@ public:
     }
 
     /**
-     * @brief Constructor froma ssignable or convertible rvalue
+     * @brief Constructor from assignable or convertible rvalue
      * Note: need to check that ratio does not match to avoid overriding copy constructor
      */
     template <typename Other_Type, UnitIdentifier Other_UID, IsRatio Other_Ratio>
@@ -215,13 +227,13 @@ public:
     /** @brief Compute the real value from the ratio */
     inline const Type GetRealValue() const
     {
-        if constexpr (IsRatioCompatible<Type>)
+        if constexpr (std::is_same_v<Ratio, std::ratio<1>>)
         {
-            return MultiplyByRatio<Ratio, Type>(value);
+            return value;
         }
         else
         {
-            return value;
+            return MultiplyByRatio<Ratio, Type>(value);
         }
     }
     /** @brief Compute the value in terms of base units */
@@ -319,8 +331,10 @@ public:
     }
 
     /**
-     *  Internal helpers for arithmetic
+     *  Multiplication and Division
      */
+
+    /* Divide/multiply type helpers */
 
     // Used for multiplication
     template <typename RHS_Type, UnitIdentifier RHS_UID, IsRatio RHS_Ratio>
@@ -335,25 +349,6 @@ public:
         DivideType<Type, RHS_Type>,
         UIDivide<UID, RHS_UID>,
         std::ratio_divide<Ratio, RHS_Ratio>>;
-
-    // Used for adding/subtracting
-    template <typename RHS_Type, UnitIdentifier RHS_UID, IsRatio RHS_Ratio>
-        requires std::is_same_v<UID, RHS_UID> && CanAdd<Type, RHS_Type>
-    using ThisUnitAdd_ = Unit<
-        AddType<Type, RHS_Type>,
-        UID,
-        typename CombineRatio<Ratio, RHS_Ratio>::combinedRatio>;
-
-    template <typename RHS_Type, UnitIdentifier RHS_UID, IsRatio RHS_Ratio>
-        requires std::is_same_v<UID, RHS_UID> && CanSubtract<Type, RHS_Type>
-    using ThisUnitSubtract_ = Unit<
-        SubtractType<Type, RHS_Type>,
-        UID,
-        typename CombineRatio<Ratio, RHS_Ratio>::combinedRatio>;
-
-    /**
-     *  Multiplication and Division
-     */
 
     /** @brief Multiply with another unit. Follow default language promotion rules */
     template <typename RHS_Type, UnitIdentifier RHS_UID, IsRatio RHS_Ratio>
@@ -401,42 +396,79 @@ public:
      *    the ratio and rely on copy assignment to coerce the ratio into the one
      *    the user actually wants. For instance:
      *      Kilometer v = Kilometer{1} + Meter{1}; // expect 1.001km, not 1001m
+     *
+     * In order for units A and B to be addable:
+     * - Their UIDs must match, or one is a plaintype and the other is an empty unit
+     * - Addition A+B is well-defined
+     * And also, one of:
+     * - AddType<A,B> is ratio-compatible              -> add with common ratio
+     * - AddType<A,B> is not ratio-compatible          -> add with GetRealValue() and return ratio 1
+     *   (A, B can be either ratio-compatible or not)
+     *
+     * Vice versa for subtraction (A-B is well defined, SubtractType<A, B> is ratio-compatible)
+     * Note that we use AddType/SubtractType for type promotion instead of CommonType
+     * so that we can imitate the underlying behavior more closely, especially for user-defined
+     * types. We assume that the semantics of A+B promote to the preferred type
+     * (which potentially is neither A or B).
      */
 
-    /** @brief Add with another unit, only if UIDs match. Follow default language promotion rules */
+    /** Add/subtract type helpers */
+
     template <typename RHS_Type, UnitIdentifier RHS_UID, IsRatio RHS_Ratio>
-        requires CanRatioAdd<Type, RHS_Type> && std::is_same_v<UID, RHS_UID>
+        requires std::is_same_v<UID, RHS_UID> && CanAdd<Type, RHS_Type>
+    using ThisUnitAdd_ = Unit<
+        AddType<Type, RHS_Type>,
+        UID,
+        typename RatioAddHelper<Ratio, RHS_Ratio>::combinedRatio>;
+
+    template <typename RHS_Type, UnitIdentifier RHS_UID, IsRatio RHS_Ratio>
+        requires std::is_same_v<UID, RHS_UID> && CanSubtract<Type, RHS_Type>
+    using ThisUnitSubtract_ = Unit<
+        SubtractType<Type, RHS_Type>,
+        UID,
+        typename RatioAddHelper<Ratio, RHS_Ratio>::combinedRatio>;
+
+    /** @brief Add with another unit, if resultant unit is ratio-compatible */
+    template <typename RHS_Type, UnitIdentifier RHS_UID, IsRatio RHS_Ratio>
+        requires std::is_same_v<UID, RHS_UID> &&
+                 // Checks for CanAdd<A,B> and IsRatioCompatible<AddType<A,B>> under the hood
+                 CanRatioAdd<Type, RHS_Type>
     inline ThisUnitAdd_<RHS_Type, RHS_UID, RHS_Ratio> operator+(const Unit<RHS_Type, RHS_UID, RHS_Ratio> &rhs) const
     {
         return ThisUnitAdd_<RHS_Type, RHS_UID, RHS_Ratio>{
             ratio_value_add<Type, Ratio, RHS_Type, RHS_Ratio>(value, rhs.GetValue())};
     }
 
-    /** @brief Add with a unitless scalar, if we are empty */
-    template <std::convertible_to<Type> RHS>
-        requires CanAdd<Type, RHS> && IsEmptyUid<UID>
-    inline Unit<AddType<Type, RHS>, UID, Ratio> operator+(const RHS &rhs) const
-    {
-        return Unit<AddType<Type, RHS>, UID, Ratio>{
-            ratio_value_add<Type, Ratio, RHS, std::ratio<1>>(value, rhs)};
-    }
-
-    /** @brief Subtract with another unit, only if UIDs match. Follow default language promotion rules */
+    /** @brief Subtract with another unit, if resultant unit is ratio-compatible */
     template <typename RHS_Type, UnitIdentifier RHS_UID, IsRatio RHS_Ratio>
-        requires CanRatioSubtract<Type, RHS_Type> && std::is_same_v<UID, RHS_UID>
+        requires std::is_same_v<UID, RHS_UID> &&
+                 // Checks for CanSubtract<A,B> and IsRatioCompatible<SubtractType<A,B>> under the hood
+                 CanRatioSubtract<Type, RHS_Type>
     inline ThisUnitSubtract_<RHS_Type, RHS_UID, RHS_Ratio> operator-(const Unit<RHS_Type, RHS_UID, RHS_Ratio> &rhs) const
     {
         return ThisUnitSubtract_<RHS_Type, RHS_UID, RHS_Ratio>{
             ratio_value_subtract<Type, Ratio, RHS_Type, RHS_Ratio>(value, rhs.GetValue())};
     }
 
-    /** @brief Subtract with a unitless scalar, if we are empty */
-    template <std::convertible_to<Type> RHS>
-        requires CanSubtract<Type, RHS> && IsEmptyUid<UID>
-    inline Unit<SubtractType<Type, RHS>, UID, Ratio> operator-(const RHS &rhs) const
+    /** @brief Add with another unit, if resultant unit is NOT ratio-compatible */
+    template <typename RHS_Type, UnitIdentifier RHS_UID, IsRatio RHS_Ratio>
+        requires std::is_same_v<UID, RHS_UID> &&
+                 CanAdd<Type, RHS_Type> && // stupid temp solution to avoid recursion
+                 // Checks for CanAdd<A,B> and IsRatioCompatible<AddType<A,B>> under the hood
+                 (!CanRatioAdd<Type, RHS_Type>)
+    inline Unit<AddType<Type, RHS_Type>, UID, std::ratio<1>> operator+(const Unit<RHS_Type, RHS_UID, RHS_Ratio> &rhs) const
     {
-        return Unit<SubtractType<Type, RHS>, UID, Ratio>{
-            ratio_value_subtract<Type, Ratio, RHS, std::ratio<1>>(value, rhs)};
+        return Unit<AddType<Type, RHS_Type>, UID, std::ratio<1>>{GetRealValue() + rhs.GetRealValue()};
+    }
+
+    /** @brief Subtract with another unit, if resultant unit is NOT ratio-compatible */
+    template <typename RHS_Type, UnitIdentifier RHS_UID, IsRatio RHS_Ratio>
+        requires std::is_same_v<UID, RHS_UID> &&
+                 // Checks for CanSubtract<A,B> and IsRatioCompatible<SubtractType<A,B>> under the hood
+                 (!CanRatioSubtract<Type, RHS_Type>)
+    inline Unit<SubtractType<Type, RHS_Type>, UID, std::ratio<1>> operator-(const Unit<RHS_Type, RHS_UID, RHS_Ratio> &rhs) const
+    {
+        return Unit<SubtractType<Type, RHS_Type>, UID, std::ratio<1>>{GetRealValue() - rhs.GetRealValue()};
     }
 
     /**
@@ -505,12 +537,12 @@ public:
      * - Their UIDs must match, or one is a plaintype and the other is an empty unit
      * And also, one of:
      * Builtin types:
-     *   - Both types are ratio compatible, and epsilon is well-defined (builtin only)
-     *   - Both types are ratio compatible, and are integral (builtin only)
+     *   - Both types are ratio compatible, and epsilon is well-defined (builtin only) -> cross-multiply with epsilon check
+     *   - Both types are ratio compatible, and are integral (builtin only)            -> cross-multiply with direct equality
      * User-defined types:
      * - Underlying equality A == B must be defined. In addition, either:
-     *   - Both sides are ratio-compatible (and ratios can be anything)
-     *   - Or, only one side is ratio-compatible (and it can have any ratio, but
+     *   - Both sides are ratio-compatible (and ratios can be anything)                -> cross-multiply with direct equality
+     *   - Or, only one side is ratio-compatible (and it can have any ratio, but       -> compare real values
      *     the other side must be 1/1)
      *   - Or, neither side is ratio-compatible, and both have ratio 1/1
      */
@@ -658,8 +690,63 @@ template <typename T>
 using EmptyUnit = Unit<T, EmptyUid, std::ratio<1>>;
 
 //------------------------------------------------------------------------------
-// Left side plaintype operations
+// Plaintype operations
 //------------------------------------------------------------------------------
+
+/**
+ * We generally prefer to implement these as non-members because they allow us to
+ * explicitly check !IsUnit, avoiding recursion from e.g. `Empty{1} + KiloEmpty{1} == 1001`
+ */
+
+/**
+ * Right-side plaintype operator overloads
+ */
+
+/** @brief Add with another type, if resultant type is ratio-compatible */
+template <typename Type, UnitIdentifier UID, IsRatio Ratio, typename RHS>
+    requires((IsEmptyUid<UID> && !IsUnit<RHS>) &&
+             // Checks for CanAdd<A,B> and IsRatioCompatible<AddType<A,B>> under the hood
+             CanRatioAdd<Type, RHS>)
+inline Unit<AddType<Type, RHS>, UID, Ratio> operator+(const Unit<Type, UID, Ratio> &lhs_unit, const RHS &rhs)
+{
+    return Unit<AddType<Type, RHS>, UID, Ratio>{
+        ratio_value_add<Type, Ratio, RHS, std::ratio<1>>(lhs_unit.GetValue(), rhs)};
+}
+
+/** @brief Subtract with another type, if resultant type is ratio-compatible */
+template <typename Type, UnitIdentifier UID, IsRatio Ratio, typename RHS>
+    requires((IsEmptyUid<UID> && !IsUnit<RHS>) &&
+             // Checks for CanAdd<A,B> and IsRatioCompatible<AddType<A,B>> under the hood
+             CanRatioSubtract<Type, RHS>)
+inline Unit<SubtractType<Type, RHS>, UID, Ratio> operator-(const Unit<Type, UID, Ratio> &lhs_unit, const RHS &rhs)
+{
+    return Unit<SubtractType<Type, RHS>, UID, Ratio>{
+        ratio_value_subtract<Type, Ratio, RHS, std::ratio<1>>(lhs_unit.GetValue(), rhs)};
+}
+
+/** @brief Add with another unit, if resultant unit is NOT ratio-compatible */
+template <typename Type, UnitIdentifier UID, IsRatio Ratio, typename RHS>
+    requires((IsEmptyUid<UID> && !IsUnit<RHS>) &&
+             // Checks for CanAdd<A,B> and IsRatioCompatible<AddType<A,B>> under the hood
+             !CanRatioAdd<Type, RHS>)
+inline Unit<AddType<Type, RHS>, UID, std::ratio<1>> operator+(const Unit<Type, UID, Ratio> &lhs_unit, const RHS &rhs)
+{
+    return Unit<AddType<Type, RHS>, UID, std::ratio<1>>{lhs_unit.GetRealValue() + rhs.GetRealValue()};
+}
+
+/** @brief Subtract with another unit, if resultant unit is NOT ratio-compatible */
+template <typename Type, UnitIdentifier UID, IsRatio Ratio, typename RHS>
+    requires((IsEmptyUid<UID> && !IsUnit<RHS>) &&
+             // Checks for CanAdd<A,B> and IsRatioCompatible<AddType<A,B>> under the hood
+             !CanRatioAdd<Type, RHS>)
+inline Unit<SubtractType<Type, RHS>, UID, std::ratio<1>> operator-(const Unit<Type, UID, Ratio> &lhs_unit, const RHS &rhs)
+{
+    return Unit<SubtractType<Type, RHS>, UID, std::ratio<1>>{lhs_unit.GetRealValue() - rhs.GetRealValue()};
+}
+
+/**
+ * Left-side plaintype operations
+ */
 
 /** @brief Left-compare with plain type for EmptyUnits */
 template <typename LHS, typename RHS_Type, UnitIdentifier RHS_UID, IsRatio RHS_Ratio>
