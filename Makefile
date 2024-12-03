@@ -7,7 +7,7 @@ CXXFLAGS = -Wall -Wextra -std=c++20 -g
 
 # Source files (all .cpp files in the directory)
 SOURCES = $(wildcard *.cpp)
-HEADERS = $(wildcard *.h) $(wildcard UnitLib/*.h)
+HEADERS = $(wildcard *.h) $(wildcard UnitLib/*.h) $(wildcard _Tests/*.h)
 
 # Primary targets
 TARGET_MAIN = main

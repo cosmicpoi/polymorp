@@ -87,6 +87,11 @@ constexpr bool CanOp()
     }
 }
 
+template <typename T, typename Ratio>
+concept CanUnitMultRatio = IsRatio<Ratio> && requires {
+    UnitMultRatio<T, Ratio>{};
+};
+
 /** @brief Helper concept to check if a type supports IsZero */
 template <typename T>
 concept HasIsZero = requires(T t) {
@@ -171,6 +176,24 @@ int main()
         static_assert(!StrEq<str1, str2>::value);
     }
 
+    std::cout << "Running AdditiveString tests" << std::endl;
+    {
+        assert((AdditiveString{"hibye"} + AdditiveString{"bye"} == AdditiveString{"hibyebye"}));
+        assert((AdditiveString{"hibye"} - AdditiveString{"bye"} == AdditiveString{"hi"}));
+
+        assert((!CanOp<AdditiveString, "*", AdditiveString>()));
+        assert((!CanOp<AdditiveString, "/", AdditiveString>()));
+    }
+
+    std::cout << "Running PrimeField tests" << std::endl;
+    {
+        assert(Z7{4} + Z7{5} == Z7{2});
+        assert(Z7{4} - Z7{5} == Z7{6});
+
+        assert(Z7{4} * Z7{5} == Z7{6});
+        assert(Z7{6} / Z7{5} == Z7{4});
+    }
+
     // ------------------------------------------------------------
     // Run Unit tests
     // ------------------------------------------------------------
@@ -228,8 +251,18 @@ int main()
     using dUEmpty = EmptyUnit<double>;
     using dUKilo = UnitMultRatio<dUEmpty, std::ratio<1000>>;
 
+    // User-defined types
+    using StrUnit = TypeAtomic<AdditiveString, "string">;
+    assert((!CanUnitMultRatio<StrUnit, std::ratio<2>>));
+
+    using Z7Unit = TypeAtomic<Z7, "z7">;
+    using Z7Unit_2 = UnitExpI<Z7Unit, 2>;
+    using Z7Unit_Double = UnitMultRatio<Z7Unit, std::ratio<2>>;
+    using Z7Unit_Half = UnitMultRatio<Z7Unit, std::ratio<1, 2>>;
+
     // /** -- Run constructor tests --  */
-    std::cout << "Running constructor tests" << std::endl;
+    std::cout
+        << "Running constructor tests" << std::endl;
     {
         Meter v0;
         assert(v0.GetValue() == 0);
@@ -371,11 +404,24 @@ int main()
     }
     // Addition for nonratio types
     {
-        // std::cout << (EmptyUnit<AdditiveString>{"hellobye"} + EmptyUnit<AdditiveString>{"bye"}) << std::endl;
-        // std::cout << (EmptyUnit<AdditiveString>{"hellobye"} + AdditiveString{"bye"}) << std::endl;
+        assert((StrUnit{"hellobye"} + StrUnit{"bye"} == StrUnit{"hellobyebye"}));
+        assert((StrUnit{"hellobye"} - StrUnit{"bye"} == StrUnit{"hello"}));
 
-        // std::cout << (EmptyUnit<AdditiveString>{"hellobye"} - EmptyUnit<AdditiveString>{"bye"}) << std::endl;
-        // std::cout << (EmptyUnit<AdditiveString>{"hellobye"} - AdditiveString{"bye"}) << std::endl;
+        assert((EmptyUnit<AdditiveString>{"hellobye"} + AdditiveString{"bye"} == AdditiveString{"hellobyebye"}));
+        assert((AdditiveString{"hellobye"} + AdditiveString{"bye"} == EmptyUnit<AdditiveString>{"hellobyebye"}));
+
+        assert((EmptyUnit<AdditiveString>{"hellobye"} - AdditiveString{"bye"} == AdditiveString{"hello"}));
+        assert((AdditiveString{"hellobye"} - AdditiveString{"bye"} == EmptyUnit<AdditiveString>{"hello"}));
+    }
+    // Addition for ratio types
+    {
+        assert((Z7Unit{4} + Z7Unit{5} == Z7Unit{2}));
+        assert((Z7Unit{4} - Z7Unit{5} == Z7Unit{6}));
+        assert((Z7Unit{4} + Z7Unit_Double{5} == Z7Unit{0}));
+        assert((Z7Unit{4} + Z7Unit_Half{5} == Z7Unit{3})); // 2^-1 = 4, so 4 + 4*5 = 24 -> 3
+
+        assert((EmptyUnit<Z7>{1} + Z7{4} == Z7{5}));
+        assert((Z7{1} + EmptyUnit<Z7>{4} == Z7{5}));
     }
     // Test subtraction
     {
@@ -397,6 +443,11 @@ int main()
         assert((CanOp<Meter, "*", Meter>()));
         assert((CanOp<Meter, "*", Kilometer>()));
         assert((CanOp<Meter, "*", Second>()));
+    }
+
+    // Multiplication for user-defined units
+    {
+        assert((Z7Unit{4} * Z7Unit{4} == Z7Unit_2{2}));
     }
 
     // Test multiplication with scalars (right and left)
@@ -445,6 +496,11 @@ int main()
         static_assert((CanOp<Meter, "/", Second>()));
         static_assert((CanOp<Meter, "/", Kilometer>()));
         static_assert((CanOp<Meter, "/", dUEmpty>()));
+    }
+
+    // Multiplication for user-defined units
+    {
+        assert((Z7Unit{4} / Z7Unit{4} == Z7{1}));
     }
 
     // Test division with plain scalars (right and left)

@@ -3,8 +3,8 @@
 template <uint P>
 constexpr uint PositiveMod(const intmax_t &val)
 {
-    uint rem = (val % P);
-    return rem < 0 ? (rem + P) : rem;
+    intmax_t rem = (val % P);
+    return rem < 0 ? static_cast<uint>(rem + P) : static_cast<uint>(rem);
 }
 
 // Example class that supports add and subtract and ALSO ratio
@@ -23,7 +23,7 @@ public:
 
     inline PrimeField<P> operator-(const PrimeField<P> &other) const
     {
-        return PrimeField(PositiveMod<P>(value - other.value));
+        return PrimeField(PositiveMod<P>(static_cast<int>(value) - static_cast<int>(other.value)));
     }
     // Mult/divide
     inline PrimeField<P> operator*(const PrimeField<P> &other) const
@@ -36,9 +36,9 @@ public:
         // Use fermat's little theorem
         // x = a^(P-2), so need to multiply P-3 times
         uint res = value;
-        for (uint i = 0; i <= P - 3; i++)
+        for (uint i = 0; i < P - 3; i++)
         {
-            res = (res * res) % P;
+            res = (res * value) % P;
         }
 
         return res;
