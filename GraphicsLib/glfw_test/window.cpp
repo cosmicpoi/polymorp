@@ -1,7 +1,11 @@
 #include <GLFW/glfw3.h>
 #include <glad/glad.h>
 #include <iostream>
-//#include "../../UnitLib/Vector.h"
+// #include "../../UnitLib/Vector.h"
+// #include "../../UnitLib/Unit.h"
+// #include "../../UnitLib/Matrix.h"
+
+//Reference tutorial https://learnopengl.com/Getting-started/Hello-Triangle
 
 void framebuffer_size_callback(GLFWwindow* window, int width, int height);
 void processInput(GLFWwindow *window);
