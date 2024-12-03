@@ -84,7 +84,7 @@ template <IsRatio R, typename OutType, typename T>
              (IsRatioCompatible<T> || std::is_same_v<R, std::ratio<1>>)
 OutType DivideByRatio(const T &val)
 {
-    return MultiplyByRatio<RatioInvert<R>>(val);
+    return MultiplyByRatio<RatioInvert<R>, OutType, T>(val);
 };
 
 /** Convert ratio to double */

@@ -64,17 +64,18 @@ constexpr bool typed_ratio_equality(const Type &value, const RHS_Type &rhs)
     // It might be tempting to add a check for if constexpr (std::is_same_v<Ratio, RHS_Ratio>), but
     // we want to override the default eps tolerance even for plain types (since they may have converted from Kilo)
     using Helper = RatioEqualityHelper<Type, Ratio, RHS_Type, RHS_Ratio>;
-    if constexpr (IsArithmetic<Type, RHS_Type>)
+    if constexpr (IsIntegral<Type, RHS_Type>)
+    {
+        using Common = typename Helper::Common;
+        return static_cast<Common>(value * Helper::fac1) == static_cast<Common>(rhs * Helper::fac2);
+    } 
+    // Fallback for IsIntegral<Type, RHS_Type> builtins AND for user-defined types
+    else if constexpr (IsArithmetic<Type, RHS_Type>)
     {
         using Common = typename Helper::Common;
         return std::abs(static_cast<Common>(value * Helper::fac1) - static_cast<Common>(rhs * Helper::fac2)) < Helper::epsilon;
     }
-    // Fallback for IsIntegral<Type, RHS_Type> builtins AND for user-defined types
-    else if constexpr (IsIntegral<Type, RHS_Type>)
-    {
-        using Common = typename Helper::Common;
-        return static_cast<Common>(value * Helper::fac1) == static_cast<Common>(rhs * Helper::fac2);
-    }
+
     else if constexpr (IsRatioCompatible<Type, RHS_Type>)
     {
         // Don't need to check that Type * intmax_t is valid because this is enforced by IsRatioCompatible_
@@ -731,7 +732,7 @@ template <typename LHS, typename RHS_Type, UnitIdentifier RHS_UID, IsRatio RHS_R
 inline UnitAddSubtractType<RHS_UID, RHS_Ratio, AddType<LHS, RHS_Type>> operator+(const LHS &lhs, const Unit<RHS_Type, RHS_UID, RHS_Ratio> &rhs_unit)
 {
     return UnitAddSubtractType<RHS_UID, RHS_Ratio, AddType<LHS, RHS_Type>>{
-        ratio_value_add<RHS_Type, RHS_Ratio, LHS, std::ratio<1>>(lhs, rhs_unit.GetValue())};
+        ratio_value_add<LHS, std::ratio<1>, RHS_Type, RHS_Ratio>(lhs, rhs_unit.GetValue())};
 }
 
 /** @brief Subtract with another type, if resultant type is ratio-compatible */
@@ -751,7 +752,7 @@ template <typename LHS, typename RHS_Type, UnitIdentifier RHS_UID, IsRatio RHS_R
 inline UnitAddSubtractType<RHS_UID, RHS_Ratio, SubtractType<LHS, RHS_Type>> operator-(const LHS &lhs, const Unit<RHS_Type, RHS_UID, RHS_Ratio> &rhs_unit)
 {
     return UnitAddSubtractType<RHS_UID, RHS_Ratio, SubtractType<LHS, RHS_Type>>{
-        ratio_value_subtract<RHS_Type, RHS_Ratio, LHS, std::ratio<1>>(lhs, rhs_unit.GetValue())};
+        ratio_value_subtract<LHS, std::ratio<1>, RHS_Type, RHS_Ratio>(lhs, rhs_unit.GetValue())};
 }
 
 /**
@@ -773,7 +774,7 @@ template <typename LHS, typename RHS_Type, UnitIdentifier RHS_UID, IsRatio RHS_R
              IsEqualityComparable<LHS, RHS_Type>)
 inline bool operator==(const LHS &lhs, const Unit<RHS_Type, RHS_UID, RHS_Ratio> &rhs_unit)
 {
-    return typed_ratio_equality<LHS, RHS_Ratio, RHS_Type, std::ratio<1>>(lhs, rhs_unit.GetValue());
+    return typed_ratio_equality<LHS, std::ratio<1>, RHS_Type, RHS_Ratio>(lhs, rhs_unit.GetValue());
 }
 
 //------------------------------------------------------------------------------
