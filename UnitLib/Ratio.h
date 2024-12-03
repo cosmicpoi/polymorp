@@ -49,9 +49,8 @@ using RatioInvert = std::ratio<R::den, R::num>;
  */
 template <typename T>
 concept IsRatioCompatible_ = requires(T t, intmax_t i) {
-    requires ConvertibleOrConstructible<T, intmax_t>;
-    { t / i } -> std::convertible_to<T>;
-    { t *i } -> std::convertible_to<T>;
+    { t / i } -> ConvertibleOrConstructibleTo<T>;
+    { t *i } -> ConvertibleOrConstructibleTo<T>;
 };
 
 template <typename... Ts>

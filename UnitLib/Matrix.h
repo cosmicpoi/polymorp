@@ -19,8 +19,6 @@ public:
     static constexpr size_t n = N;
     using type = Type;
 
-    static constexpr bool IsSquare = (M == N);
-
     template <typename T>
     using MatrixMN = Matrix<M, N, T>;
 

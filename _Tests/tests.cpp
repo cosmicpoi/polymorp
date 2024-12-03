@@ -7,6 +7,9 @@
 #include "../UnitLib/Matrix.h"
 #include "../UnitLib/Print.h"
 
+#include "AdditiveString.h"
+#include "PrimeField.h"
+
 #include <iomanip>
 
 // ------------------------------------------------------------
