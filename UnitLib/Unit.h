@@ -697,23 +697,23 @@ inline Unit<DivideType<LHS, RHS_Type>, UIInvert<RHS_UID>, RatioInvert<RHS_Ratio>
  */
 
 template <typename SharedType, IsRatio Ratio>
-struct UnitAddRatio_
+struct UnitAddSubtractRatio_
 {
     using ratio = std::ratio<1>;
 };
 
 template <typename SharedType, IsRatio Ratio>
     requires IsRatioCompatible<SharedType>
-struct UnitAddRatio_<SharedType, Ratio>
+struct UnitAddSubtractRatio_<SharedType, Ratio>
 {
     using ratio = Ratio;
 };
 
 template <typename SharedType, IsRatio Ratio>
-using UnitAddRatio = typename UnitAddRatio_<SharedType, Ratio>::ratio;
+using UnitAddSubtractRatio = typename UnitAddSubtractRatio_<SharedType, Ratio>::ratio;
 
 template <UnitIdentifier UID, IsRatio Ratio, typename SharedType>
-using UnitAddSubtractType = Unit<SharedType, UID, UnitAddRatio<SharedType, Ratio>>;
+using UnitAddSubtractType = Unit<SharedType, UID, UnitAddSubtractRatio<SharedType, Ratio>>;
 
 /** @brief Add with another type, if resultant type is ratio-compatible */
 template <typename Type, UnitIdentifier UID, IsRatio Ratio, typename RHS>

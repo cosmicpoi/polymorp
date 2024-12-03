@@ -1060,9 +1060,6 @@ int main()
     {
         Matrix2<double> m1 = {{1, 2}, {3, 4}};
         Matrix2<dUKilo> m2{1, 1, 1, 1};
-        std::cout << std::setprecision(20);
-        std::cout << (m1 + m2) << std::endl;
-        std::cout << Matrix2<double>{1001, 1002, 1003, 1004} << std::endl;
         assert((((m1 + m2) == Matrix2<double>{1001, 1002, 1003, 1004})));
         assert(((Matrix2<Meter>{1, 0, 0, 0} + Matrix2<Meter>{0, 1, 0, 0}) == Matrix2<Meter>{1, 1, 0, 0}));
     }
