@@ -7,6 +7,9 @@
 #include "../UnitLib/Matrix.h"
 #include "../UnitLib/Print.h"
 
+#include "AdditiveString.h"
+#include "PrimeField.h"
+
 #include <iomanip>
 
 // ------------------------------------------------------------
@@ -83,6 +86,11 @@ constexpr bool CanOp()
         return false;
     }
 }
+
+template <typename T, typename Ratio>
+concept CanUnitMultRatio = IsRatio<Ratio> && requires {
+    UnitMultRatio<T, Ratio>{};
+};
 
 /** @brief Helper concept to check if a type supports IsZero */
 template <typename T>
@@ -168,6 +176,24 @@ int main()
         static_assert(!StrEq<str1, str2>::value);
     }
 
+    std::cout << "Running AdditiveString tests" << std::endl;
+    {
+        assert((AdditiveString{"hibye"} + AdditiveString{"bye"} == AdditiveString{"hibyebye"}));
+        assert((AdditiveString{"hibye"} - AdditiveString{"bye"} == AdditiveString{"hi"}));
+
+        assert((!CanOp<AdditiveString, "*", AdditiveString>()));
+        assert((!CanOp<AdditiveString, "/", AdditiveString>()));
+    }
+
+    std::cout << "Running PrimeField tests" << std::endl;
+    {
+        assert(Z7{4} + Z7{5} == Z7{2});
+        assert(Z7{4} - Z7{5} == Z7{6});
+
+        assert(Z7{4} * Z7{5} == Z7{6});
+        assert(Z7{6} / Z7{5} == Z7{4});
+    }
+
     // ------------------------------------------------------------
     // Run Unit tests
     // ------------------------------------------------------------
@@ -225,8 +251,18 @@ int main()
     using dUEmpty = EmptyUnit<double>;
     using dUKilo = UnitMultRatio<dUEmpty, std::ratio<1000>>;
 
+    // User-defined types
+    using StrUnit = TypeAtomic<AdditiveString, "string">;
+    assert((!CanUnitMultRatio<StrUnit, std::ratio<2>>));
+
+    using Z7Unit = TypeAtomic<Z7, "z7">;
+    using Z7Unit_2 = UnitExpI<Z7Unit, 2>;
+    using Z7Unit_Double = UnitMultRatio<Z7Unit, std::ratio<2>>;
+    using Z7Unit_Half = UnitMultRatio<Z7Unit, std::ratio<1, 2>>;
+
     // /** -- Run constructor tests --  */
-    std::cout << "Running constructor tests" << std::endl;
+    std::cout
+        << "Running constructor tests" << std::endl;
     {
         Meter v0;
         assert(v0.GetValue() == 0);
@@ -246,18 +282,34 @@ int main()
 
     // Test equality
     {
-        assert(Meter{1000} == Kilometer{1});
-        assert(Meter{1} == Kilometer{0.001});
+        // Basic comparisons
         assert(Meter{1} == Meter{1});
 
-        assert((CanOp<Meter, "==", Meter>()));
-        assert((CanOp<Meter, "==", iMeter>()));
-
+        // Basic incompatibility checks
         assert((!CanOp<Meter, "==", Second>()));
         assert((!CanOp<Meter, "==", typename Meter::type>()));
         assert((!CanOp<Meter, "==", float>()));
         assert((!CanOp<Meter, "==", double>()));
-        assert((!CanOp<Meter, "==", float>()));
+
+        // Comparing units of different ratios
+        assert(Meter{1000} == Kilometer{1});
+        assert(Meter{1} == Kilometer{0.001});
+        assert((dUEmpty{1000} == dUKilo{1}));
+
+        // Comparing units of different underlying types
+        assert((CanOp<Meter, "==", iMeter>()));
+        assert((Meter{1.0} == iMeter{1}));
+
+        // Comparing non-arithmetic types
+        assert((TypeAtomic<std::string, "meter">{"hi"} == TypeAtomic<std::string, "meter">{"hi"}));
+
+        // Comparing empty units and plaintypes
+        assert(dUEmpty{1.0} == 1.0);
+        assert(1.0 == dUEmpty{1.0});
+
+        // Comparing empty units and plain non-arithmetics
+        assert(EmptyUnit<std::string>{"hi"} == std::string{"hi"});
+        assert(std::string{"hi"} == EmptyUnit<std::string>{"hi"});
     }
 
     // Comparison between empty units and plain scalars (left and right)
@@ -350,6 +402,27 @@ int main()
 
         assert((std::is_same_v<decltype(HalfMeter{1} + ThirdMeter{1})::ratio, std::ratio<1>>));
     }
+    // Addition for nonratio types
+    {
+        assert((StrUnit{"hellobye"} + StrUnit{"bye"} == StrUnit{"hellobyebye"}));
+        assert((StrUnit{"hellobye"} - StrUnit{"bye"} == StrUnit{"hello"}));
+
+        assert((EmptyUnit<AdditiveString>{"hellobye"} + AdditiveString{"bye"} == AdditiveString{"hellobyebye"}));
+        assert((AdditiveString{"hellobye"} + AdditiveString{"bye"} == EmptyUnit<AdditiveString>{"hellobyebye"}));
+
+        assert((EmptyUnit<AdditiveString>{"hellobye"} - AdditiveString{"bye"} == AdditiveString{"hello"}));
+        assert((AdditiveString{"hellobye"} - AdditiveString{"bye"} == EmptyUnit<AdditiveString>{"hello"}));
+    }
+    // Addition for ratio types
+    {
+        assert((Z7Unit{4} + Z7Unit{5} == Z7Unit{2}));
+        assert((Z7Unit{4} - Z7Unit{5} == Z7Unit{6}));
+        assert((Z7Unit{4} + Z7Unit_Double{5} == Z7Unit{0}));
+        assert((Z7Unit{4} + Z7Unit_Half{5} == Z7Unit{3})); // 2^-1 = 4, so 4 + 4*5 = 24 -> 3
+
+        assert((EmptyUnit<Z7>{1} + Z7{4} == Z7{5}));
+        assert((Z7{1} + EmptyUnit<Z7>{4} == Z7{5}));
+    }
     // Test subtraction
     {
         assert((Meter{1} - Meter{2.2}) == Meter{-1.2});
@@ -365,10 +438,16 @@ int main()
         assert((Meter{1} * Meter{2.2}) == Meter_2{2.2});
         assert((Meter{1} * Kilometer{1}) == Kilometer_2{0.001});
         assert((Meter{1} * Kilometer{1}) == Meter_2{1000});
+        assert((dUEmpty{1} * dUKilo{1} == (double)1000));
 
         assert((CanOp<Meter, "*", Meter>()));
         assert((CanOp<Meter, "*", Kilometer>()));
         assert((CanOp<Meter, "*", Second>()));
+    }
+
+    // Multiplication for user-defined units
+    {
+        assert((Z7Unit{4} * Z7Unit{4} == Z7Unit_2{2}));
     }
 
     // Test multiplication with scalars (right and left)
@@ -412,9 +491,16 @@ int main()
         assert((Meter{1} / Second{2} / Second{2}) == MeterPerSecond_2{0.25});
         assert((dUEmpty{1} / Meter{2}) == (Meter__1{0.5}));
 
+        assert((dUEmpty{1} / dUKilo{1} == 0.001));
+
         static_assert((CanOp<Meter, "/", Second>()));
         static_assert((CanOp<Meter, "/", Kilometer>()));
         static_assert((CanOp<Meter, "/", dUEmpty>()));
+    }
+
+    // Multiplication for user-defined units
+    {
+        assert((Z7Unit{4} / Z7Unit{4} == Z7{1}));
     }
 
     // Test division with plain scalars (right and left)
@@ -444,6 +530,8 @@ int main()
         assert((dUEmpty{2.0} - ((double)1.0) == 1.0));
         assert((((double)2.0) - dUEmpty{1.0} == 1.0));
         assert((dUKilo{1.0} - ((double)1.0) == 999));
+
+        assert((dUEmpty{1} + dUKilo{1} == 1001));
     }
 
     // // Test +=, -=, *=, /=
@@ -573,6 +661,8 @@ int main()
         assert(Kilometer{0.999} < Meter{1000});
         assert(Meter{999} < iMeter{1000});
 
+        assert(int(1) < dUEmpty{2});
+
         assert((CanOp<Meter, "<", Meter>()));
         assert((CanOp<Meter, "<", Kilometer>()));
         assert((CanOp<iMeter, "<", Kilometer>()));
@@ -625,14 +715,30 @@ int main()
     {
         Meter_2 v{100};
         assert((unit_sqrt(v) == Meter{10}));
-
         assert((unit_sqrt(100) == 10));
+
+        static_assert((HasSquareRoot<Meter_2>));
+        static_assert((HasSquareRoot<double>));
+        static_assert((!HasSquareRoot<Kilometer>));
+        static_assert((!HasSquareRoot<TypeAtomic<std::string, "str_unit">>));
+        static_assert((!HasSquareRoot<std::string>));
     }
 
-    // unit_pow
+    // unit_ratio_pow
+    {
+        // Kilometer v{1};
+        // using ResType = Unit<double, MakeUnitIdentifier<UnitBase<"meter", std::ratio<2, 3>>>, std::ratio<100>>;
+        // auto res = unit_ratio_pow<std::ratio<2, 3>>(v);
+        // assert((std::is_same_v<decltype(res), ResType>));
+        // assert((abs(res.GetValue() - 1) < 0.0000001));
 
-    // abs
-    // Testing absolute value
+        // static_assert((HasRatioPow<std::ratio<1, 3>, UnitExpI<Meter, 3>>));
+        // static_assert((!HasRatioPow<std::ratio<1, 3>, TypeAtomic<std::string, "str_unit">>));
+        // static_assert((HasRatioPow<std::ratio<1, 3>, double>));
+        // static_assert((!HasRatioPow<std::ratio<1, 3>, std::string>));
+    }
+
+    // unit_bas - absolute value
     {
         Meter val{-5};
         assert((unit_abs(val) == Meter{5}));
@@ -1189,6 +1295,9 @@ int main()
         assert((Det(Matrix<2, 2, double>{{0, 0}, {0, 0}}) == 0));
         assert((Det(Matrix<3, 3, double>{{0, 0, 0}, {0, 0, 0}, {0, 0, 0}}) == 0));
 
+        // Test for a 1x1 matrix
+        assert((Det(Matrix<1, 1, double>{12}) == 12));
+
         // Test for a 2x2 matrix
         assert((Det(Matrix<2, 2, double>{{1, 2}, {3, 4}}) == -2));
         assert((Det(Matrix<2, 2, double>{{5, 6}, {7, 8}}) == -2));
@@ -1221,14 +1330,30 @@ int main()
 
     std::cout << "Running inversion tests" << std::endl;
     {
+        // Basic validity checks
         assert((HasInverse<Matrix<3, 3, double>>));
         assert((!HasInverse<Matrix<2, 3, double>>));
         assert((HasInverse<Matrix<3, 3, Meter>>));
         assert((!HasInverse<Matrix<3, 3, std::string>>));
 
+        // Identity
         assert((Inv(Matrix<3, 3, double>{{1, 0, 0}, {0, 1, 0}, {0, 0, 1}}) == Matrix<3, 3, double>{{1, 0, 0}, {0, 1, 0}, {0, 0, 1}}));
+
+        // Noninvertible matrix
         assert((Inv(Matrix<3, 3, double>{{1, 0, 0}, {0, 1, 0}, {0, 0, 0}}) == Matrix<3, 3, double>::Zero()));
 
+        // Dimension and type checks
+
+        // Test for a 1x1 matrix
+        assert((Inv(Matrix<1, 1, double>{4}) == Matrix<1, 1, double>{0.25}));
+
+        // Test for a 2x2 matrix
+
+        // Test for a 3x3 matrix
+
+        // Large matrix
+
+        // Value stability tests
         assert((Inv(Matrix<3, 3, double>{{4, 7, 2}, {3, 6, 1}, {2, 5, 1}}) ==
                 Matrix<3, 3, double>{{1.0 / 3.0, 1.0, -5.0 / 3.0}, {-1.0 / 3.0, 0.0, 2.0 / 3.0}, {1.0, -2.0, 1.0}}));
         assert((Inv(Matrix<3, 3, double>{{1, 2, 3}, {4, 5, 6}, {7, 8, 9}}) == Matrix<3, 3, double>::Zero()));

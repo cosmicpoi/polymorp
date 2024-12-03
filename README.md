@@ -60,7 +60,18 @@ In addition to the general goals of units as listed above, we also have the foll
 Since the library is header-only, one important consequence of this, and a key advantage relative to `glm`, is that any of the three components can be used without the others quite easily. One can use the full functionality of `Vector` just by deleting the headers corresponding to `Unit` and `Matrix`. We minimizing coupling wherever possible.
 
 ## Units
-- Zero-overhead. This can be checked easily with `sizeof(double) == sizeof(Unit<double, ...>)`.
+
+Fundamentally, units are **a compile-time metadata system** for types.
+
+They have **zero overhead**, **no additional specialization** and **no differentiation between builtin and user-defined types**.
+
+Let's break those down piece by piece:
+- **Zero-overhead.** Both for space and for time performance, we should be at par with builtin types like `double`. This can be checked easily with `sizeof(double) == sizeof(Unit<double, ...>)`.
+- **No additional specialization.** If it is not necessary for a unit to be able to divide, do not enforce division. Many other unit systems make assumptions about what is possible with a particular type, but this necessarily excludes sets like modular integers over non-prime rings.
+- **No differentiation between builtin and user-defined types.** We should not assume that the user will only define `Unit<double>` or `Unit<int>`. They should be able to provide any type they want and the behavior will be identical.
+
+That's why we call it a **a compile-time metadata system**. We should be able to define `Unit<std::string>`, even though it might be logically nonsensical. Users should be allowed to tag ANY type with metadata.
+
 
 ## Plain scalars
 - In general, plain scalars and `EmptyUnit` should be one-to-one. That is, in any situation we can use a plain scalar like `float`, we can use `EmptyUnit`, and vice versa.
@@ -155,3 +166,42 @@ assert(( Inv(Matrix<3, 3, double>{{4, 7, 2}, {3, 6, 1}, {2, 5, 1}}) ==  Matrix<3
 ```
 
 This won't compile since `1.0/3.0` is type double and `1` is type integer.
+
+**Prefer to explicitly specify commutative operations**.
+
+This is tempting:
+```
+template <typename LHS, typename RHS_Type, UnitIdentifier RHS_UID, IsRatio RHS_Ratio>
+    requires CanOpAdd<Unit<RHS_Type, RHS_UID, RHS_Ratio>, LHS>
+inline OpAddType<Unit<RHS_Type, RHS_UID, RHS_Ratio>, LHS> operator+(const LHS &lhs, const Unit<RHS_Type, RHS_UID, RHS_Ratio> &rhs)
+{
+    return rhs.operator+(lhs);
+}
+```
+
+However, it often leads to recursion errors, since the right-side operation checks for the left-side operation, and so on.
+
+This is better:
+```
+/** @brief Right-multiply by scalar */
+template <typename LHS_VecType, size_t N, typename RHS_Type>
+    requires(!IsVector<RHS_Type>) && CanMultiply<LHS_VecType, RHS_Type>
+inline Vector<N, MultiplyType<LHS_VecType, RHS_Type>> operator*(const Vector<N, LHS_VecType> &lhs_v, const RHS_Type &rhs)
+{
+    return ([&]<size_t... Is>(std::index_sequence<Is...>) constexpr
+            {
+                return Vector<N, MultiplyType<LHS_VecType, RHS_Type>>{(lhs_v[Is] * rhs)...}; // Expands the expression for each index
+            })(std::make_index_sequence<N>{});
+}
+
+/** @brief Left-multiply by scalar */
+template <typename RHS_VecType, size_t N, typename LHS_Type>
+    requires(!IsVector<LHS_Type>) && CanMultiply<RHS_VecType, LHS_Type>
+inline Vector<N, MultiplyType<LHS_Type, RHS_VecType>> operator*(const LHS_Type &lhs, const Vector<N, RHS_VecType> &rhs_v)
+{
+    return ([&]<size_t... Is>(std::index_sequence<Is...>) constexpr
+            {
+                return Vector<N, MultiplyType<LHS_Type, RHS_VecType>>{(lhs * rhs_v[Is])...}; // Expands the expression for each index
+            })(std::make_index_sequence<N>{});
+}
+```

@@ -14,7 +14,9 @@
 
 /** @brief Square root for unit types. Will not compile if `sqrt(Unit_Ratio)` is not rational (e.g. for kilometers) */
 template <typename Type, UnitIdentifier UID, IsRatio Ratio>
-    requires RatioCanExp<Ratio, std::ratio<1, 2>>
+    requires requires(Type a) {
+        { std::sqrt(a) };
+    } && RatioCanExp<Ratio, std::ratio<1, 2>>
 inline UnitExp<Unit<Type, UID, Ratio>, std::ratio<1, 2>> unit_sqrt(const Unit<Type, UID, Ratio> &val)
 {
     using ResRatio = typename UnitExp<Unit<Type, UID, Ratio>, std::ratio<1, 2>>::ratio;
@@ -24,7 +26,9 @@ inline UnitExp<Unit<Type, UID, Ratio>, std::ratio<1, 2>> unit_sqrt(const Unit<Ty
 
 /** @brief Square root for IsArithmetic types */
 template <typename T>
-    requires IsArithmetic<T>
+    requires requires(T a) {
+        { std::sqrt(a) };
+    }
 inline T unit_sqrt(const T &val)
 {
     return std::sqrt(val);
@@ -51,17 +55,21 @@ using SquareRootType = decltype(unit_sqrt(std::declval<T>()));
 
 /** @brief Rational pow for unit types. Will not compile if `Unit_Ratio^(Exp)` is not rational (e.g. Km^1/2) */
 template <IsRatio Exp, typename Type, UnitIdentifier UID, IsRatio Ratio>
-    requires RatioCanExp<Ratio, Exp>
+    requires requires(Type a, double b) {
+        { std::pow(a, b) };
+    } && RatioCanExp<Ratio, Exp>
 inline UnitExp<Unit<Type, UID, Ratio>, Exp> unit_ratio_pow(const Unit<Type, UID, Ratio> &val)
 {
     using ResRatio = typename UnitExp<Unit<Type, UID, Ratio>, Exp>::ratio;
     return UnitExp<Unit<Type, UID, Ratio>, Exp>{
-        DivideByRatio<ResRatio, Type>(std::pow(val.GetRealValue()), RatioAsDouble<Exp>())};
+        DivideByRatio<ResRatio, Type>(std::pow(val.GetRealValue(), RatioAsDouble<Exp>()))};
 }
 
 /** @brief Rational pow for IsArithmetic types */
 template <IsRatio Exp, typename T>
-    requires IsArithmetic<T>
+    requires requires(T a, double b) {
+        { std::pow(a, b) };
+    }
 inline T unit_ratio_pow(const T &val)
 {
     return std::pow(val, RatioAsDouble<Exp>());
