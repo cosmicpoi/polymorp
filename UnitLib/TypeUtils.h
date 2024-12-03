@@ -2,6 +2,8 @@
 
 #include <concepts>
 #include <iostream>
+#include <array>
+
 
 /**
  * Global "container" class that Vector and Matrix inherit from so that 

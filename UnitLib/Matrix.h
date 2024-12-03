@@ -6,6 +6,18 @@
 
 #pragma once
 #include "Vector.h"
+#include <array>
+
+/**
+ * @brief Rotates a 2D vector by a specified angle.
+ */
+template <typename T>
+inline Vector2<T> RotateVector(const Vector2<T> &vec, double theta) {
+    double cosTheta = std::cos(theta);
+    double sinTheta = std::sin(theta);
+    return Vector2<T>{vec.x() * cosTheta - vec.y() * sinTheta,
+                      vec.x() * sinTheta + vec.y() * cosTheta};
+}
 
 /**
  * @brief Base class for an `M` row by `N` column matrix holding values of type `Type`

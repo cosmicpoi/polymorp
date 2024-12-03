@@ -7,6 +7,9 @@
 #include "../UnitLib/Matrix.h"
 #include "../UnitLib/Print.h"
 
+#include "../PhysicsLib/Actor.h"
+#include "../PhysicsLib/Collision.h"
+
 #include <iomanip>
 
 // ------------------------------------------------------------
@@ -113,6 +116,152 @@ template <typename A, typename B>
 concept IsMultDefined = requires(A a, B b) {
     { a *b };
 };
+
+/** @brief Helper function to compare floating-point numbers */
+bool NearlyEqual(double a, double b, double epsilon = 1e-6)
+{
+    return std::fabs(a - b) < epsilon;
+}
+
+// ------------------------------------------------------------
+// Actor and Collision Tests
+// ------------------------------------------------------------
+void TestActorInitialization()
+{
+    // Test default initialization
+    Actor<double> actor({0.0, 0.0}, {0.0, 0.0}, 0.0, 0.0);
+    assert((actor.position == Vector2<double>{0.0, 0.0}));
+    assert((actor.velocity == Vector2<double>{0.0, 0.0}));
+    assert((NearlyEqual(actor.rotation, 0.0)));
+    assert((NearlyEqual(actor.rotationSpeed, 0.0)));
+    assert((actor.state == ActorState::Idle));
+
+    // Test initialization with values
+    Actor<double> actor2({1.0, 2.0}, {0.5, -0.5}, M_PI / 4, 0.1);
+    assert((actor2.position == Vector2<double>{1.0, 2.0}));
+    assert((actor2.velocity == Vector2<double>{0.5, -0.5}));
+    assert((NearlyEqual(actor2.rotation, M_PI / 4)));
+    assert((NearlyEqual(actor2.rotationSpeed, 0.1)));
+    assert((actor2.state == ActorState::Idle));
+
+    std::cout << "TestActorInitialization passed.\n";
+}
+
+void TestActorMovement()
+{
+    Actor<double> actor({0.0, 0.0}, {1.0, 0.0}, 0.0, 0.0);
+    actor.Update(1.0); // Update for 1 second
+    assert(NearlyEqual(actor.position.x(), 1.0));
+    assert(NearlyEqual(actor.position.y(), 0.0));
+    assert(NearlyEqual(actor.rotation, 0.0));
+
+    actor.Update(0.5); // Update for another 0.5 seconds
+    assert(NearlyEqual(actor.position.x(), 1.5));
+    assert(NearlyEqual(actor.position.y(), 0.0));
+
+    std::cout << "TestActorMovement passed.\n";
+}
+
+void TestActorRotation()
+{
+    Actor<double> actor({0.0, 0.0}, {0.0, 0.0}, 0.0, M_PI / 2); // 90 degrees per second
+    actor.Update(1.0); // Update for 1 second
+    assert(NearlyEqual(actor.rotation, M_PI / 2));
+
+    actor.Update(1.0); // Update for another 1 second
+    assert(NearlyEqual(actor.rotation, M_PI)); // Should be 180 degrees
+
+    actor.Update(2.0); // Update for another 2 seconds
+    assert(NearlyEqual(actor.rotation, 0.0)); // Full rotation back to 0
+
+    std::cout << "TestActorRotation passed.\n";
+}
+
+void TestActorMovementWithRotation() {
+    Actor<double> actor({0.0, 0.0}, {1.0, 0.0}, 0.0, M_PI / 4); // Rotate 45 degrees/sec
+    actor.Update(1.0); // Update for 1 second
+
+    double expectedX = std::sqrt(2) / 2; // cos(45°)
+    double expectedY = std::sqrt(2) / 2; // sin(45°)
+
+    std::cout << "Debug: actor.position.x() = " << actor.position.x()
+              << ", actor.position.y() = " << actor.position.y() << "\n";
+    std::cout << "Expected: (" << expectedX << ", " << expectedY << ")\n";
+
+    assert(NearlyEqual(actor.position.x(), expectedX));
+    assert(NearlyEqual(actor.position.y(), expectedY));
+
+    std::cout << "TestActorMovementWithRotation passed.\n";
+}
+
+
+
+void TestCollisionDetection()
+{
+    AABB a = {0.0, 0.0, 1.0, 1.0};
+    AABB b = {0.5, 0.5, 1.0, 1.0};
+    AABB c = {2.0, 2.0, 1.0, 1.0};
+
+    assert(CheckCollision(a, b)); // Should collide
+    assert(!CheckCollision(a, c)); // Should not collide
+
+    std::cout << "TestCollisionDetection passed.\n";
+}
+
+void TestActorCollisionResponse()
+{
+    Actor<double> actor({0.0, 0.0}, {1.0, 0.0}, 0.0, 0.0);
+    AABB solid = {1.0, -0.5, 1.0, 1.0};
+
+    // Simulate until collision
+    for (int i = 0; i < 2; ++i)
+    {
+        actor.Update(0.5);
+    }
+
+    // Check collision
+    assert(CheckCollision(actor.boundingBox, solid));
+
+    // Apply collision response
+    actor.SetState(ActorState::Colliding);
+
+    // Velocity should be reversed and damped
+    assert(NearlyEqual(actor.velocity.x(), -0.8));
+    assert(NearlyEqual(actor.velocity.y(), 0.0));
+
+    std::cout << "TestActorCollisionResponse passed.\n";
+}
+
+void TestActorRotationAfterCollision()
+{
+    Actor<double> actor({0.0, 0.0}, {1.0, 0.0}, 0.0, M_PI / 4);
+    AABB solid = {1.0, -0.5, 1.0, 1.0};
+
+    double totalTime = 0.0;
+
+    // Simulate until collision
+    for (int i = 0; i < 2; ++i)
+    {
+        actor.Update(0.5);
+        totalTime += 0.5;
+    }
+
+    assert(CheckCollision(actor.boundingBox, solid));
+
+    actor.SetState(ActorState::Colliding);
+
+    actor.Update(0.5);
+    totalTime += 0.5;
+
+    double expectedRotation = actor.rotationSpeed * totalTime;
+
+    std::cout << "Debug: actor.rotation = " << actor.rotation << "\n";
+    std::cout << "Expected rotation: " << expectedRotation << "\n";
+
+    assert(NearlyEqual(actor.rotation, expectedRotation));
+
+    std::cout << "TestActorRotationAfterCollision passed.\n";
+}
 
 int main()
 {
@@ -1286,6 +1435,20 @@ int main()
         assert((Inv(Matrix<4, 4, double>{{1, 0, 0, 0}, {0, 2, -3, 0}, {0, 0, 1, 0}, {0, 0, 0, 1}}) ==
                 Matrix<4, 4, double>{{1., 0., 0., 0.}, {0., 0.5, 1.5, 0.}, {0., 0., 1., 0.}, {0., 0., 0., 1.}}));
     }
+    
+    
+    std::cout << "------ BEGIN TESTING ACTOR AND COLLISION ------" << std::endl;
+
+    TestActorInitialization();
+    TestActorMovement();
+    TestActorRotation();
+    TestActorMovementWithRotation();
+    TestCollisionDetection();
+    TestActorCollisionResponse();
+    TestActorRotationAfterCollision();
+
+    std::cout << "All tests passed successfully.\n";
+
 
     return 0;
 }

@@ -5,6 +5,10 @@
 #include "UnitLib/Matrix.h"
 #include "UnitLib/Print.h"
 
+#include "PhysicsLib/Actor.h"
+#include "PhysicsLib/Collision.h"
+#include <iostream>
+
 #include <iomanip>
 // using Meter = dAtomic<"meter">;
 // using fMeter = fAtomic<"meter">;
@@ -284,4 +288,34 @@ int main()
     std::cout << (m1 + m2) << std::endl;
     std::cout << Matrix2<double>{1001, 1002, 1003, 1004} << std::endl;
     std::cout << ((m1 + m2) == Matrix2<double>{1001, 1002, 1003, 1004}) << std::endl;
+    
+    
+    /**
+     * Animate the Actor
+     
+    
+    if (!Graphics::Initialize()) {
+            return -1;
+    }
+
+    Actor<double> actor({0, 0}, {0.1, 0}, 0.0, 0.5);
+    AABB solid = {1.0, -1.0, 1.0, 2.0};
+
+    while (!Graphics::WindowShouldClose()) {
+        double deltaTime = Graphics::GetDeltaTime();
+        actor.Update(deltaTime);
+
+        if (CheckCollision(actor.boundingBox, solid)) {
+            actor.SetState(ActorState::Colliding);
+        }
+
+        Graphics::BeginFrame();
+        actor.Render();
+        Graphics::DrawRectangle(solid.x + solid.width / 2, solid.y + solid.height / 2, solid.width, solid.height);
+        Graphics::EndFrame();
+    }
+
+    Graphics::Shutdown();
+    return 0;
+     *    */
 }
