@@ -1236,6 +1236,9 @@ int main()
         assert((Det(Matrix<2, 2, double>{{0, 0}, {0, 0}}) == 0));
         assert((Det(Matrix<3, 3, double>{{0, 0, 0}, {0, 0, 0}, {0, 0, 0}}) == 0));
 
+        // Test for a 1x1 matrix
+        assert((Det(Matrix<1, 1, double>{12}) == 12));
+
         // Test for a 2x2 matrix
         assert((Det(Matrix<2, 2, double>{{1, 2}, {3, 4}}) == -2));
         assert((Det(Matrix<2, 2, double>{{5, 6}, {7, 8}}) == -2));
@@ -1268,14 +1271,30 @@ int main()
 
     std::cout << "Running inversion tests" << std::endl;
     {
+        // Basic validity checks
         assert((HasInverse<Matrix<3, 3, double>>));
         assert((!HasInverse<Matrix<2, 3, double>>));
         assert((HasInverse<Matrix<3, 3, Meter>>));
         assert((!HasInverse<Matrix<3, 3, std::string>>));
 
+        // Identity
         assert((Inv(Matrix<3, 3, double>{{1, 0, 0}, {0, 1, 0}, {0, 0, 1}}) == Matrix<3, 3, double>{{1, 0, 0}, {0, 1, 0}, {0, 0, 1}}));
+
+        // Noninvertible matrix
         assert((Inv(Matrix<3, 3, double>{{1, 0, 0}, {0, 1, 0}, {0, 0, 0}}) == Matrix<3, 3, double>::Zero()));
 
+        // Dimension and type checks
+
+        // Test for a 1x1 matrix
+        assert((Inv(Matrix<1, 1, double>{4}) == Matrix<1, 1, double>{0.25}));
+
+        // Test for a 2x2 matrix
+
+        // Test for a 3x3 matrix
+
+        // Large matrix
+
+        // Value stability tests
         assert((Inv(Matrix<3, 3, double>{{4, 7, 2}, {3, 6, 1}, {2, 5, 1}}) ==
                 Matrix<3, 3, double>{{1.0 / 3.0, 1.0, -5.0 / 3.0}, {-1.0 / 3.0, 0.0, 2.0 / 3.0}, {1.0, -2.0, 1.0}}));
         assert((Inv(Matrix<3, 3, double>{{1, 2, 3}, {4, 5, 6}, {7, 8, 9}}) == Matrix<3, 3, double>::Zero()));
