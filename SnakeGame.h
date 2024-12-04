@@ -1,63 +1,60 @@
 #pragma once
-#include <cassert>
-#include "AsciiGraphics.h"
+
+#include "AsciiGame.h"
 #include "unistd.h"
 
-class SnakeGame
+/**
+ * Various game object implementatinos
+ */
+class Rect : public GameObject
 {
 public:
-    SnakeGame()
-    {
-    }
+    Rect(uint width_, uint height_) : width(width_), height(height_) {};
 
-    inline void Initialize()
+    inline virtual void Update() override
     {
-        std::cout.flush();
-        ascii = AsciiGraphics{};
+        x = x + 0.5;
+        y = y + 0.2;
     }
-    inline void Update()
+    inline virtual void Draw(AsciiGraphics &ascii) override
     {
-        std::cout << "running" << std::endl;
-        ascii.ClearScreen();
-
-        double birdX = frameCount / 10;
-        double birdY = 10 + 5 * std::sin(frameCount / 30.0);
+        // Set up chars
+        numChars = 0;
+        for (uint i = 0; i < height; i++)
+        {
+            for (uint j = 0; j < width; j++)
+            {
+                chars[numChars++] = {.x = x + j, .y = y + i, .pix = '.'};
+            }
+        }
+        // Flush chars
 
         ascii.SetTextColor(kFGRed, kBGNone, kTextBold);
-        ascii.DrawRect(1, 1, 40, 40, '.', false);
+        DrawChars(ascii);
         ascii.ResetTextColor();
-
-        ascii.DrawText(std::round(birdX), std::round(birdY), "🐍");
-
-        ascii.EndFrame();
-
-        ascii.EndFrame();
-
-        frameCount++;
-    }
-
-    void DrawGL() 
-    {
-
-    }
-
-    void DrawASCII()
-    {
-
     }
 
 private:
-    uint frameCount = 0;
-    AsciiGraphics ascii;
+    uint width = 0;
+    uint height = 0;
 };
 
+/**
+ * Game code
+ */
+class SnakeGame : public AsciiGame
+{
+public:
+    inline virtual void Initialize() override
+    {
+        CreateGameObject<Rect>(10, 10);
+    }
+};
+
+/**
+ * Game loop
+ */
 int PlaySnakeGame()
 {
-    SnakeGame game{};
-    while (1)
-    {
-        game.Update();
-
-        usleep(1000 * 16);
-    }
+    return PlayGame<SnakeGame>();
 }
