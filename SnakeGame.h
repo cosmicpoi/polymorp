@@ -53,11 +53,3 @@ public:
         CreateGameObject<Rect>(&ascii, 10, 10);
     }
 };
-
-/**
- * Game loop
- */
-int PlaySnakeGame()
-{
-    return PlayGame<SnakeGame>();
-}
