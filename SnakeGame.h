@@ -1,6 +1,6 @@
 #pragma once
-
-#include "AsciiGame.h"
+#include <cassert>
+#include "AsciiGraphics.h"
 #include "unistd.h"
 
 /**
