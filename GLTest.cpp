@@ -4,9 +4,9 @@
 #include <GLFW/glfw3.h>
 #include <glad/glad.h>
 #include <iostream>
-//#include "UnitLib/Vector.h"
-// #include "../../UnitLib/Unit.h"
-// #include "../../UnitLib/Matrix.h"
+#include "UnitLib/Vector.h"
+#include "UnitLib/Unit.h"
+#include "UnitLib/Matrix.h"
 
 //Reference tutorial https://learnopengl.com/Getting-started/Hello-Triangle
 
@@ -37,7 +37,7 @@ const char *fragmentShaderSource = "#version 330 core\n"
     "   FragColor = vec4(1.0f, 0.5f, 0.2f, 1.0f);\n"
     "}\n\0";
 
-int RunGLTest()
+int RunGL()
 {
     // glfw: initialize and configure
     // ------------------------------
