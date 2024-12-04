@@ -149,7 +149,7 @@ public:
     Game()
     {
         std::fill_n(gameObjects, MAX_GAME_OBJECTS, nullptr);
-    }
+    };
     ~Game()
     {
         for (uint i = 0; i < MAX_GAME_OBJECTS; i++)
@@ -159,7 +159,7 @@ public:
                 delete gameObjects[i];
             }
         }
-    }
+    };
 
     template <typename GameObj, typename... Args>
         requires IsEntity<GameObj> &&
@@ -176,7 +176,7 @@ public:
         }
 
         throw std::runtime_error("Too many game objects!");
-    }
+    };
 
     inline virtual void Initialize() = 0;
 
@@ -189,15 +189,12 @@ public:
                 gameObjects[i]->Update();
             }
         }
-
-        frameCount++;
-    }
+    };
 
     inline virtual void Draw() = 0;
 
 protected:
     Entity *gameObjects[MAX_GAME_OBJECTS] = {nullptr};
-    uint frameCount = 0;
 };
 
 template <typename T>
@@ -211,10 +208,10 @@ template <IsGame G>
 int PlayGame()
 {
     G *game = new G();
-    XBounds::SetLowerBound(1);
-    XBounds::SetUpperBound(1 + G::GET_DEFAULT_WIDTH());
-    YBounds::SetLowerBound(1);
-    YBounds::SetUpperBound(1 + G::GET_DEFAULT_HEIGHT());
+    XBounds::SetLowerBound(0);
+    XBounds::SetUpperBound(0 + G::GET_DEFAULT_WIDTH());
+    YBounds::SetLowerBound(0);
+    YBounds::SetUpperBound(0 + G::GET_DEFAULT_HEIGHT());
 
     game->Initialize();
     while (1)
