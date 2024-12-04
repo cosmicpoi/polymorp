@@ -3,14 +3,15 @@
 #include "GameTypes.h"
 #include "UnitLib/Unit.h"
 #include "UnitLib/Vector.h"
+#include <unistd.h>
 
 //------------------------------------------------------------------------------
 // Consts
 //------------------------------------------------------------------------------
 
 constexpr size_t MAX_GAME_OBJECTS = 1024;
-
-
+constexpr double DEFAULT_WIDTH = 320;
+constexpr double DEFAULT_HEIGHT = 240;
 
 constexpr char OBJECTSPACE[] = "worldspace";
 constexpr char WORLDSPACE[] = "worldspace";
@@ -110,3 +111,118 @@ template <WrapType Wrap>
 using WorldX = typename WorldTypes<Wrap>::worldX;
 template <WrapType Wrap>
 using WorldY = typename WorldTypes<Wrap>::worldY;
+
+//------------------------------------------------------------------------------
+// GameObject class
+//------------------------------------------------------------------------------
+
+class Entity
+{
+public:
+    Entity() {};
+    virtual ~Entity() {};
+    inline virtual void Update() = 0;
+    inline virtual void Draw() = 0;
+};
+
+template <WrapType Wrap = kWrapNone>
+class GameObject : public Entity
+{
+protected:
+    WorldX<Wrap> x{0};
+    WorldY<Wrap> y{0};
+};
+
+template <typename T>
+concept IsEntity = std::is_base_of_v<Entity, T>;
+
+//------------------------------------------------------------------------------
+// Game class
+//------------------------------------------------------------------------------
+
+class Game
+{
+public:
+    inline static double GET_DEFAULT_WIDTH() { return DEFAULT_WIDTH; };
+    inline static double GET_DEFAULT_HEIGHT() { return DEFAULT_HEIGHT; };
+
+    Game()
+    {
+        std::fill_n(gameObjects, MAX_GAME_OBJECTS, nullptr);
+    }
+    ~Game()
+    {
+        for (uint i = 0; i < MAX_GAME_OBJECTS; i++)
+        {
+            if (gameObjects[i] != nullptr)
+            {
+                delete gameObjects[i];
+            }
+        }
+    }
+
+    template <typename GameObj, typename... Args>
+        requires IsEntity<GameObj> &&
+                 std::is_constructible_v<GameObj, Args...>
+    inline void CreateGameObject(Args... argList)
+    {
+        for (uint i = 0; i < MAX_GAME_OBJECTS; i++)
+        {
+            if (gameObjects[i] == nullptr)
+            {
+                gameObjects[i] = new GameObj(argList...);
+                return;
+            }
+        }
+
+        throw std::runtime_error("Too many game objects!");
+    }
+
+    inline virtual void Initialize() = 0;
+
+    inline void Update()
+    {
+        for (uint i = 0; i < MAX_GAME_OBJECTS; i++)
+        {
+            if (gameObjects[i] != nullptr)
+            {
+                gameObjects[i]->Update();
+            }
+        }
+
+        frameCount++;
+    }
+
+    inline virtual void Draw() = 0;
+
+protected:
+    Entity *gameObjects[MAX_GAME_OBJECTS] = {nullptr};
+    uint frameCount = 0;
+};
+
+template <typename T>
+concept IsGame = std::is_base_of_v<Game, T>;
+
+/**
+ * Game loop
+ */
+
+template <IsGame G>
+int PlayGame()
+{
+    G *game = new G();
+    XBounds::SetLowerBound(1);
+    XBounds::SetUpperBound(1 + G::GET_DEFAULT_WIDTH());
+    YBounds::SetLowerBound(1);
+    YBounds::SetUpperBound(1 + G::GET_DEFAULT_HEIGHT());
+
+    game->Initialize();
+    while (1)
+    {
+        game->Update();
+        game->Draw();
+
+        usleep(1000 * 16);
+    }
+    return 0;
+}

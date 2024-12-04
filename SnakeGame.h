@@ -1,22 +1,22 @@
 #pragma once
 
 #include "AsciiGame.h"
-#include "unistd.h"
 
 /**
  * Various game object implementatinos
  */
-class Rect : public GameObject<kWrapBoth>
+class Rect : public AsciiGameObject<kWrapBoth>
 {
 public:
-    Rect(uint width_, uint height_) : width(width_), height(height_) {};
+    Rect(AsciiGraphics *asciiGraphics, uint width_, uint height_)
+        : AsciiGameObject(asciiGraphics), width(width_), height(height_) {};
 
     inline virtual void Update() override
     {
         x = x + 0.5_ws;
         y = y + 0.2_ws;
     }
-    inline virtual void Draw(AsciiGraphics &ascii) override
+    inline virtual void Draw() override
     {
         // Set up chars
         numChars = 0;
@@ -32,9 +32,9 @@ public:
         }
 
         // Flush chars
-        ascii.SetTextColor(kFGRed, kBGNone, kTextBold);
-        DrawChars(ascii);
-        ascii.ResetTextColor();
+        ascii->SetTextColor(kFGRed, kBGNone, kTextBold);
+        DrawChars();
+        ascii->ResetTextColor();
     }
 
 private:
@@ -50,7 +50,7 @@ class SnakeGame : public AsciiGame
 public:
     inline virtual void Initialize() override
     {
-        CreateGameObject<Rect>(10, 10);
+        CreateGameObject<Rect>(&ascii, 10, 10);
     }
 };
 
