@@ -14,7 +14,7 @@ public:
     GLGraphics() : window(nullptr), width(800), height(600), title("GLGraphics") {}
     ~GLGraphics() { Terminate(); }
 
-    static void framebuffer_size_callback(GLFWwindow* window, int width, int height){ glViewport(0, 0, width, height); }
+    static void framebuffer_size_callback(GLFWwindow*, int width, int height){ glViewport(0, 0, width, height); }
     
     // Initialize GLFW and OpenGL context
     bool Initialize(int w, int h, const std::string &windowTitle) {
