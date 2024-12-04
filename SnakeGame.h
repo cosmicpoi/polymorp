@@ -36,6 +36,16 @@ public:
         frameCount++;
     }
 
+    void DrawGL() 
+    {
+
+    }
+
+    void DrawASCII()
+    {
+
+    }
+
 private:
     uint frameCount = 0;
     AsciiGraphics ascii;

@@ -24,8 +24,8 @@ OBJECTS = $(SOURCES:.cpp=.o)
 
 # Default rule
 # Rule to link object files into the executable
-$(TARGET_MAIN): $(OBJECTS) $(HEADERS)
-	$(CXX) $(CXXFLAGS) $(INCLUDE_DIRS) $(LIB_DIRS) $(LIBS) $(FRAMEWORKS) $(OBJECTS) glad.c -o $(TARGET_MAIN)
+$(TARGET_MAIN): $(OBJECTS) $(HEADERS) glad.o
+	$(CXX) $(CXXFLAGS) $(INCLUDE_DIRS) $(LIB_DIRS) $(LIBS) $(FRAMEWORKS) $(OBJECTS) glad.o -o $(TARGET_MAIN)
 
 tests: $(TARGET_TESTS).o $(HEADERS)
 	$(CXX) $(CXXFLAGS) $(TARGET_TESTS).o -o $(TARGET_TESTS)
@@ -39,9 +39,12 @@ tests: $(TARGET_TESTS).o $(HEADERS)
 $(TARGET_TESTS).o: $(HEADERS) $(TARGET_TESTS).cpp
 	$(CXX) $(CXXFLAGS) -c $(TARGET_TESTS).cpp -o $(TARGET_TESTS).o
 
+glad.o:
+	clang $(INCLUDE_DIRS)  -c glad.c -o glad.o
+
 # Clean rule to remove generated files
 clean:
-	rm -f $(OBJECTS) $(TARGET_MAIN)
+	rm -f $(OBJECTS) $(TARGET_MAIN) glad.o
 	rm -f _Tests/*.o $(TARGET_TESTS)
 
 # Phony targets to prevent conflicts with files named 'clean' or 'all'
