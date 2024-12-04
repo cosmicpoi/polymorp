@@ -1,3 +1,6 @@
+#define GL_SILENCE_DEPRECATION
+
+#include "GLTest.h"
 #include <GLFW/glfw3.h>
 #include <glad/glad.h>
 #include <iostream>
