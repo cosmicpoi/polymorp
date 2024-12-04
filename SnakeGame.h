@@ -1,5 +1,5 @@
 #pragma once
-
+#include <cassert>
 #include "AsciiGraphics.h"
 #include "unistd.h"
 
