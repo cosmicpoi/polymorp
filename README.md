@@ -5,7 +5,8 @@ Timothy Melendez, Yuhao Tang, Faith Luo
 # Compilation
 
 Make sure you have the following prereqs:
-* [Ncurses](https://formulae.brew.sh/formula/ncurses)
+* [glfw](https://www.glfw.org/) - `brew install homebrew`
+<!-- * [Ncurses](https://formulae.brew.sh/formula/ncurses) -->
 
 Run `make` from root
 

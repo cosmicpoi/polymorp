@@ -1,6 +1,6 @@
 CXX = /usr/bin/clang++
 CXXFLAGS = -std=c++20 -fcolor-diagnostics -fansi-escape-codes -Wall -g -Wno-deprecated
-INCLUDE_DIRS = -I dependencies/include -I ../../UnitLib
+INCLUDE_DIRS = -I dependencies/include -I ../../UnitLibS
 LIB_DIRS = -L dependencies/library
 LIBS = dependencies/library/libglfw.3.4.dylib \
        -framework OpenGL -framework Cocoa -framework IOKit \
