@@ -417,13 +417,7 @@ using InvertType = DivideType<DivideType<A, A>, A>;
 // Check if the type is negatable (non-unary only for now)
 template <typename A>
 concept Negatable = requires(A a) {
-<<<<<<< HEAD
-    { -1 * a } -> std::constructible_from<A>;
-    { 1 * a } -> std::constructible_from<A>;
-};
-=======
     // Note that these are intended to be +-1 and not +-Type{1}; they're unitless identity
     { -1 * a } -> ConvertibleOrConstructibleTo<A>;
     { 1 * a } -> ConvertibleOrConstructibleTo<A>;
 };
->>>>>>> 1d92a2ced78b45b9137ee982ca8d08d6643bd351

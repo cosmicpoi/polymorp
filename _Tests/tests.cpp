@@ -7,13 +7,10 @@
 #include "../UnitLib/Matrix.h"
 #include "../UnitLib/Print.h"
 
-<<<<<<< HEAD
 #include "../PhysicsLib/Actor.h"
 #include "../PhysicsLib/Collision.h"
-=======
 #include "AdditiveString.h"
 #include "PrimeField.h"
->>>>>>> 1d92a2ced78b45b9137ee982ca8d08d6643bd351
 
 #include <iomanip>
 
