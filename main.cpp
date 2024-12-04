@@ -57,23 +57,21 @@ int main()
             // give background screen a color
             gl.ClearScreen(backGroundColor[0], backGroundColor[1], backGroundColor[2]);
             
-            //Draw a triangle
-            /*
-            float vertices[] = {
-            -0.5f, -0.5f, 0.0f, // left  
-            0.5f, -0.5f, 0.0f, // right 
-            0.0f,  0.5f, 0.0f  // top   
-            }; */
+            Vector3<float> p1{-0.2f + i, -0.2f + i, 0.0f};
+            Vector3<float> p2{ 0.2f + i, -0.2f + i, 0.0f};
+            Vector3<float> p3{0.0f,  0.7f + i, 0.0f};
+            i=i+0.001;
 
-            Vector3<float> p1{-0.5f + i, -0.5f + i, 0.0f};
-            Vector3<float> p2{ 0.5f + + i, -0.5f + i, 0.0f};
-            Vector3<float> p3{0.0f,  0.5f + i, 0.0f};
             Triangle triangle(p1, p2, p3);
+            
+            // x, y, width, height
+            Vector4<float> rect{-0.2f, -0.2f, 0.3f, 0.3f};
 
             gl.DrawTriangle(triangle);
 
+            gl.DrawRectangle(rect);
+
             gl.EndFrame();
-            //i = i+0.001;
         }
     }
 
