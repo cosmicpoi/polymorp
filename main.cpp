@@ -1,11 +1,5 @@
-#include "UnitLib/Unit.h"
-#include "UnitLib/Vector.h"
-#include "UnitLib/Print.h"
-
 #include "SnakeGame.h"
 #include "JumpGame.h"
-#include "GLGraphics.h"
-#include "Triangle.h"
 #include <iostream>
 
 int main()
