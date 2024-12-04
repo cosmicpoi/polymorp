@@ -1,73 +1,41 @@
 #pragma once
 
 #include "AsciiGraphics.h"
-#include "GameTypes.h"
-#include "UnitLib/Unit.h"
-#include "UnitLib/Vector.h"
+#include "Game.h"
+
 #include <unistd.h>
 
-/**
- * Consts
- */
+//------------------------------------------------------------------------------
+// Consts
+//------------------------------------------------------------------------------
 
-constexpr size_t MAX_GAME_OBJECTS = 1024;
+constexpr double DEFAULT_ASCII_WIDTH = 50;
+constexpr double DEFAULT_ASCII_HEIGHT = 25;
 
-constexpr double DEFAULT_WIDTH = 50;
-constexpr double DEFAULT_HEIGHT = 25;
+//------------------------------------------------------------------------------
+// GameObject definitions
+//------------------------------------------------------------------------------
 
-constexpr char OBJECTSPACE[] = "worldspace";
-constexpr char WORLDSPACE[] = "worldspace";
-
-/**
- * Unit definitions
- */
-
-struct Bounds
+// class
+class Entity
 {
-    static void SetLowerBound(double lb) { lowerBound = lb; };
-    static void SetUpperBound(double ub) { upperBound = ub; };
-    inline static double upperBound;
-    inline static double lowerBound;
+public:
+    Entity() {};
+    virtual ~Entity() {};
+    inline virtual void Update() = 0;
+    inline virtual void Draw(AsciiGraphics &ascii) = 0;
 };
 
-struct XBounds : public Bounds
-{
-    static double width() { return upperBound - lowerBound; };
-};
-struct YBounds : public Bounds
-{
-    static double height() { return upperBound - lowerBound; };
-};
-using ClippedX = ClipDouble<XBounds>;
-using ClippedY = ClipDouble<YBounds>;
-
-using Objectspace = TypeAtomic<double, OBJECTSPACE>;
-using Worldspace = TypeAtomic<double, WORLDSPACE>;
-using World_per_Object = DivideType<Worldspace, Objectspace>;
-using ClipWorldX = TypeAtomic<ClippedX, WORLDSPACE>;
-using ClipWorldY = TypeAtomic<ClippedX, WORLDSPACE>;
-
-/**
- * GameObject definition
- */
-
-struct CharPixel
-{
-    ClippedX x;
-    ClippedY y;
-    char pix;
-};
-const size_t MAX_CHARS = 256;
-
-class GameObject
+template <WrapType Wrap = kWrapNone>
+class GameObject : public Entity
 {
 public:
     GameObject() {};
-    virtual ~GameObject() {};
+    virtual ~GameObject() override {};
 
-    inline virtual void Update() {};
+    inline virtual void Update() override {};
 
-    inline virtual void Draw(AsciiGraphics &ascii)
+    inline virtual void Draw(AsciiGraphics &ascii) override
     {
         DrawChars(ascii);
     }
@@ -77,21 +45,20 @@ protected:
     {
         for (uint i = 0; i < numChars; i++)
         {
-            const CharPixel &px = chars[i];
-            ascii.DrawChar(px.x, px.y, px.pix);
+            ascii.DrawCharPixel(chars[i]);
         }
     }
 
     // Member variables
     size_t numChars = 0;
-    CharPixel chars[MAX_CHARS];
+    CharPixel<Wrap> chars[MAX_CHARS];
 
-    ClippedX x = 0;
-    ClippedY y = 0;
+    WorldX<Wrap> x{0};
+    WorldY<Wrap> y{0};
 };
 
 template <typename T>
-concept IsGameObject = std::is_base_of_v<GameObject, T>;
+concept IsEntity = std::is_base_of_v<Entity, T>;
 /**
  * Game definition
  */
@@ -115,7 +82,7 @@ public:
     }
 
     template <typename GameObj, typename... Args>
-        requires IsGameObject<GameObj> &&
+        requires IsEntity<GameObj> &&
                  std::is_constructible_v<GameObj, Args...>
     inline void CreateGameObject(Args... argList)
     {
@@ -167,7 +134,7 @@ public:
     }
 
 private:
-    GameObject *gameObjects[MAX_GAME_OBJECTS] = {nullptr};
+    Entity *gameObjects[MAX_GAME_OBJECTS] = {nullptr};
 
     uint frameCount = 0;
     AsciiGraphics ascii;
@@ -185,9 +152,9 @@ int PlayGame()
 {
     G *game = new G();
     XBounds::SetLowerBound(1);
-    XBounds::SetUpperBound(1 + DEFAULT_WIDTH);
+    XBounds::SetUpperBound(1 + DEFAULT_ASCII_WIDTH);
     YBounds::SetLowerBound(1);
-    YBounds::SetUpperBound(1 + DEFAULT_HEIGHT);
+    YBounds::SetUpperBound(1 + DEFAULT_ASCII_HEIGHT);
 
     game->Initialize();
     while (1)

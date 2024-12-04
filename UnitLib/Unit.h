@@ -593,7 +593,7 @@ struct IsUnitHelper<Unit<Type, UID, Ratio>> : std::true_type
 
 /** @brief Concept to check if a type is a unit */
 template <typename T>
-concept IsUnit = IsUnitHelper<T>::value;
+concept IsUnit = IsUnitHelper<std::decay_t<T>>::value;
 
 //------------------------------------------------------------------------------
 // Type transformers
@@ -778,11 +778,15 @@ inline bool operator==(const LHS &lhs, const Unit<RHS_Type, RHS_UID, RHS_Ratio> 
 }
 
 //------------------------------------------------------------------------------
-// Shorthands for defining units
+// Type utils
 //------------------------------------------------------------------------------
 
+/**
+ * Shorthands for defining units
+ */
+
 template <typename T, StringLiteral Symbol>
-using TypeAtomic = Unit<T, MakeUnitIdentifier<UnitAtomic<Symbol>>>;
+using TypeAtomic = Unit<T, UnitAtomic<Symbol>>;
 
 template <StringLiteral Symbol>
 using dAtomic = TypeAtomic<double, Symbol>;
@@ -792,3 +796,20 @@ using fAtomic = TypeAtomic<float, Symbol>;
 
 template <StringLiteral Symbol>
 using iAtomic = TypeAtomic<int, Symbol>;
+
+/**
+ * Concepts for matching unit symbols
+ */
+
+/** @brief Concept to check that a type is a unit with a particular UID */
+template <typename T, typename UID>
+concept IsUnitWithUID = requires {
+    requires UnitIdentifier<UID>;
+    requires IsUnit<T>;
+    typename std::decay_t<T>::uid;
+    requires std::is_same_v<typename std::decay_t<T>::uid, UID>;
+};
+
+/** @brief Concept to check that a type is a unit an atomic UID corresponding to this symbol */
+template <typename T, StringLiteral Symbol>
+concept IsUnitWithSymbol = IsUnitWithUID<T, UnitAtomic<Symbol>>;

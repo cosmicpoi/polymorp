@@ -16,6 +16,21 @@ struct StringLiteral
     }
 };
 
+// // Concept for stringliterals
+// template <typename T>
+// struct IsStringLiteralHelper : std::false_type
+// {
+// };
+
+// template <size_t N>
+// struct IsStringLiteralHelper<StringLiteral<N>> : std::true_type
+// {
+// };
+
+// /** @brief Concept to check if a type is a StringLiteral */
+// template <typename T>
+// concept IsStringLiteral = IsStringLiteralHelper<T>::value;
+
 // Compare two StringLiterals lexicographically at compile-time
 
 constexpr int const_strcmp(const char *str1, const char *str2)
