@@ -6,15 +6,15 @@
 /**
  * Various game object implementatinos
  */
-class Rect : public GameObject
+class Rect : public GameObject<kWrapBoth>
 {
 public:
     Rect(uint width_, uint height_) : width(width_), height(height_) {};
 
     inline virtual void Update() override
     {
-        x = x + 0.5;
-        y = y + 0.2;
+        x = x + 0.5_ws;
+        y = y + 0.2_ws;
     }
     inline virtual void Draw(AsciiGraphics &ascii) override
     {
@@ -24,11 +24,14 @@ public:
         {
             for (uint j = 0; j < width; j++)
             {
-                chars[numChars++] = {.x = x + j, .y = y + i, .pix = '.'};
+                chars[numChars++] = {
+                    .x = x + Worldspace{j},
+                    .y = y + Worldspace{i},
+                    .pix = '.'};
             }
         }
-        // Flush chars
 
+        // Flush chars
         ascii.SetTextColor(kFGRed, kBGNone, kTextBold);
         DrawChars(ascii);
         ascii.ResetTextColor();
