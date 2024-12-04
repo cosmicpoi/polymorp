@@ -10,10 +10,6 @@ concept UnitIdentifier = IsUnitLeafVector<V> && std::is_same_v<V, ULGetUnique<V>
 template <StringLiteral Symbol, IsRatio Exponent>
 using UnitBase = UnitLeaf<Symbol, Exponent>;
 
-/** Shorthand to make a UnitBase with exp 1 */
-template <StringLiteral Symbol>
-using UnitAtomic = UnitBase<Symbol, std::ratio<1>>;
-
 /** Empty UID (unitless scalars) */
 using EmptyUid = UnitLeafVector<>;
 
@@ -21,11 +17,14 @@ template <typename T>
 concept IsEmptyUid = std::is_same_v<T, EmptyUid>;
 
 /** Shorthand to make a UnitIdentifier */
-template<typename... T> 
+template <typename... T>
 using MakeUnitIdentifier = ULGetUnique<UnitLeafVector<T...>>;
 
+/** Shorthand to make a UnitBase with exp 1 */
+template <StringLiteral Symbol>
+using UnitAtomic = MakeUnitIdentifier<UnitBase<Symbol, std::ratio<1>>>;
 
-/** 
+/**
  * Type transformers
  */
 

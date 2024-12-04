@@ -7,18 +7,18 @@
 #include "Triangle.h"
 #include <iostream>
 
-#include "GameTypes.h"
+// #include "GameTypes.h"
 
-using dUEmpty = EmptyUnit<double>;
-using dUKilo = UnitMultRatio<dUEmpty, std::ratio<1000>>;
+// using dUEmpty = EmptyUnit<double>;
+// using dUKilo = UnitMultRatio<dUEmpty, std::ratio<1000>>;
 
-struct MyBounds
-{
-    static constexpr double lowerBound = 10;
-    static constexpr double upperBound = 90;
-};
+// struct MyBounds
+// {
+//     static constexpr double lowerBound = 10;
+//     static constexpr double upperBound = 90;
+// };
 
-using Clipped = ClipDouble<MyBounds>;
+// using Clipped = ClipDouble<MyBounds>;
 
 int main()
 {

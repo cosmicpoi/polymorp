@@ -1,7 +1,12 @@
 #pragma once
-
+#include "UnitLib/Unit.h"
+#include "Game.h"
 #include <iostream>
 #include <cstdio>
+
+//------------------------------------------------------------------------------
+// Consts
+//------------------------------------------------------------------------------
 
 const uint BUF_SIZE = 2048;
 const uint ESC_SIZE = 32;
@@ -40,6 +45,30 @@ enum BGColor
     kBGWhite = 47
 };
 
+//------------------------------------------------------------------------------
+// CharPixel definition
+//------------------------------------------------------------------------------
+
+template <WrapType Wrap>
+struct CharPixel
+{
+    WorldX<Wrap> x;
+    WorldY<Wrap> y;
+    char pix;
+};
+const size_t MAX_CHARS = 256;
+
+template <typename T>
+concept IsCharPixel = requires(T t) {
+    { t.x } -> IsUnitWithSymbol<WORLDSPACE>;
+    { t.y } -> IsUnitWithSymbol<WORLDSPACE>;
+    { t.pix } -> std::convertible_to<char>;
+};
+
+//------------------------------------------------------------------------------
+// AsciiGraphics definition
+//------------------------------------------------------------------------------
+
 class AsciiGraphics
 {
 public:
@@ -71,6 +100,13 @@ public:
     {
         MoveCursor(x, y);
         os->put(fill);
+    }
+
+    /** @brief Draw a char pixel. Enforces Worldspace */
+    template <IsCharPixel CP>
+    void DrawCharPixel(CP &charPixel)
+    {
+        DrawChar(charPixel.x.GetValue(), charPixel.y.GetValue(), charPixel.pix);
     }
 
     /** @brief Draws the text `str` to x, y */
