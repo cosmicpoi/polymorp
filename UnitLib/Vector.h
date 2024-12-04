@@ -179,12 +179,13 @@ public:
     template <typename OtherType>
         requires ConvertibleOrConstructible<Type, OtherType> &&
                  (!std::is_same_v<Type, OtherType>)
-    explicit inline Vector(const VectorN<OtherType> &other)
+    inline Vector(const VectorN<OtherType> &other)
+        : _v{([&other]<size_t... Is>(std::index_sequence<Is...>) constexpr
+              {
+                  return std::array<Type, N>{
+                      ConvertOrConstruct<Type, OtherType>(other[Is])...}; //
+              })(std::make_index_sequence<N>{})}
     {
-        ([&]<size_t... Is>(std::index_sequence<Is...>) constexpr
-         {
-             ((_v[Is] = ConvertOrConstruct<Type, OtherType>(other[Is])), ...); //
-         })(std::make_index_sequence<N>{});
     }
 
     /**
