@@ -3,32 +3,21 @@
 #include "AsciiGraphics.h"
 #include "unistd.h"
 
-// class SnakeGame
-// {
-//     void Update()
-//     {
-
-//     }
-
-//     void Draw()
-//     {
-
-//     }
-// }
-
-int SnakeGame()
+class SnakeGame
 {
-    AsciiGraphics ascii{};
-    ascii.ClearScreen();
-    ascii.MoveCursor(5, 5);
-    // ascii.DrawRect(1, 1, 5, 5, "✊", false);
-
-    // ascii.DrawChar(10, 10, 'h');
-    // ascii.EndFrame();
-
-    uint frameCount = 0;
-    while (1)
+public:
+    SnakeGame()
     {
+    }
+
+    inline void Initialize()
+    {
+        std::cout.flush();
+        ascii = AsciiGraphics{};
+    }
+    inline void Update()
+    {
+        std::cout << "running" << std::endl;
         ascii.ClearScreen();
 
         double birdX = frameCount / 10;
@@ -40,11 +29,25 @@ int SnakeGame()
 
         ascii.DrawText(std::round(birdX), std::round(birdY), "🐍");
 
-        frameCount++;
         ascii.EndFrame();
+
+        ascii.EndFrame();
+
+        frameCount++;
+    }
+
+private:
+    uint frameCount = 0;
+    AsciiGraphics ascii;
+};
+
+int PlaySnakeGame()
+{
+    SnakeGame game{};
+    while (1)
+    {
+        game.Update();
+
         usleep(1000 * 16);
     }
-    ascii.EndFrame();
-
-    return 0;
 }

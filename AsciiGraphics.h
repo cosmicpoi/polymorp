@@ -84,7 +84,6 @@ public:
     void DrawRect(const uint &x, const uint &y, const uint &width, const uint &height, const char &fill = '.', const bool filled = true)
     {
         assert(width < MAX_WIDTH);
-        ;
         std::fill_n(rowBuf, width, fill);
 
         for (uint i = 0; i < height; i++)
