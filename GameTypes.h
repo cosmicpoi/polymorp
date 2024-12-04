@@ -22,7 +22,6 @@ template <ClipBounds Bounds>
 class ClipDouble
 {
 public:
-    ClipDouble() : value{0} {};
     ClipDouble(double val) : value(clip<Bounds>(val)) {};
 
     inline ClipDouble<Bounds> &operator=(double other)
