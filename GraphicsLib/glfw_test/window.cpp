@@ -1,7 +1,7 @@
 #include <GLFW/glfw3.h>
 #include <glad/glad.h>
 #include <iostream>
-// #include "../../UnitLib/Vector.h"
+//#include "../../UnitLib/Vector.h"
 // #include "../../UnitLib/Unit.h"
 // #include "../../UnitLib/Matrix.h"
 
@@ -136,12 +136,8 @@ int main()
     // -----------
     while (!glfwWindowShouldClose(window))
     {
-        // input
-        // -----
+       
         processInput(window);
-
-        // render
-        // ------
         glClearColor(0.2f, 0.3f, 0.3f, 1.0f);
         glClear(GL_COLOR_BUFFER_BIT);
 
@@ -163,8 +159,6 @@ int main()
     glDeleteBuffers(1, &VBO);
     glDeleteProgram(shaderProgram);
 
-    // glfw: terminate, clearing all previously allocated GLFW resources.
-    // ------------------------------------------------------------------
     glfwTerminate();
     return 0;
 }
