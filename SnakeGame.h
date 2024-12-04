@@ -48,8 +48,10 @@ private:
 class SnakeGame : public AsciiGame
 {
 public:
+    SnakeGame(AsciiGraphics *asciiGraphics) : AsciiGame(asciiGraphics) {};
+
     inline virtual void Initialize() override
     {
-        CreateGameObject<Rect>(&ascii, 10, 10);
+        CreateGameObject<Rect>(ascii, 10, 10);
     }
 };

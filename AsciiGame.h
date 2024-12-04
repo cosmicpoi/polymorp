@@ -50,14 +50,14 @@ public:
     inline static double GET_DEFAULT_WIDTH() { return DEFAULT_ASCII_WIDTH; };
     inline static double GET_DEFAULT_HEIGHT() { return DEFAULT_ASCII_HEIGHT; };
 
-    AsciiGame() : Game(), ascii{AsciiGraphics{}} {};
+    AsciiGame(AsciiGraphics *asciiGraphics) : Game(), ascii{asciiGraphics} {};
 
     inline virtual void Draw() override
     {
-        ascii.ClearScreen();
+        ascii->ClearScreen();
 
         // Draw bounds
-        ascii.DrawRect(XBounds::lowerBound, YBounds::lowerBound, XBounds::width(), YBounds::height(), '.', false);
+        ascii->DrawRect(XBounds::lowerBound, YBounds::lowerBound, XBounds::width(), YBounds::height(), '.', false);
 
         // Draw objects
         for (uint i = 0; i < MAX_GAME_OBJECTS; i++)
@@ -69,11 +69,11 @@ public:
         }
 
         // End frame
-        ascii.EndFrame();
+        ascii->EndFrame();
     }
 
 protected:
-    AsciiGraphics ascii;
+    AsciiGraphics *ascii;
 };
 
 //------------------------------------------------------------------------------
@@ -89,7 +89,8 @@ int PlayGame()
     YBounds::SetLowerBound(1);
     YBounds::SetUpperBound(1 + G::GET_DEFAULT_HEIGHT());
 
-    G *game = new G();
+    AsciiGraphics ascii{};
+    G *game = new G(&ascii);
 
     game->Initialize();
     while (1)

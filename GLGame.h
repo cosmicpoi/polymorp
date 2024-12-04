@@ -1,4 +1,4 @@
-#pragma
+#pragma once
 
 #include "GLGraphics.h"
 #include "Game.h"
