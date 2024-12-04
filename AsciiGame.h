@@ -3,8 +3,6 @@
 #include "AsciiGraphics.h"
 #include "Game.h"
 
-#include <unistd.h>
-
 //------------------------------------------------------------------------------
 // Consts
 //------------------------------------------------------------------------------
@@ -20,7 +18,7 @@ template <WrapType Wrap = kWrapNone>
 class AsciiGameObject : public GameObject<Wrap>
 {
 public:
-    AsciiGameObject(AsciiGraphics* asciiGraphics) : ascii{asciiGraphics} {};
+    AsciiGameObject(AsciiGraphics *asciiGraphics) : ascii{asciiGraphics} {};
 
     inline virtual void Draw() override
     {
@@ -42,9 +40,9 @@ protected:
     AsciiGraphics *ascii = nullptr;
 };
 
-/**
- * Game definition
- */
+//------------------------------------------------------------------------------
+// Game definition
+//------------------------------------------------------------------------------
 
 class AsciiGame : public Game
 {
@@ -52,10 +50,7 @@ public:
     inline static double GET_DEFAULT_WIDTH() { return DEFAULT_ASCII_WIDTH; };
     inline static double GET_DEFAULT_HEIGHT() { return DEFAULT_ASCII_HEIGHT; };
 
-    AsciiGame() : Game(), ascii{AsciiGraphics{}}
-    {
-        std::fill_n(gameObjects, MAX_GAME_OBJECTS, nullptr);
-    }
+    AsciiGame() : Game(), ascii{AsciiGraphics{}} {};
 
     inline virtual void Draw() override
     {
@@ -80,3 +75,29 @@ public:
 protected:
     AsciiGraphics ascii;
 };
+
+//------------------------------------------------------------------------------
+// Game loop
+//------------------------------------------------------------------------------
+
+template <IsGame G>
+    requires std::is_base_of_v<AsciiGame, G>
+int PlayGame()
+{
+    XBounds::SetLowerBound(1);
+    XBounds::SetUpperBound(1 + G::GET_DEFAULT_WIDTH());
+    YBounds::SetLowerBound(1);
+    YBounds::SetUpperBound(1 + G::GET_DEFAULT_HEIGHT());
+
+    G *game = new G();
+
+    game->Initialize();
+    while (1)
+    {
+        game->Update();
+        game->Draw();
+
+        usleep(1000 * 16);
+    }
+    return 0;
+}
