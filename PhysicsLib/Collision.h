@@ -1,7 +1,6 @@
 // collision.h
 
-#ifndef COLLISION_H
-#define COLLISION_H
+#pragma once
 
 struct AABB {
     double x;
@@ -15,4 +14,3 @@ inline bool CheckCollision(const AABB& a, const AABB& b) {
              a.y + a.height < b.y || a.y > b.y + b.height);
 }
 
-#endif // COLLISION_H
