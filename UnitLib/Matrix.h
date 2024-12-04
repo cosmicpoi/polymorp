@@ -20,8 +20,6 @@ public:
     static constexpr size_t n = N;
     using type = Type;
 
-    static constexpr bool IsSquare = (M == N);
-
     template <typename T>
     using MatrixMN = Matrix<M, N, T>;
 
@@ -519,17 +517,16 @@ template <size_t Row, size_t Col, typename Type, size_t N>
     requires HasCrossProduct<Type, Type> && //
              (Row <= N && Col <= N) &&      //
              CanExp<N - 1, Type> &&         //
-             Negatable<Type>
+             Negatable<Type> &&
+             (N >= 2)
 constexpr inline ExpType<N - 1, Type> GetCofactor(const Matrix<N, N, Type> &mat)
 {
-    if constexpr (N == 1)
-    {
-        return mat[0][0];
-    }
-    return (((Row + Col) % 2 == 0) ? 1 : -1) *                            //
-           _Det<N - 1>(mat,                                               //
-                       RemoveAtIndex<Row, std::make_index_sequence<N>>{}, //
-                       RemoveAtIndex<Col, std::make_index_sequence<N>>{});
+    return ConvertOrConstruct<ExpType<N - 1, Type>>(                   //
+        (((Row + Col) % 2 == 0) ? 1 : -1) *                            //
+        _Det<N - 1>(mat,                                               //
+                    RemoveAtIndex<Row, std::make_index_sequence<N>>{}, //
+                    RemoveAtIndex<Col, std::make_index_sequence<N>>{}) //
+    );
 }
 
 /**
@@ -555,6 +552,10 @@ inline Matrix<N, N, InvertType<Type>> Inv(const Matrix<N, N, Type> &mat)
     if (d == ExpType<N, Type>{0})
     {
         return Matrix<N, N, InvertType<Type>>{};
+    }
+    else if constexpr (N == 1)
+    {
+        return Matrix<N, N, InvertType<Type>>{(mat[0][0] / mat[0][0]) / mat[0][0]};
     }
     else if constexpr (N == 2)
     {

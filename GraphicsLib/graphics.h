@@ -1,10 +1,18 @@
-class GraphicsContext {
-public:
-    /*
-    void initialize();  // Set up OpenGL or Metal
-    void clearScreen(); // Clear the frame buffer
-    void drawRectangle(const Vector2& position, const Vector2& size, const Color& color);
-    void drawSprite(const Sprite& sprite, const Transform& transform);
-    void present();     // Swap buffers
-    */
+#pragma once
+#include <type_traits>
+#include "../UnitLib/Unit.h"
+#include "../UnitLib/Vector.h"
+#include "../UnitLib/Matrix.h"
+#include "Triangle.h"
+
+using Pixel = dAtomic<"pixel">;
+
+template<typename T>
+class Graphics {
+    public:
+        static void DrawTriangle(const Triangle<Screenspace>& triangle) {
+        
+        }
 };
+
+

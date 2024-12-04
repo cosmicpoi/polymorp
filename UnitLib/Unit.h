@@ -68,7 +68,7 @@ constexpr bool typed_ratio_equality(const Type &value, const RHS_Type &rhs)
     {
         using Common = typename Helper::Common;
         return static_cast<Common>(value * Helper::fac1) == static_cast<Common>(rhs * Helper::fac2);
-    } 
+    }
     // Fallback for IsIntegral<Type, RHS_Type> builtins AND for user-defined types
     else if constexpr (IsArithmetic<Type, RHS_Type>)
     {
@@ -80,7 +80,7 @@ constexpr bool typed_ratio_equality(const Type &value, const RHS_Type &rhs)
     {
         // Don't need to check that Type * intmax_t is valid because this is enforced by IsRatioCompatible_
         static_assert((requires(Type a, RHS_Type b, intmax_t c) { {a * c}; {b * c}; }));
-        return value * Helper::fac1 == rhs * Helper::fac2;
+        return ConvertOrConstruct<Type>(value * Helper::fac1) == ConvertOrConstruct<RHS_Type>(rhs * Helper::fac2);
     }
     else
     {

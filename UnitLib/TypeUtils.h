@@ -6,16 +6,15 @@
 
 
 /**
- * Global "container" class that Vector and Matrix inherit from so that 
+ * Global "container" class that Vector and Matrix inherit from so that
  * unit can have knowledge of them without having to include them
  */
-class Container{};
+class Container
+{
+};
 
 template <typename T>
 concept IsContainer = std::is_base_of_v<Container, T>;
-
-
-
 
 /**
  * Proxies for builtins like `std::is_arithmetic` and qstd::common_type`.
@@ -359,6 +358,13 @@ struct CanExp_
 };
 
 template <typename A>
+struct CanExp_<0, A>
+{
+    static constexpr bool canExp = CanDivide<A, A>;
+    using expType = DivideType<A, A>;
+};
+
+template <typename A>
 struct CanExp_<1, A>
 {
     static constexpr bool canExp = true;
@@ -390,10 +396,10 @@ struct CanExp_<2, A>
 };
 
 template <size_t N, typename A>
-concept CanExp = (N >= 1) && CanExp_<N, A>::canExp;
+concept CanExp = CanExp_<N, A>::canExp;
 
 template <size_t N, typename A>
-    requires(N >= 1) && CanExp<N, A>
+    requires CanExp<N, A>
 using ExpType = typename CanExp_<N, A>::expType;
 
 // Check if a type can be inverted
@@ -411,6 +417,13 @@ using InvertType = DivideType<DivideType<A, A>, A>;
 // Check if the type is negatable (non-unary only for now)
 template <typename A>
 concept Negatable = requires(A a) {
+<<<<<<< HEAD
     { -1 * a } -> std::constructible_from<A>;
     { 1 * a } -> std::constructible_from<A>;
 };
+=======
+    // Note that these are intended to be +-1 and not +-Type{1}; they're unitless identity
+    { -1 * a } -> ConvertibleOrConstructibleTo<A>;
+    { 1 * a } -> ConvertibleOrConstructibleTo<A>;
+};
+>>>>>>> 1d92a2ced78b45b9137ee982ca8d08d6643bd351

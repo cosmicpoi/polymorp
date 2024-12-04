@@ -1,3 +1,4 @@
+<<<<<<< HEAD
 // Run tests
 #include "UnitLib/Unit.h"
 #include "UnitLib/UnitMath.h"
@@ -164,34 +165,35 @@ std::ostream &operator<<(std::ostream &os, const AdditiveString &val)
 {
     return os << val.value; // Forward to the underlying std::string
 }
+=======
+#include "SnakeGame.h"
+#include "GLTest.h"
+#include <iostream>
+>>>>>>> 1d92a2ced78b45b9137ee982ca8d08d6643bd351
 
 int main()
 {
-    // Matrix<2, 2, Meter> mat2{1, 2, 3, 4};
-    // std::cout << Inv(mat2) << std::endl;
-    // std::cout << (HasSquareRoot<std::string>) << std::endl;
-    // std::cout << ( Meter{2} * 2.5 ) << std::endl;
-    // std::cout << ( 2.5 * Meter{2} ) << std::endl;
-    // std::cout << ( Meter{2} / 2.5 ) << std::endl;
-    // std::cout << ( 2.5 / Meter{2} ) << std::endl;
 
-    using StrUnit = TypeAtomic<AdditiveString, "string">;
-    // Doesn't compile:
-    // using StrDouble = UnitMultRatio<StrUnit, std::ratio<2>>;
-    // std::cout << (StrUnit{"hellobye"} + StrUnit{"bye"}) << std::endl;
+    std::vector<std::string> games = {"snake", "gltest"};
 
-    using Z7Unit = TypeAtomic<Z7, "z7">;
-    using Z7Unit_Double = UnitMultRatio<Z7Unit, std::ratio<2>>;
-    using Z7Unit_Half = UnitMultRatio<Z7Unit, std::ratio<1, 2>>;
-    // std::cout << ((Z7{1} / Z7{2}).value == 4) << std::endl;
+    std::cout << "Choose a game:" << std::endl;
+    for (uint i = 0; i < games.size(); i++)
+    {
+        std::cout << i << ": " << games[i] << std::endl;
+    }
+    uint selection = 0;
+    std::cin >> selection;
 
-    // std::cout << (EmptyUnit<AdditiveString>{"hellobye"} + EmptyUnit<AdditiveString>{"bye"}) << std::endl;
-    // std::cout << (EmptyUnit<AdditiveString>{"hellobye"} + AdditiveString{"bye"}) << std::endl;
 
-    // std::cout << (EmptyUnit<AdditiveString>{"hellobye"} - EmptyUnit<AdditiveString>{"bye"}) << std::endl;
-    // std::cout << (EmptyUnit<AdditiveString>{"hellobye"} - AdditiveString{"bye"}) << std::endl;
-    // std::cout << (2.5 + dUEmpty{2}) << std::endl;
+    if (games[selection] == "snake")
+    {
+        return PlaySnakeGame();
+    } else if (games[selection] == "gltest")
+    {
+        return RunGLTest();
+    }
 
+<<<<<<< HEAD
     // std::cout << ( Meter{2} - 2.5 ) << std::endl;
     // std::cout << ( 2.5 - Meter{2} ) << std::endl;
 
@@ -319,3 +321,7 @@ int main()
     return 0;
      *    */
 }
+=======
+    return 0;
+}
+>>>>>>> 1d92a2ced78b45b9137ee982ca8d08d6643bd351
