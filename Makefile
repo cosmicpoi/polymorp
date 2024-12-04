@@ -12,7 +12,7 @@ FRAMEWORKS = -framework OpenGL -framework Cocoa -framework IOKit \
 
 # Source files (all .cpp files in the directory)
 SOURCES = $(wildcard *.cpp)
-HEADERS = $(wildcard *.h) $(wildcard UnitLib/*.h) $(wildcard _Tests/*.h)
+HEADERS = $(wildcard *.h) $(wildcard UnitLib/*.h) $(wildcard _Tests/*.h) $(wildcard PhysicsLib/*.h)
 
 
 # Primary targets
