@@ -101,12 +101,15 @@ public:
     }
 
     // Clears or Processes the screen with a given color
-    void ProcessScreen(float r, float g, float b, float a = 1.0f) {
+    void ClearScreen(float r, float g, float b, float a = 1.0f) {   
+        glClearColor(r, g, b, a);
+        glClear(GL_COLOR_BUFFER_BIT);
+    }
+
+    void ProcessInput() {
         if (glfwGetKey(window, GLFW_KEY_ESCAPE) == GLFW_PRESS){
             glfwSetWindowShouldClose(window, true);
         }    
-        glClearColor(r, g, b, a);
-        glClear(GL_COLOR_BUFFER_BIT);
     }
 
     // Draw a triangle with given vertices
