@@ -6,6 +6,7 @@
 
 #pragma once
 
+#include "TypeUtils.h"
 #include <initializer_list>
 
 //--------------------------------------------------------------------------------
