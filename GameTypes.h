@@ -1,3 +1,5 @@
+#pragma once
+
 // Represents the interval [lowerBound, upperBound]
 template <typename T>
 concept ClipBounds = requires {
@@ -20,6 +22,7 @@ template <ClipBounds Bounds>
 class ClipDouble
 {
 public:
+    ClipDouble() : value{0} {};
     ClipDouble(double val) : value(clip<Bounds>(val)) {};
 
     inline ClipDouble<Bounds> &operator=(double other)
@@ -33,9 +36,23 @@ public:
         return ClipDouble(value + other.value);
     }
 
+    template <typename Other>
+        requires std::is_convertible_v<double, Other>
+    inline ClipDouble<Bounds> operator+(Other other) const
+    {
+        return ClipDouble(value + static_cast<double>(other));
+    }
+
     inline ClipDouble<Bounds> operator-(const ClipDouble<Bounds> &other) const
     {
         return ClipDouble(value - other.value);
+    }
+
+    template <typename Other>
+        requires std::is_convertible_v<double, Other>
+    inline ClipDouble<Bounds> operator-(Other other) const
+    {
+        return ClipDouble(value - static_cast<double>(other));
     }
 
     inline operator double() const

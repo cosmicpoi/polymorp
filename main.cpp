@@ -22,13 +22,14 @@ using Clipped = ClipDouble<MyBounds>;
 int main()
 {
 
-    Vector2<double> v{100, 100};
-    Vector2<Clipped> cv{v};
-    std::cout << ConvertibleOrConstructible<Clipped, double> << std::endl;
+    // Vector2<double> v{100, 100};
+    // Vector2<Clipped> cv = v;
+    // std::cout << ConvertibleOrConstructible<Clipped, double> << std::endl;
     // std::cout << clip<MyBounds>(97) << std::endl;
     // ClipDouble<MyBounds> b{100};
     // b = 120;
-    std::cout << cv << std::endl;
+    // std::cout << cv << std::endl;
+    return PlaySnakeGame();
     // return RunGLTest();
 
     // std::vector<std::string> games = {"snake", "gltest"};
