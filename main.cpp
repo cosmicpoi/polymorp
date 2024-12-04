@@ -4,7 +4,7 @@
 
 int main()
 {
-    return RunGLTest();
+    return RunGL();
 
     // std::vector<std::string> games = {"snake", "gltest"};
 
