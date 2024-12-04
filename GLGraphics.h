@@ -1,6 +1,7 @@
 #pragma once
 
 #define GL_SILENCE_DEPRECATION
+#define MAX_TRIANGLES 200
 
 #include <GLFW/glfw3.h>
 #include <glad/glad.h>
@@ -115,33 +116,57 @@ public:
     // Draw a triangle with given vertices
     void DrawTriangle(Triangle<float> &triangle) {
     
-        Vector3<float> vertices[] = {
-            triangle._p1, // left  
-            triangle._p2, // right 
-            triangle._p3  // top   
-        }; 
+        triangleVerticeBuffer[verticeCount++] = triangle._p1;
+        triangleVerticeBuffer[verticeCount++] = triangle._p2;
+        triangleVerticeBuffer[verticeCount++] = triangle._p3;
+        triangleCount++;
+
+    }
+    // Draw a rectangle with given vertices
+    void DrawRectangle(Vector4<float> points) {
+        
+        Vector3<float> p1{points[0], points[1], 0.0f}; // Bottom-left
+        Vector3<float> p2{points[0],  points[1] + points[3], 0.0f}; // Bottom-right
+        Vector3<float> p3{points[0] + points[2],  points[1], 0.0f}; // Top-left
+        Vector3<float> p4{points[0] + points[2],  points[1] + points[3], 0.0f}; // Top-right
+
+        Triangle bottomTri(p1, p3, p2);
+        Triangle topTri(p2, p4, p3);
+
+        DrawTriangle(bottomTri);
+        DrawTriangle(topTri);
+
+    }
+
+    void FlushBuffer(){
+        if(triangleCount < 1){
+            return;
+        }
 
         glGenVertexArrays(1, &VAO);
         glGenBuffers(1, &VBO);
 
         glBindVertexArray(VAO);
         glBindBuffer(GL_ARRAY_BUFFER, VBO);
-        glBufferData(GL_ARRAY_BUFFER, sizeof(triangle), vertices, GL_STATIC_DRAW);
+
+        glBufferData(GL_ARRAY_BUFFER, triangleCount * sizeof(Triangle<float>), triangleVerticeBuffer, GL_DYNAMIC_DRAW);
+
         glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 3 * sizeof(float), (void *)0);
         glEnableVertexAttribArray(0);
         glBindBuffer(GL_ARRAY_BUFFER, 0); //unbind VBO
 
-        glUseProgram(shaderProgram); // Assume a valid shader program is linked
+        glUseProgram(shaderProgram);
         glBindVertexArray(VAO);
-        glDrawArrays(GL_TRIANGLES, 0, 3);
+        glDrawArrays(GL_TRIANGLES, 0, triangleCount * 3);
         glBindVertexArray(0); //unbind VAO
-        
-        //glDeleteBuffers(1, &VBO);
-        //glDeleteVertexArrays(1, &VAO);
+
+        triangleCount = 0;
+        verticeCount = 0;
     }
 
     // Swaps buffers and polls events
     void EndFrame() {
+        FlushBuffer();
         glfwSwapBuffers(window);
         glfwPollEvents();
     }
@@ -157,12 +182,15 @@ public:
         glfwTerminate();
     }
 
+
+
 private:
     GLFWwindow *window;
-    int width, height;
+    int width, height, triangleCount = 0, verticeCount = 0;
     std::string title;
     GLuint VAO, VBO;
     unsigned int shaderProgram;
+    Vector3<float> triangleVerticeBuffer[MAX_TRIANGLES];
     //Shader programs
     const char *vertexShaderSource = "#version 330 core\n"
         "layout (location = 0) in vec3 aPos;\n"
@@ -174,6 +202,6 @@ private:
         "out vec4 FragColor;\n"
         "void main()\n"
         "{\n"
-        "   FragColor = vec4(1.0f, 0.5f, 0.2f, 1.0f);\n"
+        "   FragColor = vec4(0.3f, 0.4f, 0.2f, 1.0f);\n"
         "}\n\0";
 };
