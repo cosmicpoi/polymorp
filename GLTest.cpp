@@ -1,3 +1,6 @@
+#define GL_SILENCE_DEPRECATION
+
+#include "GLTest.h"
 #include <GLFW/glfw3.h>
 #include <glad/glad.h>
 #include <iostream>
@@ -110,6 +113,7 @@ int RunGLTest()
 
     // set up vertex data (and buffer(s)) and configure vertex attributes
     // ------------------------------------------------------------------
+
     float vertices[] = {
         -0.5f, -0.5f, 0.0f, // left  
          0.5f, -0.5f, 0.0f, // right 
