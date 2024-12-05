@@ -172,21 +172,22 @@ void TestActorMovement()
 void TestActorRotation()
 {
     Actor<double> actor({0.0, 0.0}, {0.0, 0.0}, 0.0, M_PI / 2); // 90 degrees per second
-    actor.Update(1.0); // Update for 1 second
+    actor.Update(1.0);                                          // Update for 1 second
     assert(NearlyEqual(actor.rotation, M_PI / 2));
 
-    actor.Update(1.0); // Update for another 1 second
+    actor.Update(1.0);                         // Update for another 1 second
     assert(NearlyEqual(actor.rotation, M_PI)); // Should be 180 degrees
 
-    actor.Update(2.0); // Update for another 2 seconds
+    actor.Update(2.0);                        // Update for another 2 seconds
     assert(NearlyEqual(actor.rotation, 0.0)); // Full rotation back to 0
 
     std::cout << "TestActorRotation passed.\n";
 }
 
-void TestActorMovementWithRotation() {
+void TestActorMovementWithRotation()
+{
     Actor<double> actor({0.0, 0.0}, {1.0, 0.0}, 0.0, M_PI / 4); // Rotate 45 degrees/sec
-    actor.Update(1.0); // Update for 1 second
+    actor.Update(1.0);                                          // Update for 1 second
 
     double expectedX = std::sqrt(2) / 2; // cos(45°)
     double expectedY = std::sqrt(2) / 2; // sin(45°)
@@ -201,15 +202,13 @@ void TestActorMovementWithRotation() {
     std::cout << "TestActorMovementWithRotation passed.\n";
 }
 
-
-
 void TestCollisionDetection()
 {
     AABB a = {0.0, 0.0, 1.0, 1.0};
     AABB b = {0.5, 0.5, 1.0, 1.0};
     AABB c = {2.0, 2.0, 1.0, 1.0};
 
-    assert(CheckCollision(a, b)); // Should collide
+    assert(CheckCollision(a, b));  // Should collide
     assert(!CheckCollision(a, c)); // Should not collide
 
     std::cout << "TestCollisionDetection passed.\n";
@@ -797,6 +796,18 @@ int main()
 
         assert((CanOp<double, "-=", dUEmpty>()));
         assert((CanOp<double, "-=", dUKilo>()));
+    }
+    // /** -- Run increment/decrement tests --  */
+    std::cout << "Running increment/decrement tests" << std::endl;
+    {
+        Meter x{1};
+        assert((x++ == Meter{1}));
+        assert((x == Meter{2}));
+        assert((++x == Meter{3}));
+
+        assert((x-- == Meter{3}));
+        assert((x == Meter{2}));
+        assert((--x == Meter{1}));
     }
 
     // /** -- Run comparison tests --  */
@@ -1512,8 +1523,7 @@ int main()
         assert((Inv(Matrix<4, 4, double>{{1, 0, 0, 0}, {0, 2, -3, 0}, {0, 0, 1, 0}, {0, 0, 0, 1}}) ==
                 Matrix<4, 4, double>{{1., 0., 0., 0.}, {0., 0.5, 1.5, 0.}, {0., 0., 1., 0.}, {0., 0., 0., 1.}}));
     }
-    
-    
+
     std::cout << "------ BEGIN TESTING ACTOR AND COLLISION ------" << std::endl;
 
     TestActorInitialization();
@@ -1525,7 +1535,6 @@ int main()
     TestActorRotationAfterCollision();
 
     std::cout << "All tests passed successfully.\n";
-
 
     return 0;
 }

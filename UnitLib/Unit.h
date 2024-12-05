@@ -530,6 +530,52 @@ public:
     }
 
     /**
+     * Increment/decrement
+     */
+
+    /** @brief Prefix increment */
+    inline ThisType &operator++()
+        requires requires(Type a) {
+            ++a;
+        }
+    {
+        ++value;
+        return *this;
+    }
+
+    /** @brief Postfix increment */
+    inline ThisType operator++(int)
+        requires requires(Type a) {
+            a++;
+        }
+    {
+        ThisType temp = *this;
+        value++;
+        return temp;
+    }
+
+    /** @brief Prefix decrement */
+    inline ThisType &operator--()
+        requires requires(Type a) {
+            --a;
+        }
+    {
+        --value;
+        return *this;
+    }
+
+    /** @brief Postfix decrement */
+    inline ThisType operator--(int)
+        requires requires(Type a) {
+            a--;
+        }
+    {
+        ThisType temp = *this;
+        value--;
+        return temp;
+    }
+
+    /**
      * Comparison
      */
 
