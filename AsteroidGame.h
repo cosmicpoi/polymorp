@@ -9,8 +9,32 @@
 template <size_t Depth>
 class Orbiter : public GameObject<Depth>
 {
+public:
+    using Coord = typename GameObject<Depth>::Coord;
+
+    static_assert(Depth > 0);
     inline virtual void Update() override {};
     inline virtual void Draw() override {};
+
+    Vector2<Worldspace> GetWorldpos()
+    {
+        return _GetWorldpos<Depth>(this->pos);
+    }
+
+private:
+    template <size_t PDepth>
+    Vector2<ObjCoord<PDepth - 1>> _GetWorldpos(Vector2<ObjCoord<PDepth>> &ppos)
+    {
+        if constexpr (PDepth == 1)
+        {
+            static_assert(std::is_same_v<ObjCoord<PDepth - 1>, Worldspace>);
+            return this->GetParent()->ApplyTransform(ppos);
+        }
+        else
+        {
+            return _GetWorldpos<PDepth - 1>(this->GetParent()->ApplyTransform(ppos));
+        }
+    }
 };
 
 class Asteroid : public AsciiWorldObject<kWrapBoth>
@@ -23,6 +47,7 @@ public:
     inline virtual void Initialize() override
     {
         o1 = AddChild<Orbiter>();
+        o1->SetPos({0, -5});
 
         vel = {0.2, 0.2};
     }
@@ -52,6 +77,12 @@ public:
             }
         }
 
+        Vector2<Worldspace> wv = o1->GetWorldpos();
+        chars[numChars++] = {
+            .x = x + wv.x(),
+            .y = y + wv.y(),
+            .pix = '.'};
+
         // Flush chars
         ascii->SetTextColor(kFGRed, kBGNone, kTextBold);
         DrawChars();
@@ -74,6 +105,6 @@ public:
 
     inline virtual void Initialize() override
     {
-        CreateGameObject<Asteroid>(ascii, 5);
+        CreateGameObject<Asteroid>(ascii, 3);
     }
 };

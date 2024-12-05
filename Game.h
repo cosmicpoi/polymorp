@@ -3,6 +3,7 @@
 #include "GameTypes.h"
 #include "UnitLib/Unit.h"
 #include "UnitLib/Vector.h"
+#include "UnitLib/Matrix.h"
 #include <unistd.h>
 
 //------------------------------------------------------------------------------
@@ -171,12 +172,16 @@ public:
     inline virtual void Draw() = 0;
 };
 
+template <size_t Depth>
+    requires(Depth >= 0)
+using ObjCoord = DivideType<Worldspace, ExpType<Depth, Objectspace>>;
+
 template <size_t Depth = 0>
 class GameObject : public Entity
 {
 public:
     static constexpr size_t GO_Depth = Depth;
-    using Coord = DivideType<Worldspace, ExpType<Depth, Objectspace>>;
+    using Coord = ObjCoord<Depth>;
 
     template <template <size_t> class ChildObj>
     using Child = ChildObj<Depth + 1>;
@@ -202,6 +207,7 @@ public:
             if (children[i] == nullptr)
             {
                 Child<ChildObj> *obj = new Child<ChildObj>(argList...);
+                obj->parent = this;
                 children[i] = obj;
                 children[i]->Initialize();
                 return obj;
@@ -211,12 +217,36 @@ public:
         throw std::runtime_error("Too many children!");
     };
 
+    template <typename T>
+        requires requires(T a, Objectspace b) {
+            { a *b } -> std::convertible_to<Coord>;
+        }
+    inline Vector2<Coord> ApplyTransform(const Vector2<T> &vec)
+    {
+        // static_assert((CanMultiply<T, Objectspace>));
+        // static_assert((std::convertible_to<MultiplyType<T, Objectspace>, Coord>));
+        Vector2<Coord> scaled = Get2DScaleMatrix<Objectspace>() * vec;
+        return scaled;
+    };
+
+    inline GameObject<Depth - 1> *GetParent()
+    {
+        return parent;
+    }
+
+    inline void SetPos(Vector2<Coord> pos_)
+    {
+        this->pos = pos_;
+    }
+
 protected:
     Vector2<Coord> pos{};
     Vector2<VelType<Coord>> vel{};
     Vector2<AccType<Coord>> acc{};
-
+    GameObject<Depth - 1> *parent = nullptr;
     Entity *children[MAX_GAME_OBJECTS] = {nullptr};
+
+    friend class GameObject<Depth - 1>;
 };
 
 /** WrapGameObject definition */

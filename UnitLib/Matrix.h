@@ -569,3 +569,25 @@ inline Matrix<N, N, InvertType<Type>> Inv(const Matrix<N, N, Type> &mat)
                   }); })(std::make_index_sequence<N * N>{});
     }
 }
+
+//--------------------------------------------------------------------------------
+// Transformation matrices
+//--------------------------------------------------------------------------------
+Matrix2<double> Get2DRotationMatrix(double theta)
+{
+    return Matrix2<double>{
+        {std::cos(theta), std::sin(theta)},
+        {-std::sin(theta), std::cos(theta)}};
+}
+
+template <typename T>
+    requires requires {
+        T{0};
+        T{1};
+    }
+Matrix2<T> Get2DScaleMatrix(T scaleX = T{1}, T scaleY = T{1})
+{
+    return Matrix2<T>{
+        {scaleX, T{0}},
+        {T{0}, scaleY}};
+}
