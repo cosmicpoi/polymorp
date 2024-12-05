@@ -87,7 +87,7 @@ public:
         o2->rotSpeed = 0.03;
         // o1->SetPos(Get2DRotationMatrix(0.785398) * o1->GetPos());
 
-        vel = {0.2, 0};
+        vel = {0.0, 0.2};
     }
 
     inline virtual void Update() override
@@ -133,10 +133,22 @@ public:
         ascii->ResetTextColor();
     }
 
+    inline virtual bool Collide(const Vector2<Worldspace> &point) override
+    {
+        ascii->MoveCursor(64, 5);
+        std::cout << "asking if collide: ";
+        std::cout << point << std::endl;
+
+        if (NormSquared(point - GetPos()) < radius * radius)
+        {
+            return true;
+        }
+
+        return false;
+    };
+
 private:
     Coord radius;
-    WorldX<kWrapBoth> x{0};
-    WorldY<kWrapBoth> y{0};
 };
 
 /**
@@ -146,8 +158,8 @@ private:
 class Player : public AsciiWorldObject<kWrapBoth>
 {
 public:
-    Player(AsciiGraphics *asciiGraphics, double x_, double y_)
-        : AsciiWorldObject(asciiGraphics), x{x_}, y{y_} {};
+    Player(AsciiGraphics *asciiGraphics)
+        : AsciiWorldObject(asciiGraphics) {};
 
     static constexpr const char *PLAYER = "🐥";
 
@@ -157,9 +169,33 @@ public:
 
     inline virtual void Update() override
     {
-        // vel += acc * 1_frame;
-        // x += vel.x() * 1_frame;
-        // y += vel.y() * 1_frame;
+        double delX = 0;
+        double delY = 0;
+
+        if (KeyEventManager::GetInstance().Keypressed(kKeyCodeDown))
+        {
+            delY += 1;
+        }
+        if (KeyEventManager::GetInstance().Keypressed(kKeyCodeUp))
+        {
+            delY -= 1;
+        }
+        if (KeyEventManager::GetInstance().Keypressed(kKeyCodeRight))
+        {
+            delX += 1;
+        }
+        if (KeyEventManager::GetInstance().Keypressed(kKeyCodeLeft))
+        {
+            delX -= 1;
+        }
+
+        acc = {delX * 0.04, delY * 0.04};
+
+        vel += acc * 1_frame;
+        x += vel.x() * 1_frame;
+        y += vel.y() * 1_frame;
+
+        vel *= 0.95;
 
         // GameObject<>::Update();
     }
@@ -171,8 +207,6 @@ public:
 
 private:
     Coord radius;
-    WorldX<kWrapBoth> x{0};
-    WorldY<kWrapBoth> y{0};
 };
 
 /**
@@ -183,9 +217,42 @@ class AsteroidGame : public AsciiGame
 public:
     AsteroidGame(AsciiGraphics *asciiGraphics) : AsciiGame(asciiGraphics) {};
 
+    Player *player = nullptr;
+    Asteroid *asteroid = nullptr;
+    bool gameOver = false;
+
     inline virtual void Initialize() override
     {
-        CreateGameObject<Asteroid>(ascii, 2);
-        CreateGameObject<Player>(ascii, GET_DEFAULT_WIDTH() / 2, GET_DEFAULT_HEIGHT() / 2);
+        asteroid = CreateGameObject<Asteroid>(ascii, 2);
+        player = CreateGameObject<Player>(ascii);
+
+        player->SetPos({GET_DEFAULT_WIDTH() / 2, GET_DEFAULT_HEIGHT() / 2});
+    }
+
+    inline virtual void UpdateEnd() override
+    {
+        if (asteroid->IsEnabled())
+        {
+        }
+        if (asteroid->Collide(player->GetPos()))
+        {
+            player->Disable();
+            // asteroid->Disable();
+            gameOver = true;
+        }
+    }
+
+    inline virtual void Draw() override
+    {
+        AsciiGame::Draw();
+
+        if (gameOver)
+        {
+            ascii->SetTextColor(kFGRed, kBGYellow, kTextBold);
+            ascii->DrawText({GET_DEFAULT_WIDTH() / 2 - 7}, {GET_DEFAULT_HEIGHT() / 2}, "   GAME OVER   ");
+            ascii->ResetTextColor();
+        }
+
+        ascii->EndFrame();
     }
 };

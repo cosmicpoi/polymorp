@@ -72,7 +72,7 @@ using World_per_Frame_2 = DivideType<World_per_Frame, Frame>;
  * Clip types
  */
 using ClipWorldX = TypeAtomic<ClippedX, WORLDSPACE>;
-using ClipWorldY = TypeAtomic<ClippedX, WORLDSPACE>;
+using ClipWorldY = TypeAtomic<ClippedY, WORLDSPACE>;
 
 /**
  * Literal operators
@@ -170,8 +170,20 @@ public:
     Entity() {};
     virtual ~Entity() {};
     inline virtual void Initialize() {};
+    inline virtual bool Collide(const Vector2<Worldspace> &) { return false; };
     inline virtual void Update() = 0;
     inline virtual void Draw() = 0;
+    inline void Disable()
+    {
+        enabled = false;
+    }
+    inline bool IsEnabled()
+    {
+        return enabled;
+    }
+
+private:
+    bool enabled = true;
 };
 
 template <size_t Depth>
@@ -248,7 +260,7 @@ public:
     {
         this->pos = pos_;
     }
-    inline Vector2<Coord> GetPos()
+    inline virtual Vector2<Coord> GetPos()
     {
         return pos;
     }
@@ -306,24 +318,26 @@ public:
     template <typename GameObj, typename... Args>
         requires IsEntity<GameObj> &&
                  std::is_constructible_v<GameObj, Args...>
-    inline void CreateGameObject(Args... argList)
+    inline GameObj *CreateGameObject(Args... argList)
     {
         for (uint i = 0; i < MAX_GAME_OBJECTS; i++)
         {
             if (gameObjects[i] == nullptr)
             {
-                gameObjects[i] = new GameObj(argList...);
-                gameObjects[i]->Initialize();
-                return;
+                GameObj *obj = new GameObj(argList...);
+                obj->Initialize();
+                gameObjects[i] = obj;
+                return obj;
             }
         }
 
         throw std::runtime_error("Too many game objects!");
+        return nullptr;
     };
 
     inline virtual void Initialize() = 0;
 
-    inline void Update()
+    inline virtual void Update()
     {
         KeyEventManager::GetInstance().Update(frameCount);
         frameCount++;
@@ -332,10 +346,17 @@ public:
         {
             if (gameObjects[i] != nullptr)
             {
-                gameObjects[i]->Update();
+                if (gameObjects[i]->IsEnabled())
+                {
+                    gameObjects[i]->Update();
+                }
             }
         }
+
+        UpdateEnd();
     };
+
+    inline virtual void UpdateEnd() {};
 
     inline virtual void Draw() = 0;
 

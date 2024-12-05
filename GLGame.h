@@ -63,7 +63,10 @@ public:
         {
             if (gameObjects[i] != nullptr)
             {
-                gameObjects[i]->Draw();
+                if (gameObjects[i]->IsEnabled())
+                {
+                    gameObjects[i]->Draw();
+                }
             }
         }
 

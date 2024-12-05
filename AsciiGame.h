@@ -19,11 +19,23 @@ template <WrapType Wrap = kWrapBoth>
 class AsciiWorldObject : public GameObject<0>
 {
 public:
+    using Coord = ObjCoord<0>;
+
     AsciiWorldObject(AsciiGraphics *asciiGraphics) : ascii{asciiGraphics} {};
 
     inline virtual void Draw() override
     {
         DrawChars();
+    }
+
+    inline void SetPos(Vector2<Worldspace> pos)
+    {
+        x = pos.x();
+        y = pos.y();
+    }
+    inline Vector2<Coord> GetPos() override
+    {
+        return {x, y};
     }
 
 protected:
@@ -39,6 +51,9 @@ protected:
     CharPixel<Wrap> chars[MAX_CHARS];
 
     AsciiGraphics *ascii = nullptr;
+
+    WorldX<Wrap> x{0};
+    WorldY<Wrap> y{0};
 };
 
 //------------------------------------------------------------------------------
@@ -57,11 +72,6 @@ public:
     {
         ascii->ClearScreen();
 
-        ascii->MoveCursor(60, 2);
-        std::cout << KeyEventManager::GetInstance().Keydown(kKeyCodeDown);
-        ascii->MoveCursor(60, 3);
-        std::cout << KeyEventManager::GetInstance().Keyup(kKeyCodeDown);
-
         // Draw bounds
         ascii->DrawRect(XBounds::lowerBound, YBounds::lowerBound, XBounds::width(), YBounds::height(), '.', false);
 
@@ -70,7 +80,10 @@ public:
         {
             if (gameObjects[i] != nullptr)
             {
-                gameObjects[i]->Draw();
+                if (gameObjects[i]->IsEnabled())
+                {
+                    gameObjects[i]->Draw();
+                }
             }
         }
 
@@ -107,7 +120,7 @@ int PlayGame()
         glHeadless.UpdateHeadless();
         game->Update();
         game->Draw();
-        if ( KeyEventManager::GetInstance().Keydown(kKeyCodeDown))
+        if (KeyEventManager::GetInstance().Keydown(kKeyCodeDown))
         {
             std::cout << "key down" << std::endl;
         }

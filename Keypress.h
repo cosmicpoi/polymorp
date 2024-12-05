@@ -8,6 +8,7 @@ enum KeyCode
     kKeyCodeDown = 1,
     kKeyCodeRight = 2,
     kKeyCodeLeft = 3,
+    kKeyCodeMin = kKeyCodeUp,
     kKeyCodeMax = 16,
 };
 
@@ -65,6 +66,18 @@ public:
             // Empty the queue
             numEvents = 0;
         }
+        for (size_t i = 0; i < kKeyCodeMax; i++)
+        {
+            if (!isKeyPressed[i] && isKeyDown[i])
+            {
+                isKeyPressed[i] = true;
+            }
+            else if (isKeyPressed[i] && isKeyUp[i])
+            {
+                isKeyPressed[i] = false;
+            }
+        }
+
         lastFrameCount = frameCount;
     };
 
@@ -98,12 +111,18 @@ public:
         return isKeyUp[keycode];
     };
 
+    inline bool Keypressed(KeyCode keycode)
+    {
+        return isKeyPressed[keycode];
+    }
+
 private:
     KeyEvent events[MAX_EVENTS];
     size_t numEvents = 0;
 
     bool isKeyDown[kKeyCodeMax];
     bool isKeyUp[kKeyCodeMax];
+    bool isKeyPressed[kKeyCodeMax];
 
     uint lastFrameCount = 0;
     // Private constructor to prevent direct instantiation

@@ -236,7 +236,7 @@ public:
 
     /** @brief Constructor for converting from literal */
     template <std::convertible_to<Type> T>
-    explicit inline Unit(T val)
+    inline Unit(T val)
         : value(val){};
 
     /**
