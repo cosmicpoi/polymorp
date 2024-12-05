@@ -1,33 +1,54 @@
 #pragma once
 
 #include "AsciiGame.h"
+#include "UnitLib/Print.h"
 
 /**
  * Various game object implementatinos
  */
-class Rect : public AsciiGameObject<kWrapBoth>
+template <size_t Depth>
+class Orbiter : public GameObject<Depth>
+{
+    inline virtual void Update() override {};
+    inline virtual void Draw() override {};
+};
+
+class Asteroid : public AsciiWorldObject<kWrapBoth>
 {
 public:
-    Rect(AsciiGraphics *asciiGraphics, uint width_, uint height_)
-        : AsciiGameObject(asciiGraphics), width(width_), height(height_) {};
+    Asteroid(AsciiGraphics *asciiGraphics, double radius_)
+        : AsciiWorldObject(asciiGraphics), radius(radius_) {};
+
+    Child<Orbiter> *o1 = nullptr;
+    inline virtual void Initialize() override
+    {
+        o1 = AddChild<Orbiter>();
+
+        vel = {0.2, 0.2};
+    }
 
     inline virtual void Update() override
     {
-        x = x + 0.5_ws;
-        y = y + 0.2_ws;
+        vel += acc * 1_frame;
+        x += vel.x() * 1_frame;
+        y += vel.y() * 1_frame;
     }
     inline virtual void Draw() override
     {
         // Set up chars
+
         numChars = 0;
-        for (uint i = 0; i < height; i++)
+        for (Worldspace offX = -radius; offX <= radius; offX++)
         {
-            for (uint j = 0; j < width; j++)
+            for (Worldspace offY = -radius; offY <= radius; offY++)
             {
-                chars[numChars++] = {
-                    .x = x + Worldspace{j},
-                    .y = y + Worldspace{i},
-                    .pix = '.'};
+                if (NormSquared(Vector2<Worldspace>{offX, offY}) <= radius * radius)
+                {
+                    chars[numChars++] = {
+                        .x = x + offX,
+                        .y = y + offY,
+                        .pix = '.'};
+                }
             }
         }
 
@@ -38,8 +59,9 @@ public:
     }
 
 private:
-    uint width = 0;
-    uint height = 0;
+    Coord radius;
+    WorldY<kWrapBoth> y{0};
+    WorldX<kWrapBoth> x{0};
 };
 
 /**
@@ -52,6 +74,6 @@ public:
 
     inline virtual void Initialize() override
     {
-        CreateGameObject<Rect>(ascii, 10, 10);
+        CreateGameObject<Asteroid>(ascii, 5);
     }
 };

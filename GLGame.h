@@ -14,8 +14,8 @@ constexpr double DEFAULT_GL_HEIGHT = 400;
 // GameObject definition
 //------------------------------------------------------------------------------
 
-template <WrapType Wrap = kWrapNone>
-class GLGameObject : public GameObject<Wrap>
+template <size_t Depth = 0>
+class GLGameObject : public GameObject<Depth>
 {
 public:
     GLGameObject(GLGraphics *glGraphics) : gl{glGraphics} {};
