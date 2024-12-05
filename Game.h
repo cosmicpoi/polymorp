@@ -228,15 +228,12 @@ public:
         throw std::runtime_error("Too many children!");
     };
 
-    template <typename T>
-        requires requires(T a, Objectspace b) {
-            { a *b } -> std::convertible_to<Coord>;
-        }
-    inline Vector2<Coord> ApplyTransform(const Vector2<T> &vec)
+    inline Vector2<ObjCoord<Depth>> ApplyTransform(const Vector2<ObjCoord<Depth + 1>> &vec)
     {
         // static_assert((CanMultiply<T, Objectspace>));
         // static_assert((std::convertible_to<MultiplyType<T, Objectspace>, Coord>));
         Vector2<Coord> scaled = Get2DScaleMatrix<Objectspace>() * vec;
+        scaled += this->GetPos();
         return scaled;
     };
 
