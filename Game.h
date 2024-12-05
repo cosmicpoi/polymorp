@@ -3,6 +3,7 @@
 #include "GameTypes.h"
 #include "UnitLib/Unit.h"
 #include "UnitLib/Vector.h"
+#include "UnitLib/Matrix.h"
 #include <unistd.h>
 
 //------------------------------------------------------------------------------
@@ -10,11 +11,13 @@
 //------------------------------------------------------------------------------
 
 constexpr size_t MAX_GAME_OBJECTS = 1024;
+constexpr size_t MAX_CHILDREN = 16;
 constexpr double DEFAULT_WIDTH = 320;
 constexpr double DEFAULT_HEIGHT = 240;
 
-constexpr char OBJECTSPACE[] = "worldspace";
+constexpr char OBJECTSPACE[] = "objectspace";
 constexpr char WORLDSPACE[] = "worldspace";
+constexpr char FRAME[] = "frame";
 
 //------------------------------------------------------------------------------
 // Bounded type definnitions
@@ -43,20 +46,63 @@ using ClippedY = ClipDouble<YBounds>;
 // Unit definitions
 //------------------------------------------------------------------------------
 
+/**
+ * Basic definitions
+ */
 using Objectspace = TypeAtomic<double, OBJECTSPACE>;
 using Worldspace = TypeAtomic<double, WORLDSPACE>;
+using Frame = TypeAtomic<double, FRAME>;
 using World_per_Object = DivideType<Worldspace, Objectspace>;
+
+/**
+ * Vel/acc types
+ */
+template <typename Dist>
+using VelType = DivideType<Dist, Frame>;
+
+template <typename Dist>
+using AccType = DivideType<Dist, ExpType<2, Frame>>;
+
+using World_per_Frame = DivideType<Worldspace, Frame>;
+using World_per_Frame_2 = DivideType<World_per_Frame, Frame>;
+
+/**
+ * Clip types
+ */
 using ClipWorldX = TypeAtomic<ClippedX, WORLDSPACE>;
 using ClipWorldY = TypeAtomic<ClippedX, WORLDSPACE>;
 
+/**
+ * Literal operators
+ */
 Worldspace operator"" _ws(long double val)
 {
     return Worldspace{val};
 }
 
+Worldspace operator"" _ws(unsigned long long val)
+{
+    return Worldspace{static_cast<long double>(val)};
+}
+
 Objectspace operator"" _os(long double val)
 {
     return Objectspace{val};
+}
+
+Objectspace operator"" _os(unsigned long long val)
+{
+    return Objectspace{static_cast<long double>(val)};
+}
+
+Frame operator"" _frame(long double val)
+{
+    return Frame{val};
+}
+
+Frame operator"" _frame(unsigned long long val)
+{
+    return Frame{static_cast<long double>(val)};
 }
 
 //------------------------------------------------------------------------------
@@ -121,14 +167,111 @@ class Entity
 public:
     Entity() {};
     virtual ~Entity() {};
+    inline virtual void Initialize() {};
     inline virtual void Update() = 0;
     inline virtual void Draw() = 0;
 };
 
-template <WrapType Wrap = kWrapNone>
+template <size_t Depth>
+    requires(Depth >= 0)
+using ObjCoord = DivideType<Worldspace, ExpType<Depth, Objectspace>>;
+
+template <size_t Depth = 0>
 class GameObject : public Entity
 {
+public:
+    static constexpr size_t GO_Depth = Depth;
+    using Coord = ObjCoord<Depth>;
+
+    template <template <size_t> class ChildObj>
+    using Child = ChildObj<Depth + 1>;
+
+    ~GameObject()
+    {
+        for (uint i = 0; i < MAX_CHILDREN; i++)
+        {
+            if (children[i] != nullptr)
+            {
+                delete children[i];
+            }
+        }
+    };
+
+    inline virtual void Update()
+    {
+        for (uint i = 0; i < MAX_CHILDREN; i++)
+        {
+            if (children[i] != nullptr)
+            {
+                children[i]->Update();
+            }
+        }
+    }
+
+    template <template <size_t> class ChildObj, typename... Args>
+        requires std::is_base_of_v<GameObject<Depth + 1>, Child<ChildObj>> &&
+                 std::is_constructible_v<Child<ChildObj>, Args...>
+    Child<ChildObj> *AddChild(Args... argList)
+    {
+        for (uint i = 0; i < MAX_CHILDREN; i++)
+        {
+            if (children[i] == nullptr)
+            {
+                Child<ChildObj> *obj = new Child<ChildObj>(argList...);
+                obj->parent = this;
+                children[i] = obj;
+                children[i]->Initialize();
+                return obj;
+            }
+        }
+
+        throw std::runtime_error("Too many children!");
+    };
+
+    template <typename T>
+        requires requires(T a, Objectspace b) {
+            { a *b } -> std::convertible_to<Coord>;
+        }
+    inline Vector2<Coord> ApplyTransform(const Vector2<T> &vec)
+    {
+        // static_assert((CanMultiply<T, Objectspace>));
+        // static_assert((std::convertible_to<MultiplyType<T, Objectspace>, Coord>));
+        Vector2<Coord> scaled = Get2DScaleMatrix<Objectspace>() * vec;
+        return scaled;
+    };
+
+    inline GameObject<Depth - 1> *GetParent()
+    {
+        return parent;
+    }
+
+    inline void SetPos(Vector2<Coord> pos_)
+    {
+        this->pos = pos_;
+    }
+    inline Vector2<Coord> GetPos()
+    {
+        return pos;
+    }
+
 protected:
+    Vector2<Coord> pos{};
+    Vector2<VelType<Coord>> vel{};
+    Vector2<AccType<Coord>> acc{};
+    GameObject<Depth - 1> *parent = nullptr;
+    Entity *children[MAX_GAME_OBJECTS] = {nullptr};
+
+    friend class GameObject<Depth - 1>;
+};
+
+/** WrapGameObject definition */
+// Top-level objects (depth 0) only
+template <WrapType Wrap = kWrapNone>
+struct WrapCoords
+{
+    using Xcoord = WorldX<Wrap>;
+    using Ycoord = WorldY<Wrap>;
+
     WorldX<Wrap> x{0};
     WorldY<Wrap> y{0};
 };
@@ -171,6 +314,7 @@ public:
             if (gameObjects[i] == nullptr)
             {
                 gameObjects[i] = new GameObj(argList...);
+                gameObjects[i]->Initialize();
                 return;
             }
         }

@@ -14,11 +14,11 @@ constexpr double DEFAULT_ASCII_HEIGHT = 25;
 // GameObject definitions
 //------------------------------------------------------------------------------
 
-template <WrapType Wrap = kWrapNone>
-class AsciiGameObject : public GameObject<Wrap>
+template <WrapType Wrap = kWrapBoth>
+class AsciiWorldObject : public GameObject<0>
 {
 public:
-    AsciiGameObject(AsciiGraphics *asciiGraphics) : ascii{asciiGraphics} {};
+    AsciiWorldObject(AsciiGraphics *asciiGraphics) : ascii{asciiGraphics} {};
 
     inline virtual void Draw() override
     {
