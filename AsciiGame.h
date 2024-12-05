@@ -1,6 +1,7 @@
 #pragma once
 
 #include "AsciiGraphics.h"
+#include "GLGraphics.h"
 #include "Game.h"
 
 //------------------------------------------------------------------------------
@@ -56,6 +57,11 @@ public:
     {
         ascii->ClearScreen();
 
+        ascii->MoveCursor(60, 2);
+        std::cout << KeyEventManager::GetInstance().Keydown(kKeyCodeDown);
+        ascii->MoveCursor(60, 3);
+        std::cout << KeyEventManager::GetInstance().Keyup(kKeyCodeDown);
+
         // Draw bounds
         ascii->DrawRect(XBounds::lowerBound, YBounds::lowerBound, XBounds::width(), YBounds::height(), '.', false);
 
@@ -90,13 +96,21 @@ int PlayGame()
     YBounds::SetUpperBound(1 + G::GET_DEFAULT_HEIGHT());
 
     AsciiGraphics ascii{};
+    GLGraphics glHeadless{};
     G *game = new G(&ascii);
+
+    glHeadless.InitializeHeadless();
 
     game->Initialize();
     while (1)
     {
+        glHeadless.UpdateHeadless();
         game->Update();
         game->Draw();
+        if ( KeyEventManager::GetInstance().Keydown(kKeyCodeDown))
+        {
+            std::cout << "key down" << std::endl;
+        }
 
         usleep(1000 * 16);
     }

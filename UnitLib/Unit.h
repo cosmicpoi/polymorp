@@ -247,7 +247,7 @@ public:
         requires(std::is_same_v<UID, Other_UID> &&
                  ConvertibleOrConstructible<Type, Other_Type> &&
                  (!std::is_same_v<ThisType, Unit<Other_Type, Other_UID, Other_Ratio>>))
-    explicit inline Unit(const Unit<Other_Type, Other_UID, Other_Ratio> &val)
+    inline Unit(const Unit<Other_Type, Other_UID, Other_Ratio> &val)
         : value(DivideByRatio<Ratio, Type>(ConvertOrConstruct<Type, Other_Type>(val.GetRealValue()))){};
 
     /**
@@ -259,7 +259,7 @@ public:
                  (!ConvertibleOrConstructible<Type, Other_Type>) &&
                  AssignableTo<Type, Other_Type> &&
                  (!std::is_same_v<ThisType, Unit<Other_Type, Other_UID, Other_Ratio>>))
-    explicit inline Unit(const Unit<Other_Type, Other_UID, Other_Ratio> &val)
+    inline Unit(const Unit<Other_Type, Other_UID, Other_Ratio> &val)
     {
         value = DivideByRatio<Ratio, Type>(val.GetRealValue());
     }

@@ -5,6 +5,7 @@
 
 #include <GLFW/glfw3.h>
 #include <glad/glad.h>
+#include "Keypress.h"
 #include "Triangle.h"
 #include <string>
 #include <iostream>
@@ -16,6 +17,33 @@ public:
 
     static void framebuffer_size_callback(GLFWwindow*, int width, int height){ glViewport(0, 0, width, height); }
     
+    // Initialize headless window (for tracking keypresses)
+    bool InitializeHeadless()
+    {
+        if (!glfwInit())
+        {
+            std::cout << "Failed to initialize GLFW" << std::endl;
+            return false;
+        }
+        GLFWwindow* window = glfwCreateWindow(1, 1, "Invisible Window", nullptr, nullptr);
+        glfwSetWindowPos(window, 0, 0);
+        if (!window) {
+            glfwTerminate();
+            std::cerr << "Failed to create GLFW window" << std::endl;
+            return false;
+        }
+        glfwSetKeyCallback(window, key_callback);
+
+
+
+        return true;
+    }
+
+    void UpdateHeadless()
+    {
+        glfwPollEvents();
+    }
+
     // Initialize GLFW and OpenGL context
     bool Initialize(int w, int h, const std::string &windowTitle) {
         width = w;
@@ -25,7 +53,7 @@ public:
         if (!glfwInit())
         {
             std::cout << "Failed to initialize GLFW" << std::endl;
-            return -1;
+            return false;
         }
 
         glfwWindowHint(GLFW_CONTEXT_VERSION_MAJOR, 3);
@@ -40,21 +68,23 @@ public:
         {
             std::cout << "Failed to create GLFW window" << std::endl;
             glfwTerminate();
-            return -1;
+            return false;
         }
         
 
         glfwMakeContextCurrent(window);
         glfwSetFramebufferSizeCallback(window, framebuffer_size_callback);
+        glfwSetKeyCallback(window, key_callback);
+
 
         if (!gladLoadGLLoader((GLADloadproc)glfwGetProcAddress))
         {
             std::cout << "Failed to initialize GLAD" << std::endl;
-            return -1;
+            return false;
         }
 
         glViewport(0, 0, width, height);
-        return 1;
+        return true;
     }
 
     bool BuildShaders(){

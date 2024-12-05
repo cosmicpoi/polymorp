@@ -110,9 +110,9 @@ public:
     }
 
     /** @brief Draws the text `str` to x, y */
-    void DrawText(const uint &x, const uint &y, const char *str)
+    void DrawText(const Worldspace x, const Worldspace y, const char *str)
     {
-        MoveCursor(x, y);
+        MoveCursor(x.GetValue(), y.GetValue());
         os->write(str, strlen(str));
     }
 

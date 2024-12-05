@@ -4,6 +4,7 @@
 #include "UnitLib/Unit.h"
 #include "UnitLib/Vector.h"
 #include "UnitLib/Matrix.h"
+#include "Keypress.h"
 #include <unistd.h>
 
 //------------------------------------------------------------------------------
@@ -23,20 +24,21 @@ constexpr char FRAME[] = "frame";
 // Bounded type definnitions
 //------------------------------------------------------------------------------
 
-struct Bounds
+struct XBounds
 {
     static void SetLowerBound(double lb) { lowerBound = lb; };
     static void SetUpperBound(double ub) { upperBound = ub; };
     inline static double upperBound;
     inline static double lowerBound;
-};
-
-struct XBounds : public Bounds
-{
     static double width() { return upperBound - lowerBound; };
 };
-struct YBounds : public Bounds
+
+struct YBounds
 {
+    static void SetLowerBound(double lb) { lowerBound = lb; };
+    static void SetUpperBound(double ub) { upperBound = ub; };
+    inline static double upperBound;
+    inline static double lowerBound;
     static double height() { return upperBound - lowerBound; };
 };
 using ClippedX = ClipDouble<XBounds>;
@@ -323,6 +325,18 @@ public:
 
     inline void Update()
     {
+        KeyEventManager::GetInstance().Update(frameCount);
+        frameCount++;
+
+        if(KeyEventManager::GetInstance().Keydown(kKeyCodeUp))
+        {
+            std::cout << "keydown" << std::endl;
+        }
+        if(KeyEventManager::GetInstance().Keyup(kKeyCodeUp))
+        {
+            std::cout << "keyup" << std::endl;
+        }
+
         for (uint i = 0; i < MAX_GAME_OBJECTS; i++)
         {
             if (gameObjects[i] != nullptr)
@@ -335,6 +349,7 @@ public:
     inline virtual void Draw() = 0;
 
 protected:
+    uint frameCount = 0;
     Entity *gameObjects[MAX_GAME_OBJECTS] = {nullptr};
 };
 

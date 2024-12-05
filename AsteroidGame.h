@@ -87,7 +87,7 @@ public:
         o2->rotSpeed = 0.03;
         // o1->SetPos(Get2DRotationMatrix(0.785398) * o1->GetPos());
 
-        // vel = {0.2, 0.2};
+        vel = {0.2, 0};
     }
 
     inline virtual void Update() override
@@ -100,8 +100,6 @@ public:
     }
     inline virtual void Draw() override
     {
-        // Set up chars
-
         numChars = 0;
         for (Worldspace offX = -radius; offX <= radius; offX++)
         {
@@ -137,8 +135,44 @@ public:
 
 private:
     Coord radius;
-    WorldY<kWrapBoth> y{0};
     WorldX<kWrapBoth> x{0};
+    WorldY<kWrapBoth> y{0};
+};
+
+/**
+ * Player code
+ */
+
+class Player : public AsciiWorldObject<kWrapBoth>
+{
+public:
+    Player(AsciiGraphics *asciiGraphics, double x_, double y_)
+        : AsciiWorldObject(asciiGraphics), x{x_}, y{y_} {};
+
+    static constexpr const char *PLAYER = "🐥";
+
+    inline virtual void Initialize() override
+    {
+    }
+
+    inline virtual void Update() override
+    {
+        // vel += acc * 1_frame;
+        // x += vel.x() * 1_frame;
+        // y += vel.y() * 1_frame;
+
+        // GameObject<>::Update();
+    }
+    inline virtual void Draw() override
+    {
+        // Set up chars
+        ascii->DrawText({x}, {y}, PLAYER);
+    }
+
+private:
+    Coord radius;
+    WorldX<kWrapBoth> x{0};
+    WorldY<kWrapBoth> y{0};
 };
 
 /**
@@ -152,5 +186,6 @@ public:
     inline virtual void Initialize() override
     {
         CreateGameObject<Asteroid>(ascii, 2);
+        CreateGameObject<Player>(ascii, GET_DEFAULT_WIDTH() / 2, GET_DEFAULT_HEIGHT() / 2);
     }
 };
