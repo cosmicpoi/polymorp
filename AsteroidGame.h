@@ -45,10 +45,10 @@ private:
 /**
  * Game code
  */
-class SnakeGame : public AsciiGame
+class AsteroidGame : public AsciiGame
 {
 public:
-    SnakeGame(AsciiGraphics *asciiGraphics) : AsciiGame(asciiGraphics) {};
+    AsteroidGame(AsciiGraphics *asciiGraphics) : AsciiGame(asciiGraphics) {};
 
     inline virtual void Initialize() override
     {

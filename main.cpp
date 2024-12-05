@@ -1,10 +1,10 @@
-#include "SnakeGame.h"
+#include "AsteroidGame.h"
 #include "JumpGame.h"
 #include <iostream>
 
 int main()
 {
-    std::vector<std::string> games = {"snake", "jump"};
+    std::vector<std::string> games = {"asteroid", "jump"};
 
     std::cout << "Choose a game:" << std::endl;
     for (uint i = 0; i < games.size(); i++)
@@ -14,9 +14,9 @@ int main()
     uint selection = 0;
     std::cin >> selection;
 
-    if (games[selection] == "snake")
+    if (games[selection] == "asteroid")
     {
-        return PlayGame<SnakeGame>();
+        return PlayGame<AsteroidGame>();
     }
     else if (games[selection] == "jump")
     {
