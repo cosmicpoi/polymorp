@@ -328,15 +328,6 @@ public:
         KeyEventManager::GetInstance().Update(frameCount);
         frameCount++;
 
-        if(KeyEventManager::GetInstance().Keydown(kKeyCodeUp))
-        {
-            std::cout << "keydown" << std::endl;
-        }
-        if(KeyEventManager::GetInstance().Keyup(kKeyCodeUp))
-        {
-            std::cout << "keyup" << std::endl;
-        }
-
         for (uint i = 0; i < MAX_GAME_OBJECTS; i++)
         {
             if (gameObjects[i] != nullptr)
