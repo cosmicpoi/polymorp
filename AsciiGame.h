@@ -93,7 +93,6 @@ int PlayGame()
     G *game = new G(&ascii);
 
     game->Initialize();
-    return 0;
     while (1)
     {
         game->Update();
