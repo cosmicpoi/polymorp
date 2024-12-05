@@ -2,8 +2,7 @@
 #include "JumpGame.h"
 #include <iostream>
 
-#include "UnitLib/Unit.h"
-#include "UnitLib/Vector.h"
+#include "Keypress.h"
 
 int main()
 {
@@ -11,9 +10,6 @@ int main()
     // Meter val{10};
     // val = 0.2;
     // vel = {0.2, 0.2};
-
-    std::cout << (Get2DRotationMatrix(0.785398) * Vector2<double>{0, 5}) << std::endl;
-
     
 
     std::vector<std::string> games = {"asteroid", "jump"};

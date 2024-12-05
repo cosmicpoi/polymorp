@@ -4,6 +4,7 @@
 #include "UnitLib/Unit.h"
 #include "UnitLib/Vector.h"
 #include "UnitLib/Matrix.h"
+#include "Keypress.h"
 #include <unistd.h>
 
 //------------------------------------------------------------------------------
@@ -19,24 +20,36 @@ constexpr char OBJECTSPACE[] = "objectspace";
 constexpr char WORLDSPACE[] = "worldspace";
 constexpr char FRAME[] = "frame";
 
+/**
+ * Helper function
+ */
+
+double fRand(double fMin, double fMax)
+{
+    double f = (double)rand() / RAND_MAX;
+    return fMin + f * (fMax - fMin);
+}
+
+
 //------------------------------------------------------------------------------
 // Bounded type definnitions
 //------------------------------------------------------------------------------
 
-struct Bounds
+struct XBounds
 {
     static void SetLowerBound(double lb) { lowerBound = lb; };
     static void SetUpperBound(double ub) { upperBound = ub; };
     inline static double upperBound;
     inline static double lowerBound;
-};
-
-struct XBounds : public Bounds
-{
     static double width() { return upperBound - lowerBound; };
 };
-struct YBounds : public Bounds
+
+struct YBounds
 {
+    static void SetLowerBound(double lb) { lowerBound = lb; };
+    static void SetUpperBound(double ub) { upperBound = ub; };
+    inline static double upperBound;
+    inline static double lowerBound;
     static double height() { return upperBound - lowerBound; };
 };
 using ClippedX = ClipDouble<XBounds>;
@@ -70,7 +83,7 @@ using World_per_Frame_2 = DivideType<World_per_Frame, Frame>;
  * Clip types
  */
 using ClipWorldX = TypeAtomic<ClippedX, WORLDSPACE>;
-using ClipWorldY = TypeAtomic<ClippedX, WORLDSPACE>;
+using ClipWorldY = TypeAtomic<ClippedY, WORLDSPACE>;
 
 /**
  * Literal operators
@@ -168,8 +181,20 @@ public:
     Entity() {};
     virtual ~Entity() {};
     inline virtual void Initialize() {};
+    inline virtual bool Collide(const Vector2<Worldspace> &) { return false; };
     inline virtual void Update() = 0;
     inline virtual void Draw() = 0;
+    inline void Disable()
+    {
+        enabled = false;
+    }
+    inline bool IsEnabled()
+    {
+        return enabled;
+    }
+
+private:
+    bool enabled = true;
 };
 
 template <size_t Depth>
@@ -228,15 +253,12 @@ public:
         throw std::runtime_error("Too many children!");
     };
 
-    template <typename T>
-        requires requires(T a, Objectspace b) {
-            { a *b } -> std::convertible_to<Coord>;
-        }
-    inline Vector2<Coord> ApplyTransform(const Vector2<T> &vec)
+    inline Vector2<ObjCoord<Depth>> ApplyTransform(const Vector2<ObjCoord<Depth + 1>> &vec)
     {
         // static_assert((CanMultiply<T, Objectspace>));
         // static_assert((std::convertible_to<MultiplyType<T, Objectspace>, Coord>));
         Vector2<Coord> scaled = Get2DScaleMatrix<Objectspace>() * vec;
+        scaled += this->GetPos();
         return scaled;
     };
 
@@ -249,7 +271,11 @@ public:
     {
         this->pos = pos_;
     }
-    inline Vector2<Coord> GetPos()
+    inline void SetVel(Vector2<VelType<Coord>> vel_)
+    {
+        this->vel = vel_;
+    }
+    inline virtual Vector2<Coord> GetPos()
     {
         return pos;
     }
@@ -307,37 +333,50 @@ public:
     template <typename GameObj, typename... Args>
         requires IsEntity<GameObj> &&
                  std::is_constructible_v<GameObj, Args...>
-    inline void CreateGameObject(Args... argList)
+    inline GameObj *CreateGameObject(Args... argList)
     {
         for (uint i = 0; i < MAX_GAME_OBJECTS; i++)
         {
             if (gameObjects[i] == nullptr)
             {
-                gameObjects[i] = new GameObj(argList...);
-                gameObjects[i]->Initialize();
-                return;
+                GameObj *obj = new GameObj(argList...);
+                obj->Initialize();
+                gameObjects[i] = obj;
+                return obj;
             }
         }
 
         throw std::runtime_error("Too many game objects!");
+        return nullptr;
     };
 
     inline virtual void Initialize() = 0;
 
-    inline void Update()
+    inline virtual void Update()
     {
+        KeyEventManager::GetInstance().Update(frameCount);
+        frameCount++;
+
         for (uint i = 0; i < MAX_GAME_OBJECTS; i++)
         {
             if (gameObjects[i] != nullptr)
             {
-                gameObjects[i]->Update();
+                if (gameObjects[i]->IsEnabled())
+                {
+                    gameObjects[i]->Update();
+                }
             }
         }
+
+        UpdateEnd();
     };
+
+    inline virtual void UpdateEnd() {};
 
     inline virtual void Draw() = 0;
 
 protected:
+    uint frameCount = 0;
     Entity *gameObjects[MAX_GAME_OBJECTS] = {nullptr};
 };
 
