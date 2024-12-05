@@ -1,35 +1,100 @@
 #pragma once
 
 #include "AsciiGame.h"
+#include "UnitLib/Print.h"
 
 /**
  * Various game object implementatinos
  */
-class Rect : public AsciiGameObject<kWrapBoth>
+template <size_t Depth>
+class Orbiter : public GameObject<Depth>
 {
 public:
-    Rect(AsciiGraphics *asciiGraphics, uint width_, uint height_)
-        : AsciiGameObject(asciiGraphics), width(width_), height(height_) {};
+    double theta = 0;
+
+    using Coord = typename GameObject<Depth>::Coord;
+
+    static_assert(Depth > 0);
+    inline virtual void Update() override
+    {
+        this->SetPos(Get2DRotationMatrix(0.010) * this->pos);
+
+        // theta += 0.001;
+    };
+    inline virtual void Draw() override {};
+
+    Vector2<Worldspace> GetWorldpos()
+    {
+        return _GetWorldpos<Depth>(this->pos);
+    }
+
+private:
+    template <size_t PDepth>
+    Vector2<ObjCoord<PDepth - 1>> _GetWorldpos(Vector2<ObjCoord<PDepth>> &ppos)
+    {
+        if constexpr (PDepth == 1)
+        {
+            static_assert(std::is_same_v<ObjCoord<PDepth - 1>, Worldspace>);
+            return this->GetParent()->ApplyTransform(ppos);
+        }
+        else
+        {
+            return _GetWorldpos<PDepth - 1>(this->GetParent()->ApplyTransform(ppos));
+        }
+    }
+};
+
+class Asteroid : public AsciiWorldObject<kWrapBoth>
+{
+public:
+    Asteroid(AsciiGraphics *asciiGraphics, double radius_)
+        : AsciiWorldObject(asciiGraphics), radius(radius_) {};
+
+    Child<Orbiter> *o1 = nullptr;
+    inline virtual void Initialize() override
+    {
+        x = 10_ws;
+        y = 10_ws;
+        
+        o1 = AddChild<Orbiter>();
+        o1->SetPos({0, 5});
+        // o1->SetPos(Get2DRotationMatrix(0.785398) * o1->GetPos());
+
+        // vel = {0.2, 0.2};
+    }
 
     inline virtual void Update() override
     {
-        x = x + 0.5_ws;
-        y = y + 0.2_ws;
+        vel += acc * 1_frame;
+        x += vel.x() * 1_frame;
+        y += vel.y() * 1_frame;
+
+        GameObject<>::Update();
     }
     inline virtual void Draw() override
     {
         // Set up chars
+
         numChars = 0;
-        for (uint i = 0; i < height; i++)
+        for (Worldspace offX = -radius; offX <= radius; offX++)
         {
-            for (uint j = 0; j < width; j++)
+            for (Worldspace offY = -radius; offY <= radius; offY++)
             {
-                chars[numChars++] = {
-                    .x = x + Worldspace{j},
-                    .y = y + Worldspace{i},
-                    .pix = '.'};
+                if (NormSquared(Vector2<Worldspace>{offX, offY}) <= radius * radius)
+                {
+                    chars[numChars++] = {
+                        .x = x + offX,
+                        .y = y + offY,
+                        .pix = '.'};
+                }
             }
         }
+
+        Vector2<Worldspace> wv = o1->GetWorldpos();
+        chars[numChars++] = {
+            .x = x + wv.x(),
+            .y = y + wv.y(),
+            .pix = '.'};
 
         // Flush chars
         ascii->SetTextColor(kFGRed, kBGNone, kTextBold);
@@ -38,8 +103,9 @@ public:
     }
 
 private:
-    uint width = 0;
-    uint height = 0;
+    Coord radius;
+    WorldY<kWrapBoth> y{0};
+    WorldX<kWrapBoth> x{0};
 };
 
 /**
@@ -52,6 +118,6 @@ public:
 
     inline virtual void Initialize() override
     {
-        CreateGameObject<Rect>(ascii, 10, 10);
+        CreateGameObject<Asteroid>(ascii, 3);
     }
 };

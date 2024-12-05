@@ -185,7 +185,7 @@ struct GetSequenceElement<0, std::index_sequence<H, Rest...>>
 
 /** @brief Check if FromArgs can be converted to primitive ToType */
 template <typename ToType, typename... FromArgs>
-concept ConvertibleToPrimitive = ((std::is_convertible_v<FromArgs, ToType>) && ...);
+concept ConvertibleTo = ((std::is_convertible_v<FromArgs, ToType>) && ...);
 
 /** @brief Check if FromArgs can be assigned to type ToType */
 template <typename ToType, typename... FromArgs>
@@ -197,7 +197,7 @@ concept ConstructibleFrom = ((std::constructible_from<ToType, FromArgs>) && ...)
 
 /** @brief Helper for ConvertOrConstruct. */
 template <typename ToType, typename... FromArgs>
-concept ConvertibleOrConstructible = ConvertibleToPrimitive<ToType, FromArgs...> || //
+concept ConvertibleOrConstructible = ConvertibleTo<ToType, FromArgs...> || //
                                      ConstructibleFrom<ToType, FromArgs...>;
 
 /** @brief Flipped version for use in concepts */

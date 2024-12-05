@@ -286,7 +286,7 @@ public:
                  (!ConvertibleOrConstructible<Type, Other_Type>) &&
                  AssignableTo<Type, Other_Type> &&
                  (!std::is_same_v<Type, Other_Type>))
-    explicit inline Unit(const Unit<Other_Type, Other_UID, Other_Ratio> &&val)
+    inline Unit(const Unit<Other_Type, Other_UID, Other_Ratio> &&val)
         : Unit(val)
     {
     }
