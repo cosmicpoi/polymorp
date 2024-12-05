@@ -12,6 +12,8 @@ int main()
     // val = 0.2;
     // vel = {0.2, 0.2};
 
+    std::cout << (Get2DRotationMatrix(0.785398) * Vector2<double>{0, 5}) << std::endl;
+
     
 
     std::vector<std::string> games = {"asteroid", "jump"};

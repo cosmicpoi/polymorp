@@ -421,7 +421,7 @@ inline Vector<M, MultiplyType<LHS_MatType, RHS_VecType>> operator*(const Matrix<
     {
         return ([&]<size_t... Idxs>(std::index_sequence<Idxs...>) constexpr
                 {
-                    return ((lhs_m[i][Idxs] * rhs_v[i]) + ...); //
+                    return ((lhs_m[i][Idxs] * rhs_v[Idxs]) + ...); //
                 })(std::make_index_sequence<N>{});
     };
 

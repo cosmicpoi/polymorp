@@ -10,10 +10,17 @@ template <size_t Depth>
 class Orbiter : public GameObject<Depth>
 {
 public:
+    double theta = 0;
+
     using Coord = typename GameObject<Depth>::Coord;
 
     static_assert(Depth > 0);
-    inline virtual void Update() override {};
+    inline virtual void Update() override
+    {
+        this->SetPos(Get2DRotationMatrix(0.010) * this->pos);
+
+        // theta += 0.001;
+    };
     inline virtual void Draw() override {};
 
     Vector2<Worldspace> GetWorldpos()
@@ -46,10 +53,14 @@ public:
     Child<Orbiter> *o1 = nullptr;
     inline virtual void Initialize() override
     {
+        x = 10_ws;
+        y = 10_ws;
+        
         o1 = AddChild<Orbiter>();
-        o1->SetPos({0, -5});
+        o1->SetPos({0, 5});
+        // o1->SetPos(Get2DRotationMatrix(0.785398) * o1->GetPos());
 
-        vel = {0.2, 0.2};
+        // vel = {0.2, 0.2};
     }
 
     inline virtual void Update() override
@@ -57,6 +68,8 @@ public:
         vel += acc * 1_frame;
         x += vel.x() * 1_frame;
         y += vel.y() * 1_frame;
+
+        GameObject<>::Update();
     }
     inline virtual void Draw() override
     {

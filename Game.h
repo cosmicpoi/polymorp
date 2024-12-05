@@ -197,6 +197,17 @@ public:
         }
     };
 
+    inline virtual void Update()
+    {
+        for (uint i = 0; i < MAX_CHILDREN; i++)
+        {
+            if (children[i] != nullptr)
+            {
+                children[i]->Update();
+            }
+        }
+    }
+
     template <template <size_t> class ChildObj, typename... Args>
         requires std::is_base_of_v<GameObject<Depth + 1>, Child<ChildObj>> &&
                  std::is_constructible_v<Child<ChildObj>, Args...>
@@ -237,6 +248,10 @@ public:
     inline void SetPos(Vector2<Coord> pos_)
     {
         this->pos = pos_;
+    }
+    inline Vector2<Coord> GetPos()
+    {
+        return pos;
     }
 
 protected:
