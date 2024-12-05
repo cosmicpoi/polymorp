@@ -20,6 +20,17 @@ constexpr char OBJECTSPACE[] = "objectspace";
 constexpr char WORLDSPACE[] = "worldspace";
 constexpr char FRAME[] = "frame";
 
+/**
+ * Helper function
+ */
+
+double fRand(double fMin, double fMax)
+{
+    double f = (double)rand() / RAND_MAX;
+    return fMin + f * (fMax - fMin);
+}
+
+
 //------------------------------------------------------------------------------
 // Bounded type definnitions
 //------------------------------------------------------------------------------
@@ -259,6 +270,10 @@ public:
     inline void SetPos(Vector2<Coord> pos_)
     {
         this->pos = pos_;
+    }
+    inline void SetVel(Vector2<VelType<Coord>> vel_)
+    {
+        this->vel = vel_;
     }
     inline virtual Vector2<Coord> GetPos()
     {

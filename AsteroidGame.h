@@ -11,6 +11,7 @@ class Orbiter : public GameObject<Depth>
 {
 public:
     double rotSpeed = 0.010;
+    Worldspace radius = 0.5;
 
     using Coord = typename GameObject<Depth>::Coord;
 
@@ -76,18 +77,13 @@ public:
     Child<Orbiter>::Child<Orbiter> *o2 = nullptr;
     inline virtual void Initialize() override
     {
-        x = 10_ws;
-        y = 10_ws;
-
         o1 = AddChild<Orbiter>();
         o1->SetPos({0, 5});
+        o1->radius = fRand(1, 3);
 
         o2 = o1->AddChild<Orbiter>();
         o2->SetPos({0, 2});
         o2->rotSpeed = 0.03;
-        // o1->SetPos(Get2DRotationMatrix(0.785398) * o1->GetPos());
-
-        vel = {0.0, 0.2};
     }
 
     inline virtual void Update() override
@@ -96,36 +92,32 @@ public:
         x += vel.x() * 1_frame;
         y += vel.y() * 1_frame;
 
+        radius *= 0.995;
+        if (radius < 0.5_ws)
+        {
+            Disable();
+        }
+
         GameObject<>::Update();
     }
     inline virtual void Draw() override
     {
-        numChars = 0;
-        for (Worldspace offX = -radius; offX <= radius; offX++)
+        if (!IsEnabled())
         {
-            for (Worldspace offY = -radius; offY <= radius; offY++)
-            {
-                if (NormSquared(Vector2<Worldspace>{offX, offY}) <= radius * radius)
-                {
-                    chars[numChars++] = {
-                        .x = x + offX,
-                        .y = y + offY,
-                        .pix = '.'};
-                }
-            }
+            numChars = 0;
+            return;
         }
 
+        numChars = 0;
+
+        DrawCircle(x, y, radius);
+        ascii->ResetTextColor();
+
         Vector2<Worldspace> wv = o1->GetWorldpos();
-        chars[numChars++] = {
-            .x = x + wv.x(),
-            .y = y + wv.y(),
-            .pix = '.'};
+        DrawCircle(x + wv.x(), y + wv.y(), o1->radius);
 
         Vector2<Worldspace> wv2 = o2->GetWorldpos();
-        chars[numChars++] = {
-            .x = x + wv2.x(),
-            .y = y + wv2.y(),
-            .pix = '.'};
+        DrawCircle(x + wv2.x(), y + wv2.y(), o2->radius);
 
         // Flush chars
         ascii->SetTextColor(kFGRed, kBGNone, kTextBold);
@@ -135,19 +127,36 @@ public:
 
     inline virtual bool Collide(const Vector2<Worldspace> &point) override
     {
-        ascii->MoveCursor(64, 5);
-        std::cout << "asking if collide: ";
-        std::cout << point << std::endl;
-
-        if (NormSquared(point - GetPos()) < radius * radius)
+        if (!IsEnabled())
         {
-            return true;
+            return false;
         }
 
-        return false;
+        bool c0 = (NormSquared(point - GetPos()) <= radius * radius);
+        bool c1 = (NormSquared(point - o1->GetWorldpos()) <= o1->radius * o1->radius);
+        bool c2 = (NormSquared(point - o2->GetWorldpos()) <= o2->radius * o2->radius);
+
+        return c0 || c1 || c2;
     };
 
 private:
+    inline void DrawCircle(WorldX<kWrapBoth> cx, WorldY<kWrapBoth> cy, Worldspace rad)
+    {
+        for (Worldspace offX = -rad; offX <= rad; offX++)
+        {
+            for (Worldspace offY = -rad; offY <= rad; offY++)
+            {
+                if (NormSquared(Vector2<Worldspace>{offX, offY}) <= rad * rad)
+                {
+                    chars[numChars++] = {
+                        .x = cx + offX,
+                        .y = cy + offY,
+                        .pix = '.'};
+                }
+            }
+        }
+    }
+
     Coord radius;
 };
 
@@ -221,9 +230,12 @@ public:
     Asteroid *asteroid = nullptr;
     bool gameOver = false;
 
+    double points = 0;
+
     inline virtual void Initialize() override
     {
         asteroid = CreateGameObject<Asteroid>(ascii, 2);
+        asteroid->SetVel({fRand(-0.2, 0.2), fRand(-0.2, 0.2)});
         player = CreateGameObject<Player>(ascii);
 
         player->SetPos({GET_DEFAULT_WIDTH() / 2, GET_DEFAULT_HEIGHT() / 2});
@@ -231,9 +243,16 @@ public:
 
     inline virtual void UpdateEnd() override
     {
-        if (asteroid->IsEnabled())
+        if (!gameOver)
         {
+            points += fRand(0, 0.01);
         }
+        if (!asteroid->IsEnabled())
+        {
+            asteroid = CreateGameObject<Asteroid>(ascii, 2);
+            asteroid->SetVel({fRand(-0.2, 0.2), fRand(-0.2, 0.2)});
+        }
+
         if (asteroid->Collide(player->GetPos()))
         {
             player->Disable();
@@ -246,12 +265,16 @@ public:
     {
         AsciiGame::Draw();
 
+
         if (gameOver)
         {
             ascii->SetTextColor(kFGRed, kBGYellow, kTextBold);
             ascii->DrawText({GET_DEFAULT_WIDTH() / 2 - 7}, {GET_DEFAULT_HEIGHT() / 2}, "   GAME OVER   ");
             ascii->ResetTextColor();
         }
+
+        ascii->MoveCursor(0, 0);
+        std::cout << "Points: " << (int) points;
 
         ascii->EndFrame();
     }
