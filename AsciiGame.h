@@ -1,6 +1,7 @@
 #pragma once
 
 #include "AsciiGraphics.h"
+#include "GLGraphics.h"
 #include "Game.h"
 
 //------------------------------------------------------------------------------
@@ -18,11 +19,23 @@ template <WrapType Wrap = kWrapBoth>
 class AsciiWorldObject : public GameObject<0>
 {
 public:
+    using Coord = ObjCoord<0>;
+
     AsciiWorldObject(AsciiGraphics *asciiGraphics) : ascii{asciiGraphics} {};
 
     inline virtual void Draw() override
     {
         DrawChars();
+    }
+
+    inline void SetPos(Vector2<Worldspace> pos)
+    {
+        x = pos.x();
+        y = pos.y();
+    }
+    inline Vector2<Coord> GetPos() override
+    {
+        return {x, y};
     }
 
 protected:
@@ -38,6 +51,9 @@ protected:
     CharPixel<Wrap> chars[MAX_CHARS];
 
     AsciiGraphics *ascii = nullptr;
+
+    WorldX<Wrap> x{0};
+    WorldY<Wrap> y{0};
 };
 
 //------------------------------------------------------------------------------
@@ -64,7 +80,10 @@ public:
         {
             if (gameObjects[i] != nullptr)
             {
-                gameObjects[i]->Draw();
+                if (gameObjects[i]->IsEnabled())
+                {
+                    gameObjects[i]->Draw();
+                }
             }
         }
 
@@ -90,13 +109,21 @@ int PlayGame()
     YBounds::SetUpperBound(1 + G::GET_DEFAULT_HEIGHT());
 
     AsciiGraphics ascii{};
+    GLGraphics glHeadless{};
     G *game = new G(&ascii);
+
+    glHeadless.InitializeHeadless();
 
     game->Initialize();
     while (1)
     {
+        glHeadless.UpdateHeadless();
         game->Update();
         game->Draw();
+        if (KeyEventManager::GetInstance().Keydown(kKeyCodeDown))
+        {
+            std::cout << "key down" << std::endl;
+        }
 
         usleep(1000 * 16);
     }
