@@ -8,7 +8,12 @@
                 "/Library/Frameworks"
             ],
             "intelliSenseMode": "macos-clang-x64",
-            "cStandard": "c17"
+            "cStandard": "c17",
+            "compilerPath": "/usr/bin/clang++",
+            "includePath": [
+                "${workspaceFolder}/**",
+                "/opt/homebrew/Cellar/glm/1.0.1/include"
+            ]
         }
     ],
     "version": 4
