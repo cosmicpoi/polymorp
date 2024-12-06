@@ -1,3 +1,5 @@
+#pragma once
+
 #include "Unit.h"
 #include "Vector.h"
 #include "Matrix.h"
@@ -166,7 +168,7 @@ inline void Print(T val, std::ostream &os = std::cout)
     }
     else
     {
-        PrintInfo<T>(os);
+        PrintTypeInfo<T>(os);
     }
 }
 
