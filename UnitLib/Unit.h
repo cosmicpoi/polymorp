@@ -859,3 +859,7 @@ concept IsUnitWithUID = requires {
 /** @brief Concept to check that a type is a unit an atomic UID corresponding to this symbol */
 template <typename T, StringLiteral Symbol>
 concept IsUnitWithSymbol = IsUnitWithUID<T, UnitAtomic<Symbol>>;
+
+/** @brief Concept to check that a unit is an empty unit */
+template <typename U>
+concept IsEmptyUnit = IsUnit<U> && IsEmptyUid<typename U::uid>;
