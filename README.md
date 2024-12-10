@@ -12,6 +12,8 @@ Run `make` from root
 
 Run `make clean` to clean build folder
 
+Run `./run-tests` to run tests
+
 # UnitLib
 
 The overall goal of `UnitLib` is to allow compile-time typed arithmetic with arbitrary dimensional units in arbitrary rectangular shapes and arbitrary integral ratios. This means:
